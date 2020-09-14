@@ -79,7 +79,9 @@ export class Peripheral extends EventEmitter {
 
 	public async discoverServices(uuids: string[]) {
 		this.noble.discoverServices(this.uuid, uuids);
-		return new Promise<Service[]>((resolve) => this.once('servicesDiscover', (services) => resolve(services)));
+		return new Promise<Map<string, Service>>((resolve) =>
+			this.once('servicesDiscover', (services) => resolve(services))
+		);
 	}
 
 	public async discoverSomeServicesAndCharacteristics(
@@ -88,23 +90,23 @@ export class Peripheral extends EventEmitter {
 	): Promise<[Service[], Characteristic[]]> {
 		const services = await this.discoverServices(serviceUUIDs);
 
-		if (serviceUUIDs.some((serviceUUID) => !services.some((s) => s.uuid === serviceUUID))) {
+		if (serviceUUIDs.some((serviceUUID) => !services.has(serviceUUID))) {
 			throw new Error('Could not find all requested services');
 		}
 
 		let allCharacteristics: Characteristic[] = [];
 
-		for (const service of services) {
+		for (const service of services.values()) {
 			try {
 				const characteristics = await service.discoverCharacteristics(characteristicsUUIDs);
-				allCharacteristics = allCharacteristics.concat(characteristics);
+				allCharacteristics = allCharacteristics.concat([...characteristics.values()]);
 			} catch {
 				// The characteristics might be inside another service
 				// TODO: Handle not finding all characteristics
 			}
 		}
 
-		return [services, allCharacteristics];
+		return [[...services.values()], allCharacteristics];
 	}
 
 	public async discoverAllServicesAndCharacteristics() {
