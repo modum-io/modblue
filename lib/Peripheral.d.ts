@@ -19,7 +19,7 @@ export declare class Peripheral extends EventEmitter {
     connect(requestMtu?: number): Promise<void>;
     disconnect(): Promise<string>;
     updateRSSI(): Promise<number>;
-    discoverServices(uuids: string[]): Promise<Service[]>;
+    discoverServices(uuids: string[]): Promise<Map<string, Service>>;
     discoverSomeServicesAndCharacteristics(serviceUUIDs: string[], characteristicsUUIDs: string[]): Promise<[Service[], Characteristic[]]>;
     discoverAllServicesAndCharacteristics(): Promise<[Service[], Characteristic[]]>;
     readHandle(handle: number): Promise<Buffer>;
