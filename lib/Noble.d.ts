@@ -9,7 +9,7 @@ export declare class Noble extends EventEmitter {
     private discoveredPeripheralUUIDs;
     private peripherals;
     constructor(bindings: any);
-    init(): Promise<void>;
+    init(timeoutInSeconds?: number): Promise<void>;
     private onStateChange;
     private onAddressChange;
     startScanning(serviceUUIDs: string[], allowDuplicates?: boolean): Promise<void>;

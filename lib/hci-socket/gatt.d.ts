@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 import { AclStream } from './acl-stream';
-export default class Gatt extends EventEmitter {
+export declare class Gatt extends EventEmitter {
     private address;
     private aclStream;
     private services;

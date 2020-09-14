@@ -41,7 +41,7 @@ export declare class NobleBindings extends EventEmitter {
     private onServicesDiscoveredEX;
     discoverIncludedServices(peripheralUUID: string, serviceUUID: string, serviceUUIDs: string[]): void;
     private onIncludedServicesDiscovered;
-    discoverCharacteristics(peripheralUUID: string, serviceUUID: string, characteristicUUIDs: string): void;
+    discoverCharacteristics(peripheralUUID: string, serviceUUID: string, characteristicUUIDs: string[]): void;
     private onCharacteristicsDiscovered;
     private onCharacteristicsDiscoveredEX;
     read(peripheralUUID: string, serviceUUID: string, characteristicUUID: string): void;
