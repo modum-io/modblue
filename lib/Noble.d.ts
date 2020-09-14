@@ -1,10 +1,10 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 export declare class Noble extends EventEmitter {
+    address: string;
+    state: string;
     private initialized;
     private bindings;
-    private address;
-    private state;
     private allowDuplicates;
     private discoveredPeripheralUUIDs;
     private peripherals;

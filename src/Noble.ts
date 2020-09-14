@@ -6,11 +6,11 @@ import { Peripheral } from './Peripheral';
 import { Service } from './Service';
 
 export class Noble extends EventEmitter {
+	public address: string = 'unknown';
+	public state: string = 'unknown';
+
 	private initialized: boolean = false;
 	private bindings: any = null;
-
-	private address: string = 'unknown';
-	private state: string = 'unknown';
 	private allowDuplicates: boolean = false;
 
 	private discoveredPeripheralUUIDs: Set<string> = new Set();
