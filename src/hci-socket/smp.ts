@@ -23,14 +23,14 @@ export class Smp extends EventEmitter {
 	private preq: Buffer;
 	private pres: Buffer;
 	private pcnf: Buffer;
-	private r: any;
+	private r: Buffer;
 
 	public constructor(
 		aclStream: AclStream,
-		localAddressType: any,
-		localAddress: any,
-		remoteAddressType: any,
-		remoteAddress: any
+		localAddressType: string,
+		localAddress: string,
+		remoteAddressType: string,
+		remoteAddress: string
 	) {
 		super();
 

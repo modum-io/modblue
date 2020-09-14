@@ -18,7 +18,7 @@ export declare class Gatt extends EventEmitter {
     private onAclStreamEnd;
     private writeAtt;
     private errorResponse;
-    private _queueCommand;
+    private queueCommand;
     private mtuRequest;
     readByGroupRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;
     readByTypeRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;

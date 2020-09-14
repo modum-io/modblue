@@ -1,13 +1,23 @@
 import { EventEmitter } from 'events';
 import os from 'os';
 
-const isChip = os.platform() === 'linux' && os.release().indexOf('-ntc') !== -1;
+const IS_NTC_CHIP = os.platform() === 'linux' && os.release().indexOf('-ntc') !== -1;
+
+interface Discovery {
+	address: string;
+	addressType: string;
+	connectable: boolean;
+	advertisement: any;
+	rssi: number;
+	count: number;
+	hasScanResponse: boolean;
+}
 
 export class Gap extends EventEmitter {
 	private hci: any;
 	private scanState: string;
 	private scanFilterDuplicates: boolean;
-	private discoveries: Map<string, any>;
+	private discoveries: Map<string, Discovery>;
 
 	public constructor(hci: any) {
 		super();
@@ -36,7 +46,7 @@ export class Gap extends EventEmitter {
 		this.hci.setScanEnabled(false, true);
 		this.hci.setScanParameters();
 
-		if (isChip) {
+		if (IS_NTC_CHIP) {
 			// work around for Next Thing Co. C.H.I.P, always allow duplicates, to get scan response
 			this.scanFilterDuplicates = false;
 		}

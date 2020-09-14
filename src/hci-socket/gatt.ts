@@ -57,16 +57,42 @@ const GATT_SERVER_CHARAC_CFG_UUID = 0x2903;
 const ATT_CID = 0x0004;
 /* eslint-enable no-unused-vars */
 
+interface GattCommand {
+	buffer: Buffer;
+	callback?: (data: Buffer) => void;
+	writeCallback?: () => void;
+}
+
+interface GattService {
+	startHandle: number;
+	endHandle: number;
+	uuid: string;
+}
+
+interface GattCharacteristic {
+	startHandle: number;
+	endHandle?: number;
+	propertiesFlags: number;
+	properties: string[];
+	valueHandle: number;
+	uuid: string;
+}
+
+interface GattDescriptor {
+	handle: number;
+	uuid: string;
+}
+
 export class Gatt extends EventEmitter {
 	private address: string;
 	private aclStream: AclStream;
 
-	private services: Map<string, any>;
-	private characteristics: Map<string, Map<string, any>>;
-	private descriptors: Map<string, Map<string, Map<string, any>>>;
+	private services: Map<string, GattService>;
+	private characteristics: Map<string, Map<string, GattCharacteristic>>;
+	private descriptors: Map<string, Map<string, Map<string, GattDescriptor>>>;
 
-	private currentCommand: any;
-	private commandQueue: any[];
+	private currentCommand: GattCommand;
+	private commandQueue: GattCommand[];
 
 	private mtu: number;
 	private security: string;
@@ -119,7 +145,7 @@ export class Gatt extends EventEmitter {
 			this.emit('handleNotify', this.address, valueHandle, valueData);
 
 			if (data[0] === ATT_OP_HANDLE_IND) {
-				this._queueCommand(this.handleConfirmation(), null, () => {
+				this.queueCommand(this.handleConfirmation(), null, () => {
 					this.emit('handleConfirmation', this.address, valueHandle);
 				});
 			}
@@ -199,7 +225,7 @@ export class Gatt extends EventEmitter {
 		return buf;
 	}
 
-	private _queueCommand(buffer: Buffer, callback?: Function, writeCallback?: Function) {
+	private queueCommand(buffer: Buffer, callback?: (data: Buffer) => void, writeCallback?: () => void) {
 		this.commandQueue.push({
 			buffer: buffer,
 			callback: callback,
@@ -328,7 +354,7 @@ export class Gatt extends EventEmitter {
 	}
 
 	public exchangeMtu(mtu: number) {
-		this._queueCommand(this.mtuRequest(mtu), (data: Buffer) => {
+		this.queueCommand(this.mtuRequest(mtu), (data: Buffer) => {
 			const opcode = data[0];
 
 			if (opcode === ATT_OP_MTU_RESP) {
@@ -341,7 +367,7 @@ export class Gatt extends EventEmitter {
 	}
 
 	public discoverServices(uuids: string[]) {
-		const services: any[] = [];
+		const services: GattService[] = [];
 
 		const callback = (data: Buffer) => {
 			const opcode = data[0];
@@ -383,19 +409,19 @@ export class Gatt extends EventEmitter {
 				this.emit('servicesDiscovered', this.address, JSON.parse(JSON.stringify(services)) /* services */);
 				this.emit('servicesDiscover', this.address, serviceUuids);
 			} else {
-				this._queueCommand(
+				this.queueCommand(
 					this.readByGroupRequest(services[services.length - 1].endHandle + 1, 0xffff, GATT_PRIM_SVC_UUID),
 					callback
 				);
 			}
 		};
 
-		this._queueCommand(this.readByGroupRequest(0x0001, 0xffff, GATT_PRIM_SVC_UUID), callback);
+		this.queueCommand(this.readByGroupRequest(0x0001, 0xffff, GATT_PRIM_SVC_UUID), callback);
 	}
 
 	public discoverIncludedServices(serviceUUID: string, uuids: string[]) {
 		const service = this.services.get(serviceUUID);
-		const includedServices: any[] = [];
+		const includedServices: GattService[] = [];
 
 		const callback = (data: Buffer) => {
 			const opcode = data[0];
@@ -438,7 +464,7 @@ export class Gatt extends EventEmitter {
 
 				this.emit('includedServicesDiscover', this.address, service.uuid, includedServiceUuids);
 			} else {
-				this._queueCommand(
+				this.queueCommand(
 					this.readByTypeRequest(
 						includedServices[includedServices.length - 1].endHandle + 1,
 						service.endHandle,
@@ -449,12 +475,12 @@ export class Gatt extends EventEmitter {
 			}
 		};
 
-		this._queueCommand(this.readByTypeRequest(service.startHandle, service.endHandle, GATT_INCLUDE_UUID), callback);
+		this.queueCommand(this.readByTypeRequest(service.startHandle, service.endHandle, GATT_INCLUDE_UUID), callback);
 	}
 
 	public discoverCharacteristics(serviceUUID: string, characteristicUUIDs: string[]) {
 		const service = this.services.get(serviceUUID);
-		const characteristics: any[] = [];
+		const characteristics: GattCharacteristic[] = [];
 
 		this.characteristics.set(serviceUUID, this.characteristics.get(serviceUUID) || new Map());
 		this.descriptors.set(serviceUUID, this.descriptors.get(serviceUUID) || new Map());
@@ -469,9 +495,38 @@ export class Gatt extends EventEmitter {
 
 				for (i = 0; i < num; i++) {
 					const offset = 2 + i * type;
+					const propertiesFlag = data.readUInt8(offset + 2);
+					const properties: string[] = [];
+
+					if (propertiesFlag & 0x01) {
+						properties.push('broadcast');
+					}
+					if (propertiesFlag & 0x02) {
+						properties.push('read');
+					}
+					if (propertiesFlag & 0x04) {
+						properties.push('writeWithoutResponse');
+					}
+					if (propertiesFlag & 0x08) {
+						properties.push('write');
+					}
+					if (propertiesFlag & 0x10) {
+						properties.push('notify');
+					}
+					if (propertiesFlag & 0x20) {
+						properties.push('indicate');
+					}
+					if (propertiesFlag & 0x40) {
+						properties.push('authenticatedSignedWrites');
+					}
+					if (propertiesFlag & 0x80) {
+						properties.push('extendedProperties');
+					}
+
 					characteristics.push({
 						startHandle: data.readUInt16LE(offset),
-						properties: data.readUInt8(offset + 2),
+						propertiesFlags: propertiesFlag,
+						properties: properties,
 						valueHandle: data.readUInt16LE(offset + 3),
 						uuid:
 							type === 7
@@ -491,60 +546,19 @@ export class Gatt extends EventEmitter {
 				opcode !== ATT_OP_READ_BY_TYPE_RESP ||
 				characteristics[characteristics.length - 1].valueHandle === service.endHandle
 			) {
-				const characteristicsDiscovered = [];
+				const characteristicsDiscovered: GattCharacteristic[] = [];
 				for (i = 0; i < characteristics.length; i++) {
-					const properties = characteristics[i].properties;
-
-					const characteristic = {
-						properties: [] as any[],
-						uuid: characteristics[i].uuid
-					};
-
-					// work around name-clash of numeric vs. string-array properties field:
-					characteristics[i].propsDecoded = characteristic.properties;
-					characteristics[i].rawProps = properties;
+					const characteristic = characteristics[i];
 
 					if (i !== 0) {
 						characteristics[i - 1].endHandle = characteristics[i].startHandle - 1;
 					}
 
 					if (i === characteristics.length - 1) {
-						characteristics[i].endHandle = service.endHandle;
+						characteristic.endHandle = service.endHandle;
 					}
 
-					this.characteristics.get(serviceUUID).set(characteristics[i].uuid, characteristics[i]);
-
-					if (properties & 0x01) {
-						characteristic.properties.push('broadcast');
-					}
-
-					if (properties & 0x02) {
-						characteristic.properties.push('read');
-					}
-
-					if (properties & 0x04) {
-						characteristic.properties.push('writeWithoutResponse');
-					}
-
-					if (properties & 0x08) {
-						characteristic.properties.push('write');
-					}
-
-					if (properties & 0x10) {
-						characteristic.properties.push('notify');
-					}
-
-					if (properties & 0x20) {
-						characteristic.properties.push('indicate');
-					}
-
-					if (properties & 0x40) {
-						characteristic.properties.push('authenticatedSignedWrites');
-					}
-
-					if (properties & 0x80) {
-						characteristic.properties.push('extendedProperties');
-					}
+					this.characteristics.get(serviceUUID).set(characteristic.uuid, characteristic);
 
 					if (characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(characteristic.uuid) !== -1) {
 						characteristicsDiscovered.push(characteristic);
@@ -554,7 +568,7 @@ export class Gatt extends EventEmitter {
 				this.emit('characteristicsDiscovered', this.address, serviceUUID, characteristics);
 				this.emit('characteristicsDiscover', this.address, serviceUUID, characteristicsDiscovered);
 			} else {
-				this._queueCommand(
+				this.queueCommand(
 					this.readByTypeRequest(
 						characteristics[characteristics.length - 1].valueHandle + 1,
 						service.endHandle,
@@ -565,7 +579,7 @@ export class Gatt extends EventEmitter {
 			}
 		};
 
-		this._queueCommand(this.readByTypeRequest(service.startHandle, service.endHandle, GATT_CHARAC_UUID), callback);
+		this.queueCommand(this.readByTypeRequest(service.startHandle, service.endHandle, GATT_CHARAC_UUID), callback);
 	}
 
 	public read(serviceUUID: string, characteristicUUID: string) {
@@ -580,7 +594,7 @@ export class Gatt extends EventEmitter {
 				readData = Buffer.from(`${readData.toString('hex')}${data.slice(1).toString('hex')}`, 'hex');
 
 				if (data.length === this.mtu) {
-					this._queueCommand(this.readBlobRequest(characteristic.valueHandle, readData.length), callback);
+					this.queueCommand(this.readBlobRequest(characteristic.valueHandle, readData.length), callback);
 				} else {
 					this.emit('read', this.address, serviceUUID, characteristicUUID, readData);
 				}
@@ -589,20 +603,20 @@ export class Gatt extends EventEmitter {
 			}
 		};
 
-		this._queueCommand(this.readRequest(characteristic.valueHandle), callback);
+		this.queueCommand(this.readRequest(characteristic.valueHandle), callback);
 	}
 
 	public write(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean) {
 		const characteristic = this.characteristics.get(serviceUUID).get(characteristicUUID);
 
 		if (withoutResponse) {
-			this._queueCommand(this.writeRequest(characteristic.valueHandle, data, true), null, () => {
+			this.queueCommand(this.writeRequest(characteristic.valueHandle, data, true), null, () => {
 				this.emit('write', this.address, serviceUUID, characteristicUUID);
 			});
 		} else if (data.length + 3 > this.mtu) {
 			return this.longWrite(serviceUUID, characteristicUUID, data, withoutResponse);
 		} else {
-			this._queueCommand(this.writeRequest(characteristic.valueHandle, data, false), (moreData: Buffer) => {
+			this.queueCommand(this.writeRequest(characteristic.valueHandle, data, false), (moreData: Buffer) => {
 				const opcode = moreData[0];
 
 				if (opcode === ATT_OP_WRITE_RESP) {
@@ -640,7 +654,7 @@ export class Gatt extends EventEmitter {
 		while (offset < data.length) {
 			const end = offset + limit;
 			const chunk = data.slice(offset, end);
-			this._queueCommand(
+			this.queueCommand(
 				this.prepareWriteRequest(characteristic.valueHandle, offset, chunk),
 				prepareWriteCallback(chunk)
 			);
@@ -648,7 +662,7 @@ export class Gatt extends EventEmitter {
 		}
 
 		/* queue the execute command with a callback to emit the write signal when done */
-		this._queueCommand(this.executeWriteRequest(characteristic.valueHandle), (resp: Buffer) => {
+		this.queueCommand(this.executeWriteRequest(characteristic.valueHandle), (resp: Buffer) => {
 			const opcode = resp[0];
 
 			if (opcode === ATT_OP_EXECUTE_WRITE_RESP && !withoutResponse) {
@@ -660,7 +674,7 @@ export class Gatt extends EventEmitter {
 	public broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean) {
 		const characteristic = this.characteristics.get(serviceUUID).get(characteristicUUID);
 
-		this._queueCommand(
+		this.queueCommand(
 			this.readByTypeRequest(characteristic.startHandle, characteristic.endHandle, GATT_SERVER_CHARAC_CFG_UUID),
 			(data: Buffer) => {
 				const opcode = data[0];
@@ -677,10 +691,10 @@ export class Gatt extends EventEmitter {
 					const valueBuffer = Buffer.alloc(2);
 					valueBuffer.writeUInt16LE(value, 0);
 
-					this._queueCommand(this.writeRequest(handle, valueBuffer, false), (moreData: Buffer) => {
-						const opcode = moreData[0];
+					this.queueCommand(this.writeRequest(handle, valueBuffer, false), (moreData: Buffer) => {
+						const moreOpcode = moreData[0];
 
-						if (opcode === ATT_OP_WRITE_RESP) {
+						if (moreOpcode === ATT_OP_WRITE_RESP) {
 							this.emit('broadcast', this.address, serviceUUID, characteristicUUID, broadcast);
 						}
 					});
@@ -692,7 +706,7 @@ export class Gatt extends EventEmitter {
 	public notify(serviceUUID: string, characteristicUUID: string, notify: boolean) {
 		const characteristic = this.characteristics.get(serviceUUID).get(characteristicUUID);
 
-		this._queueCommand(
+		this.queueCommand(
 			this.readByTypeRequest(characteristic.startHandle, characteristic.endHandle, GATT_CLIENT_CHARAC_CFG_UUID),
 			(data: Buffer) => {
 				const opcode = data[0];
@@ -700,8 +714,8 @@ export class Gatt extends EventEmitter {
 					const handle = data.readUInt16LE(2);
 					let value = data.readUInt16LE(4);
 
-					const useNotify = characteristic.properties & 0x10;
-					const useIndicate = characteristic.properties & 0x20;
+					const useNotify = characteristic.propertiesFlags & 0x10;
+					const useIndicate = characteristic.propertiesFlags & 0x20;
 
 					if (notify) {
 						if (useNotify) {
@@ -720,7 +734,7 @@ export class Gatt extends EventEmitter {
 					const valueBuffer = Buffer.alloc(2);
 					valueBuffer.writeUInt16LE(value, 0);
 
-					this._queueCommand(this.writeRequest(handle, valueBuffer, false), (moreData: Buffer) => {
+					this.queueCommand(this.writeRequest(handle, valueBuffer, false), (moreData: Buffer) => {
 						const moreOpcode = moreData[0];
 
 						if (moreOpcode === ATT_OP_WRITE_RESP) {
@@ -734,7 +748,7 @@ export class Gatt extends EventEmitter {
 
 	public discoverDescriptors(serviceUUID: string, characteristicUUID: string) {
 		const characteristic = this.characteristics.get(serviceUUID).get(characteristicUUID);
-		const descriptors: any[] = [];
+		const descriptors: GattDescriptor[] = [];
 
 		this.descriptors.get(serviceUUID).set(characteristicUUID, new Map());
 
@@ -763,14 +777,14 @@ export class Gatt extends EventEmitter {
 
 				this.emit('descriptorsDiscover', this.address, serviceUUID, characteristicUUID, descriptorUuids);
 			} else {
-				this._queueCommand(
+				this.queueCommand(
 					this.findInfoRequest(descriptors[descriptors.length - 1].handle + 1, characteristic.endHandle),
 					callback
 				);
 			}
 		};
 
-		this._queueCommand(this.findInfoRequest(characteristic.valueHandle + 1, characteristic.endHandle), callback);
+		this.queueCommand(this.findInfoRequest(characteristic.valueHandle + 1, characteristic.endHandle), callback);
 	}
 
 	public readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string) {
@@ -783,7 +797,7 @@ export class Gatt extends EventEmitter {
 			if (opcode === ATT_OP_READ_RESP || opcode === ATT_OP_READ_BLOB_RESP) {
 				readData = Buffer.from(`${readData.toString('hex')}${data.slice(1).toString('hex')}`, 'hex');
 				if (data.length === this.mtu) {
-					this._queueCommand(this.readBlobRequest(descriptor.handle, readData.length), callback);
+					this.queueCommand(this.readBlobRequest(descriptor.handle, readData.length), callback);
 				} else {
 					this.emit('valueRead', this.address, serviceUUID, characteristicUUID, descriptorUUID, readData);
 				}
@@ -792,13 +806,13 @@ export class Gatt extends EventEmitter {
 			}
 		};
 
-		this._queueCommand(this.readRequest(descriptor.handle), callback);
+		this.queueCommand(this.readRequest(descriptor.handle), callback);
 	}
 
 	public writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer) {
 		const descriptor = this.descriptors.get(serviceUUID).get(characteristicUUID).get(descriptorUUID);
 
-		this._queueCommand(this.writeRequest(descriptor.handle, data, false), (moreData: Buffer) => {
+		this.queueCommand(this.writeRequest(descriptor.handle, data, false), (moreData: Buffer) => {
 			const opcode = moreData[0];
 
 			if (opcode === ATT_OP_WRITE_RESP) {
@@ -815,7 +829,7 @@ export class Gatt extends EventEmitter {
 			if (opcode === ATT_OP_READ_RESP || opcode === ATT_OP_READ_BLOB_RESP) {
 				readData = Buffer.from(`${readData.toString('hex')}${data.slice(1).toString('hex')}`, 'hex');
 				if (data.length === this.mtu) {
-					this._queueCommand(this.readBlobRequest(handle, readData.length), callback);
+					this.queueCommand(this.readBlobRequest(handle, readData.length), callback);
 				} else {
 					this.emit('handleRead', this.address, handle, readData);
 				}
@@ -824,16 +838,16 @@ export class Gatt extends EventEmitter {
 			}
 		};
 
-		this._queueCommand(this.readRequest(handle), callback);
+		this.queueCommand(this.readRequest(handle), callback);
 	}
 
 	public writeHandle(handle: number, data: Buffer, withoutResponse: boolean) {
 		if (withoutResponse) {
-			this._queueCommand(this.writeRequest(handle, data, true), null, () => {
+			this.queueCommand(this.writeRequest(handle, data, true), null, () => {
 				this.emit('handleWrite', this.address, handle);
 			});
 		} else {
-			this._queueCommand(this.writeRequest(handle, data, false), (moreData: Buffer) => {
+			this.queueCommand(this.writeRequest(handle, data, false), (moreData: Buffer) => {
 				const opcode = moreData[0];
 
 				if (opcode === ATT_OP_WRITE_RESP) {
