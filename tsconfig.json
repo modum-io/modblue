@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+		"noImplicitAny": true,
+		"moduleResolution": "node",
+		"allowJs": true,
+		"resolveJsonModule": true,
+		"esModuleInterop": true,
+		"module": "CommonJS",
+		"target": "ES2018",
+		"lib": ["ES2019", "ES2020"],
+		"sourceMap": true,
+		"removeComments": false,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"types": ["node"],
+		"outDir": "lib",
+		"declaration": true,
+		"plugins": [
+			{
+				"name": "tslint-language-service"
+			}
+		]
+	},
+	"exclude": ["node_modules", "lib"]
+}

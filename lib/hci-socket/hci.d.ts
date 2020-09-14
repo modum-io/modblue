@@ -1,0 +1,35 @@
+export = Hci;
+declare class Hci {
+    init(): void;
+    _deviceId: any;
+    pollIsDevUp(): void;
+    _state: any;
+    _isDevUp: any;
+    setSocketFilter(): void;
+    setEventMask(): void;
+    reset(): void;
+    readLocalVersion(): void;
+    readBdAddr(): void;
+    setLeEventMask(): void;
+    readLeHostSupported(): void;
+    writeLeHostSupported(): void;
+    setScanParameters(): void;
+    setScanEnabled(enabled: any, filterDuplicates: any): void;
+    createLeConn(address: any, addressType: any): void;
+    connUpdateLe(handle: any, minInterval: any, maxInterval: any, latency: any, supervisionTimeout: any): void;
+    startLeEncryption(handle: any, random: any, diversifier: any, key: any): void;
+    disconnect(handle: any, reason: any): void;
+    readRssi(handle: any): void;
+    writeAclDataPkt(handle: any, cid: any, data: any): void;
+    onSocketData(data: any): void;
+    onSocketError(error: any): void;
+    processCmdCompleteEvent(cmd: any, status: any, result: any): void;
+    addressType: string;
+    address: any;
+    processLeMetaEvent(eventType: any, status: any, data: any): void;
+    processLeConnComplete(status: any, data: any): void;
+    processLeAdvertisingReport(count: any, data: any): void;
+    processLeConnUpdateComplete(status: any, data: any): void;
+    processCmdStatusEvent(cmd: any, status: any): void;
+    onStateChange(state: any): void;
+}

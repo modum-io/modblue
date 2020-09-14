@@ -1,0 +1,46 @@
+/// <reference types="node" />
+import { EventEmitter } from 'events';
+import { AclStream } from './acl-stream';
+export default class Gatt extends EventEmitter {
+    private address;
+    private aclStream;
+    private services;
+    private characteristics;
+    private descriptors;
+    private currentCommand;
+    private commandQueue;
+    private mtu;
+    private security;
+    constructor(address: string, aclStream: AclStream);
+    private onAclStreamData;
+    private onAclStreamEncrypt;
+    private onAclStreamEncryptFail;
+    private onAclStreamEnd;
+    private writeAtt;
+    private errorResponse;
+    private _queueCommand;
+    private mtuRequest;
+    readByGroupRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;
+    readByTypeRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;
+    readRequest(handle: number): Buffer;
+    readBlobRequest(handle: number, offset: number): Buffer;
+    findInfoRequest(startHandle: number, endHandle: number): Buffer;
+    writeRequest(handle: number, data: Buffer, withoutResponse: boolean): Buffer;
+    private prepareWriteRequest;
+    private executeWriteRequest;
+    private handleConfirmation;
+    exchangeMtu(mtu: number): void;
+    discoverServices(uuids: string[]): void;
+    discoverIncludedServices(serviceUUID: string, uuids: string[]): void;
+    discoverCharacteristics(serviceUUID: string, characteristicUUIDs: string[]): void;
+    read(serviceUUID: string, characteristicUUID: string): void;
+    write(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean): void;
+    private longWrite;
+    broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): void;
+    notify(serviceUUID: string, characteristicUUID: string, notify: boolean): void;
+    discoverDescriptors(serviceUUID: string, characteristicUUID: string): void;
+    readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): void;
+    writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer): void;
+    readHandle(handle: number): void;
+    writeHandle(handle: number, data: Buffer, withoutResponse: boolean): void;
+}
