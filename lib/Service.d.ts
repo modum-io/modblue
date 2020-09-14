@@ -13,5 +13,5 @@ export declare class Service extends EventEmitter {
     constructor(noble: Noble, peripheralUUID: string, uuid: string);
     toString(): string;
     discoverIncludedServices(serviceUUIDs: string[]): Promise<string[]>;
-    discoverCharacteristics(characteristicUUIDs: string[]): Promise<string[]>;
+    discoverCharacteristics(characteristicUUIDs: string[]): Promise<Characteristic[]>;
 }

@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 
+import { Characteristic } from './Characteristic';
 import { Noble } from './Noble';
 import { Service } from './Service';
 
@@ -78,17 +79,20 @@ export class Peripheral extends EventEmitter {
 
 	public async discoverServices(uuids: string[]) {
 		this.noble.discoverServices(this.uuid, uuids);
-		return new Promise<any[]>((resolve) => this.once('servicesDiscover', (services) => resolve(services)));
+		return new Promise<Service[]>((resolve) => this.once('servicesDiscover', (services) => resolve(services)));
 	}
 
-	public async discoverSomeServicesAndCharacteristics(serviceUUIDs: string[], characteristicsUUIDs: string[]) {
+	public async discoverSomeServicesAndCharacteristics(
+		serviceUUIDs: string[],
+		characteristicsUUIDs: string[]
+	): Promise<[Service[], Characteristic[]]> {
 		const services = await this.discoverServices(serviceUUIDs);
 
-		if (services.length < serviceUUIDs.length) {
+		if (serviceUUIDs.some((serviceUUID) => !services.some((s) => s.uuid === serviceUUID))) {
 			throw new Error('Could not find all requested services');
 		}
 
-		let allCharacteristics: any[] = [];
+		let allCharacteristics: Characteristic[] = [];
 
 		for (const service of services) {
 			try {
@@ -100,11 +104,11 @@ export class Peripheral extends EventEmitter {
 			}
 		}
 
-		return allCharacteristics;
+		return [services, allCharacteristics];
 	}
 
 	public async discoverAllServicesAndCharacteristics() {
-		await this.discoverSomeServicesAndCharacteristics([], []);
+		return this.discoverSomeServicesAndCharacteristics([], []);
 	}
 
 	public async readHandle(handle: number) {

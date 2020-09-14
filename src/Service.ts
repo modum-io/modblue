@@ -55,7 +55,7 @@ export class Service extends EventEmitter {
 
 	public async discoverCharacteristics(characteristicUUIDs: string[]) {
 		this.noble.discoverCharacteristics(this.peripheralUUID, this.uuid, characteristicUUIDs);
-		return new Promise<string[]>((resolve) =>
+		return new Promise<Characteristic[]>((resolve) =>
 			this.once('characteristicsDiscover', (characteristics) => resolve(characteristics))
 		);
 	}

@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
+import { Characteristic } from './Characteristic';
 import { Noble } from './Noble';
 import { Service } from './Service';
 export declare class Peripheral extends EventEmitter {
@@ -18,9 +19,9 @@ export declare class Peripheral extends EventEmitter {
     connect(requestMtu?: number): Promise<void>;
     disconnect(): Promise<string>;
     updateRSSI(): Promise<number>;
-    discoverServices(uuids: string[]): Promise<any[]>;
-    discoverSomeServicesAndCharacteristics(serviceUUIDs: string[], characteristicsUUIDs: string[]): Promise<any[]>;
-    discoverAllServicesAndCharacteristics(): Promise<void>;
+    discoverServices(uuids: string[]): Promise<Service[]>;
+    discoverSomeServicesAndCharacteristics(serviceUUIDs: string[], characteristicsUUIDs: string[]): Promise<[Service[], Characteristic[]]>;
+    discoverAllServicesAndCharacteristics(): Promise<[Service[], Characteristic[]]>;
     readHandle(handle: number): Promise<Buffer>;
     writeHandle(handle: number, data: Buffer, withoutResponse: boolean): Promise<void>;
 }

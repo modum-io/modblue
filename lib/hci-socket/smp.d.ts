@@ -12,7 +12,7 @@ export declare class Smp extends EventEmitter {
     private pres;
     private pcnf;
     private r;
-    constructor(aclStream: AclStream, localAddressType: any, localAddress: any, remoteAddressType: any, remoteAddress: any);
+    constructor(aclStream: AclStream, localAddressType: string, localAddress: string, remoteAddressType: string, remoteAddress: string);
     sendPairingRequest(): void;
     private onAclStreamData;
     private onAclStreamEnd;
