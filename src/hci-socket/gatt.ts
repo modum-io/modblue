@@ -57,7 +57,7 @@ const GATT_SERVER_CHARAC_CFG_UUID = 0x2903;
 const ATT_CID = 0x0004;
 /* eslint-enable no-unused-vars */
 
-export default class Gatt extends EventEmitter {
+export class Gatt extends EventEmitter {
 	private address: string;
 	private aclStream: AclStream;
 

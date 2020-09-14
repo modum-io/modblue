@@ -2,9 +2,11 @@ import { EventEmitter } from 'events';
 
 import { AclStream } from './acl-stream';
 import { Gap } from './gap';
-import Gatt from './gatt';
+import { Gatt } from './gatt';
 import Hci from './hci';
 import { Signaling } from './signaling';
+
+type MapKey = string | number;
 
 export class NobleBindings extends EventEmitter {
 	private state: string;
@@ -17,10 +19,10 @@ export class NobleBindings extends EventEmitter {
 	private pendingConnectionUUID: string;
 	private connectionQueue: string[];
 
-	private handles: Map<any, any>;
-	private gatts: Map<any, any>;
-	private aclStreams: Map<any, AclStream>;
-	private signalings: Map<any, Signaling>;
+	private handles: Map<any, MapKey>;
+	private gatts: Map<MapKey, Gatt>;
+	private aclStreams: Map<MapKey, AclStream>;
+	private signalings: Map<MapKey, Signaling>;
 
 	private hci: any;
 	private gap: Gap;
@@ -371,7 +373,7 @@ export class NobleBindings extends EventEmitter {
 		this.emit('includedServicesDiscover', uuid, serviceUUID, includedServiceUUIDs);
 	}
 
-	public discoverCharacteristics(peripheralUUID: string, serviceUUID: string, characteristicUUIDs: string) {
+	public discoverCharacteristics(peripheralUUID: string, serviceUUID: string, characteristicUUIDs: string[]) {
 		const handle = this.handles.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 

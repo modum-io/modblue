@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 
 import { AclStream } from './acl-stream';
-import crypto from './crypto';
+import * as crypto from './crypto';
 
 const SMP_CID = 0x0006;
 

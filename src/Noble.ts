@@ -47,7 +47,7 @@ export class Noble extends EventEmitter {
 		this.bindings.on('onMtu', this.onMtu.bind(this));
 	}
 
-	public async init() {
+	public async init(timeoutInSeconds?: number) {
 		if (!this.initialized) {
 			this.initialized = true;
 			this.bindings.init();
@@ -57,7 +57,10 @@ export class Noble extends EventEmitter {
 			return;
 		}
 
-		return new Promise<void>((resolve) => {
+		const timeout = new Promise<void>((_, reject) =>
+			setTimeout(() => reject('Initializing timed out'), timeoutInSeconds * 1000)
+		);
+		const doInit = new Promise<void>((resolve) => {
 			const callback = (state: string) => {
 				if (state === 'poweredOn') {
 					this.off('stateChange', callback);
@@ -66,6 +69,8 @@ export class Noble extends EventEmitter {
 			};
 			this.on('stateChange', callback);
 		});
+
+		return Promise.race([timeout, doInit]);
 	}
 
 	private onStateChange(state: string) {
