@@ -1,8 +1,9 @@
 import { EventEmitter } from 'events';
 
+import knownDescriptors from './data/descriptors.json';
 import { Noble } from './Noble';
 
-const knownDescriptors = require('./data/descriptors.json');
+type KnownDescriptors = { [uuid: string]: { name: string; type: string } };
 
 export class Descriptor extends EventEmitter {
 	private noble: Noble;
@@ -32,7 +33,7 @@ export class Descriptor extends EventEmitter {
 		this.name = null;
 		this.type = null;
 
-		const descriptor = knownDescriptors[uuid];
+		const descriptor = (knownDescriptors as KnownDescriptors)[uuid];
 		if (descriptor) {
 			this.name = descriptor.name;
 			this.type = descriptor.type;

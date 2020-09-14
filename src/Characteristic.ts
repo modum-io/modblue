@@ -1,9 +1,10 @@
 import { EventEmitter } from 'events';
 
+import knownCharacteristics from './data/characteristics.json';
 import { Descriptor } from './Descriptor';
 import { Noble } from './Noble';
 
-const knownCharacteristics = require('./data/characteristics.json');
+type KnownCharacteristics = { [uuid: string]: { name: string; type: string } };
 
 export class Characteristic extends EventEmitter {
 	private noble: Noble;
@@ -31,7 +32,7 @@ export class Characteristic extends EventEmitter {
 		this.properties = properties;
 		this.descriptors = new Map();
 
-		const characteristic = knownCharacteristics[uuid];
+		const characteristic = (knownCharacteristics as KnownCharacteristics)[uuid];
 		if (characteristic) {
 			this.name = characteristic.name;
 			this.type = characteristic.type;

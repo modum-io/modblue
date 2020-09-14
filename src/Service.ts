@@ -1,9 +1,10 @@
 import { EventEmitter } from 'events';
 
 import { Characteristic } from './Characteristic';
+import knownServices from './data/services.json';
 import { Noble } from './Noble';
 
-const knownServices = require('./data/services.json');
+type KnownServices = { [uuid: string]: { name: string; type: string } };
 
 export class Service extends EventEmitter {
 	private noble: Noble;
@@ -29,7 +30,7 @@ export class Service extends EventEmitter {
 		this.includedServiceUUIDs = [];
 		this.characteristics = new Map();
 
-		const service = knownServices[uuid];
+		const service = (knownServices as KnownServices)[uuid];
 		if (service) {
 			this.name = service.name;
 			this.type = service.type;
