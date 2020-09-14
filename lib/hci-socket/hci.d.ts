@@ -1,4 +1,4 @@
-export = Hci;
+export default Hci;
 declare class Hci {
     init(): void;
     _deviceId: any;
