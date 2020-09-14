@@ -6,7 +6,7 @@ import Gatt from './gatt';
 import Hci from './hci';
 import { Signaling } from './signaling';
 
-class NobleBindings extends EventEmitter {
+export class NobleBindings extends EventEmitter {
 	private state: string;
 	private addresses: Map<string, any>;
 	private addressTypes: Map<string, any>;
@@ -562,5 +562,3 @@ class NobleBindings extends EventEmitter {
 		this.hci.connUpdateLe(handle, minInterval, maxInterval, latency, supervisionTimeout);
 	}
 }
-
-export default new NobleBindings();

@@ -13,6 +13,7 @@
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
 		"types": ["node"],
+		"sourceRoot": "src",
 		"outDir": "lib",
 		"declaration": true,
 		"plugins": [

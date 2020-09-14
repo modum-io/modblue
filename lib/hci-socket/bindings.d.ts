@@ -1,10 +1,11 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-declare class NobleBindings extends EventEmitter {
+export declare class NobleBindings extends EventEmitter {
     private state;
     private addresses;
     private addressTypes;
     private connectable;
+    private requestedMtu;
     private scanServiceUUIDs;
     private pendingConnectionUUID;
     private connectionQueue;
@@ -17,7 +18,7 @@ declare class NobleBindings extends EventEmitter {
     constructor();
     startScanning(serviceUUIDs: string[], allowDuplicates: boolean): void;
     stopScanning(): void;
-    connect(peripheralUUID: string): void;
+    connect(peripheralUUID: string, requestMtu?: number): void;
     disconnect(peripheralUUID: string): void;
     updateRssi(peripheralUUID: string): void;
     init(): void;
@@ -65,5 +66,3 @@ declare class NobleBindings extends EventEmitter {
     private onHandleNotify;
     private onConnectionParameterUpdateRequest;
 }
-declare const _default: NobleBindings;
-export default _default;

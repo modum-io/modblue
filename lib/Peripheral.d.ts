@@ -15,7 +15,7 @@ export declare class Peripheral extends EventEmitter {
     services: Map<string, Service>;
     constructor(noble: Noble, uuid: string, address: string, addressType: string, connectable: boolean, advertisement: any, rssi: number);
     toString(): string;
-    connect(): Promise<void>;
+    connect(requestMtu?: number): Promise<void>;
     disconnect(): Promise<string>;
     updateRSSI(): Promise<number>;
     discoverServices(uuids: string[]): Promise<any[]>;

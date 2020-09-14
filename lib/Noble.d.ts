@@ -17,7 +17,7 @@ export declare class Noble extends EventEmitter {
     stopScanning(): Promise<void>;
     private onScanStop;
     private onDiscover;
-    connect(peripheralUUID: string): void;
+    connect(peripheralUUID: string, requestMtu?: number): void;
     private onConnect;
     disconnect(peripheralUUID: string): void;
     onDisconnect(peripheralUUID: string, reason: any): void;
