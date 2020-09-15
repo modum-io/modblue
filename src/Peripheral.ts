@@ -1,16 +1,17 @@
 import { EventEmitter } from 'events';
 
+import { AddressType } from './Bindings';
 import { Characteristic } from './Characteristic';
 import { Noble } from './Noble';
 import { Service } from './Service';
 
 export class Peripheral extends EventEmitter {
-	private noble: Noble;
+	private readonly noble: Noble;
 
 	public readonly uuid: string;
 	public state: string;
 	public address: string;
-	public addressType: string;
+	public addressType: AddressType;
 	public connectable: boolean;
 	public advertisement: any;
 	public rssi: number;
@@ -22,7 +23,7 @@ export class Peripheral extends EventEmitter {
 		noble: Noble,
 		uuid: string,
 		address: string,
-		addressType: string,
+		addressType: AddressType,
 		connectable: boolean,
 		advertisement: any,
 		rssi: number

@@ -1,4 +1,4 @@
-import { AddressType, GattCharacteristic, GattDescriptor, GattService, NobleBindings } from '../Bindings';
+import { AddressType, GattCharacteristic, GattDescriptor, GattService, NobleBindings } from '../../Bindings';
 
 import { AclStream } from './acl-stream';
 import { Gap } from './gap';

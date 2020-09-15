@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { AddressType } from '../Bindings';
+import { AddressType } from '../../Bindings';
 import { Hci } from './hci';
 export declare interface AclStream {
     on(event: 'data', listener: (cid: number, data: Buffer) => void): this;

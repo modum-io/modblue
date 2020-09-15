@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { NobleBindings } from '../Bindings';
+import { NobleBindings } from '../../Bindings';
 export declare class HciBindings extends NobleBindings {
     private state;
     private addresses;

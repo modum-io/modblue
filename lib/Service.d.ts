@@ -3,8 +3,8 @@ import { EventEmitter } from 'events';
 import { Characteristic } from './Characteristic';
 import { Noble } from './Noble';
 export declare class Service extends EventEmitter {
-    private noble;
-    private peripheralUUID;
+    private readonly noble;
+    private readonly peripheralUUID;
     readonly uuid: string;
     readonly name: string;
     readonly type: string;

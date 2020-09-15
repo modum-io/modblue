@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { AddressType } from '../Bindings';
+import { AddressType } from '../../Bindings';
 interface HciDevice {
     devId: number;
     devUp: boolean;

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import { GattCharacteristic, GattDescriptor, GattService } from '../Bindings';
+import { GattCharacteristic, GattDescriptor, GattService } from '../../Bindings';
 
 import { AclStream } from './acl-stream';
 

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import os from 'os';
 
-import { AddressType } from '../Bindings';
+import { AddressType } from '../../Bindings';
 
 import { Hci } from './hci';
 

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import { GattCharacteristic, GattDescriptor, GattService, NobleBindings } from './Bindings';
+import { AddressType, GattCharacteristic, GattDescriptor, GattService, NobleBindings } from './Bindings';
 import { Characteristic } from './Characteristic';
 import { Descriptor } from './Descriptor';
 import { Peripheral } from './Peripheral';
@@ -133,7 +133,7 @@ export class Noble extends EventEmitter {
 	private onDiscover = (
 		uuid: string,
 		address: string,
-		addressType: string,
+		addressType: AddressType,
 		connectable: boolean,
 		advertisement: any,
 		rssi: number

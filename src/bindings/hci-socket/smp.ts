@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import { AddressType } from '../Bindings';
+import { AddressType } from '../../Bindings';
 
 import { AclStream } from './acl-stream';
 import * as crypto from './crypto';

@@ -7,8 +7,8 @@ import { Noble } from './Noble';
 type KnownServices = { [uuid: string]: { name: string; type: string } };
 
 export class Service extends EventEmitter {
-	private noble: Noble;
-	private peripheralUUID: string;
+	private readonly noble: Noble;
+	private readonly peripheralUUID: string;
 
 	public readonly uuid: string;
 	public readonly name: string;
