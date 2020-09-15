@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events';
 
+import { AddressType } from '../Bindings';
+
 import { Hci } from './hci';
 import { Smp } from './smp';
 
@@ -19,9 +21,9 @@ export class AclStream extends EventEmitter {
 	public constructor(
 		hci: Hci,
 		handle: number,
-		localAddressType: string,
+		localAddressType: AddressType,
 		localAddress: string,
-		remoteAddressType: string,
+		remoteAddressType: AddressType,
 		remoteAddress: string
 	) {
 		super();

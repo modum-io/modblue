@@ -10,6 +10,7 @@ export declare class Noble extends EventEmitter {
     private discoveredPeripheralUUIDs;
     private peripherals;
     constructor(bindings: NobleBindings);
+    listAdapters(): Promise<import("./Bindings").Adapter[]>;
     init(deviceId?: number, timeoutInSeconds?: number): Promise<void>;
     dispose(): void;
     private onStateChange;

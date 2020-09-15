@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 
 export type AddressType = 'public' | 'random';
 
-export interface Device {
+export interface Adapter {
 	id: number;
 	address: string;
 }
@@ -193,7 +193,8 @@ export declare interface NobleBindings {
 }
 
 export abstract class NobleBindings extends EventEmitter {
-	public abstract getDevices(): Device[];
+	public abstract listAdapters(): Adapter[];
+
 	public abstract init(deviceId?: number): void;
 	public abstract dispose(): void;
 

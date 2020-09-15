@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 export declare type AddressType = 'public' | 'random';
-export interface Device {
+export interface Adapter {
     id: number;
     address: string;
 }
@@ -77,7 +77,7 @@ export declare interface NobleBindings {
     emit(event: 'handleNotify', uuid: string, valueHandle: number, valueData: Buffer): boolean;
 }
 export declare abstract class NobleBindings extends EventEmitter {
-    abstract getDevices(): Device[];
+    abstract listAdapters(): Adapter[];
     abstract init(deviceId?: number): void;
     abstract dispose(): void;
     abstract startScanning(serviceUUIDs: string[], allowDuplicates: boolean): void;

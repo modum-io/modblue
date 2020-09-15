@@ -17,7 +17,7 @@ export declare class HciBindings extends NobleBindings {
     private hci;
     private gap;
     constructor();
-    getDevices(): {
+    listAdapters(): {
         id: number;
         address: any;
     }[];

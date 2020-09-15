@@ -72,6 +72,11 @@ const LE_START_ENCRYPTION_CMD = OCF_LE_START_ENCRYPTION | (OGF_LE_CTL << 10);
 
 const HCI_OE_USER_ENDED_CONNECTION = 0x13;
 
+interface HciDevice {
+	devId: number;
+	devUp: boolean;
+}
+
 export declare interface Hci {
 	on(event: 'stateChange', listener: (state: string) => void): this;
 	on(event: 'addressChange', listener: (address: string) => void): this;
@@ -114,7 +119,7 @@ export class Hci extends EventEmitter {
 	public static STATUS_MAPPER: string[] = STATUS_MAPPER;
 
 	public address: string;
-	public addressType: string;
+	public addressType: AddressType;
 
 	private socket: any;
 	private isDevUp: any;
@@ -139,8 +144,8 @@ export class Hci extends EventEmitter {
 		this.socket.on('error', this.onSocketError);
 	}
 
-	public getDevices() {
-		return this.socket.getDeviceList() as { devId: number; devUp: boolean }[];
+	public getDeviceList() {
+		return this.socket.getDeviceList() as HciDevice[];
 	}
 
 	public init(deviceId?: number) {
@@ -337,7 +342,7 @@ export class Hci extends EventEmitter {
 		this.socket.write(cmd);
 	}
 
-	public createLeConn(address: string, addressType: string) {
+	public createLeConn(address: string, addressType: AddressType) {
 		const cmd = Buffer.alloc(29);
 
 		// header

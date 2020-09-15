@@ -62,8 +62,8 @@ export class HciBindings extends NobleBindings {
 		this.hci.on('aclDataPkt', this.onAclDataPkt);
 	}
 
-	public getDevices() {
-		return this.hci.getDevices().map((dev) => ({ id: dev.devId, address: null }));
+	public listAdapters() {
+		return this.hci.getDeviceList().map((dev) => ({ id: dev.devId, address: null }));
 	}
 
 	public init(deviceId?: number) {
@@ -237,7 +237,7 @@ export class HciBindings extends NobleBindings {
 		status: number,
 		handle: number,
 		role: number,
-		addressType: string,
+		addressType: AddressType,
 		address: string,
 		interval: number,
 		latency: number,

@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events';
 
+import { AddressType } from '../Bindings';
+
 import { AclStream } from './acl-stream';
 import * as crypto from './crypto';
 
@@ -35,9 +37,9 @@ export class Smp extends EventEmitter {
 
 	public constructor(
 		aclStream: AclStream,
-		localAddressType: string,
+		localAddressType: AddressType,
 		localAddress: string,
-		remoteAddressType: string,
+		remoteAddressType: AddressType,
 		remoteAddress: string
 	) {
 		super();

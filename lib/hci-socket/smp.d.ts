@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
+import { AddressType } from '../Bindings';
 import { AclStream } from './acl-stream';
 export declare interface Smp {
     on(event: 'end', listener: () => void): this;
@@ -19,7 +20,7 @@ export declare class Smp extends EventEmitter {
     private pres;
     private pcnf;
     private r;
-    constructor(aclStream: AclStream, localAddressType: string, localAddress: string, remoteAddressType: string, remoteAddress: string);
+    constructor(aclStream: AclStream, localAddressType: AddressType, localAddress: string, remoteAddressType: AddressType, remoteAddress: string);
     sendPairingRequest(): void;
     private onAclStreamData;
     private onAclStreamEnd;

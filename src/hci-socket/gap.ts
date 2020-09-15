@@ -1,13 +1,15 @@
 import { EventEmitter } from 'events';
 import os from 'os';
 
+import { AddressType } from '../Bindings';
+
 import { Hci } from './hci';
 
 const IS_NTC_CHIP = os.platform() === 'linux' && os.release().indexOf('-ntc') !== -1;
 
 interface Discovery {
 	address: string;
-	addressType: string;
+	addressType: AddressType;
 	connectable: boolean;
 	advertisement: any;
 	rssi: number;
@@ -23,7 +25,7 @@ export declare interface Gap {
 		listener: (
 			status: number,
 			address: string,
-			addressType: string,
+			addressType: AddressType,
 			connectable: boolean,
 			advertisement: any,
 			rssi: number
@@ -124,7 +126,7 @@ export class Gap extends EventEmitter {
 		status: number,
 		type: number,
 		address: string,
-		addressType: string,
+		addressType: AddressType,
 		eir: Buffer,
 		rssi: number
 	) => {

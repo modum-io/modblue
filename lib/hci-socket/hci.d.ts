@@ -1,6 +1,10 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 import { AddressType } from '../Bindings';
+interface HciDevice {
+    devId: number;
+    devUp: boolean;
+}
 export declare interface Hci {
     on(event: 'stateChange', listener: (state: string) => void): this;
     on(event: 'addressChange', listener: (address: string) => void): this;
@@ -19,7 +23,7 @@ export declare interface Hci {
 export declare class Hci extends EventEmitter {
     static STATUS_MAPPER: string[];
     address: string;
-    addressType: string;
+    addressType: AddressType;
     private socket;
     private isDevUp;
     private state;
@@ -27,10 +31,7 @@ export declare class Hci extends EventEmitter {
     private handleBuffers;
     private pollTimer;
     constructor();
-    getDevices(): {
-        devId: number;
-        devUp: boolean;
-    }[];
+    getDeviceList(): HciDevice[];
     init(deviceId?: number): void;
     dispose(): void;
     private pollIsDevUp;
@@ -44,7 +45,7 @@ export declare class Hci extends EventEmitter {
     private writeLeHostSupported;
     setScanParameters(): void;
     setScanEnabled(enabled: boolean, filterDuplicates: boolean): void;
-    createLeConn(address: string, addressType: string): void;
+    createLeConn(address: string, addressType: AddressType): void;
     connUpdateLe(handle: number, minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number): void;
     startLeEncryption(handle: number, random: any, diversifier: Buffer, key: Buffer): void;
     disconnect(handle: number, reason?: number): void;
@@ -60,3 +61,4 @@ export declare class Hci extends EventEmitter {
     private processCmdStatusEvent;
     private onStateChange;
 }
+export {};
