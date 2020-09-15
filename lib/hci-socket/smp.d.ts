@@ -1,6 +1,13 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 import { AclStream } from './acl-stream';
+export declare interface Smp {
+    on(event: 'end', listener: () => void): this;
+    on(event: 'fail', listener: () => void): this;
+    on(event: 'stk', listener: (stk: Buffer) => void): this;
+    on(event: 'ltk', listener: (ltk: Buffer) => void): this;
+    on(event: 'masterIdent', listener: (ediv: Buffer, rand: Buffer) => void): this;
+}
 export declare class Smp extends EventEmitter {
     private aclStream;
     private iat;

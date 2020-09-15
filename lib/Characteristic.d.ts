@@ -9,9 +9,9 @@ export declare class Characteristic extends EventEmitter {
     readonly uuid: string;
     readonly name: string;
     readonly type: string;
-    properties: any;
+    properties: string[];
     descriptors: Map<string, Descriptor>;
-    constructor(noble: Noble, peripheralUUID: string, serviceUUID: string, uuid: string, properties: any);
+    constructor(noble: Noble, peripheralUUID: string, serviceUUID: string, uuid: string, properties: string[]);
     toString(): string;
     read(): Promise<Buffer>;
     write(data: Buffer, withoutResponse: boolean): Promise<void>;

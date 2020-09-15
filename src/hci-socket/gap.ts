@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
 import os from 'os';
 
+import { Hci } from './hci';
+
 const IS_NTC_CHIP = os.platform() === 'linux' && os.release().indexOf('-ntc') !== -1;
 
 interface Discovery {
@@ -13,8 +15,24 @@ interface Discovery {
 	hasScanResponse: boolean;
 }
 
+export declare interface Gap {
+	on(event: 'scanStart', listener: (filterDuplicates: boolean) => void): this;
+	on(event: 'scanStop', listener: () => void): this;
+	on(
+		event: 'discover',
+		listener: (
+			status: number,
+			address: string,
+			addressType: string,
+			connectable: boolean,
+			advertisement: any,
+			rssi: number
+		) => void
+	): this;
+}
+
 export class Gap extends EventEmitter {
-	private hci: any;
+	private hci: Hci;
 	private scanState: string;
 	private scanFilterDuplicates: boolean;
 	private discoveries: Map<string, Discovery>;
@@ -28,12 +46,11 @@ export class Gap extends EventEmitter {
 		this.scanFilterDuplicates = null;
 		this.discoveries = new Map();
 
-		this.hci.on('error', this.onHciError.bind(this));
-		this.hci.on('leScanParametersSet', this.onHciLeScanParametersSet.bind(this));
-		this.hci.on('leScanEnableSet', this.onHciLeScanEnableSet.bind(this));
-		this.hci.on('leAdvertisingReport', this.onHciLeAdvertisingReport.bind(this));
+		this.hci.on('leScanParametersSet', this.onHciLeScanParametersSet);
+		this.hci.on('leScanEnableSet', this.onHciLeScanEnableSet);
+		this.hci.on('leAdvertisingReport', this.onHciLeAdvertisingReport);
 
-		this.hci.on('leScanEnableSetCmd', this.onLeScanEnableSetCmd.bind(this));
+		this.hci.on('leScanEnableSetCmd', this.onLeScanEnableSetCmd);
 	}
 
 	public startScanning(allowDuplicates: boolean) {
@@ -59,16 +76,12 @@ export class Gap extends EventEmitter {
 		this.hci.setScanEnabled(false, true);
 	}
 
-	private onHciError(error: any) {
-		console.warn(error); // TODO: Better error handling
-	}
-
-	private onHciLeScanParametersSet() {
+	private onHciLeScanParametersSet = () => {
 		// NO-OP
-	}
+	};
 
 	// Called when receive an event "Command Complete" for "LE Set Scan Enable"
-	private onHciLeScanEnableSet(status: number) {
+	private onHciLeScanEnableSet = (status: number) => {
 		// Check the status we got from the command complete function.
 		if (status !== 0) {
 			// If it is non-zero there was an error, and we should not change
@@ -85,10 +98,10 @@ export class Gap extends EventEmitter {
 
 			this.emit('scanStop');
 		}
-	}
+	};
 
 	// Called when we see the actual command "LE Set Scan Enable"
-	private onLeScanEnableSetCmd(enable: boolean, filterDuplicates: boolean) {
+	private onLeScanEnableSetCmd = (enable: boolean, filterDuplicates: boolean) => {
 		// Check to see if the new settings differ from what we expect.
 		// If we are scanning, then a change happens if the new command stops
 		// scanning or if duplicate filtering changes.
@@ -105,16 +118,16 @@ export class Gap extends EventEmitter {
 			// Someone started scanning on us.
 			this.emit('scanStart', this.scanFilterDuplicates);
 		}
-	}
+	};
 
-	private onHciLeAdvertisingReport(
+	private onHciLeAdvertisingReport = (
 		status: number,
 		type: number,
 		address: string,
 		addressType: string,
 		eir: Buffer,
 		rssi: number
-	) {
+	) => {
 		const previouslyDiscovered = this.discoveries.get(address);
 
 		const advertisement = previouslyDiscovered?.advertisement || {
@@ -294,5 +307,5 @@ export class Gap extends EventEmitter {
 		) {
 			this.emit('discover', status, address, addressType, connectable, advertisement, rssi);
 		}
-	}
+	};
 }

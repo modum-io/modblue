@@ -1,6 +1,28 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
+import { GattCharacteristic, GattDescriptor, GattService } from '../Bindings';
 import { AclStream } from './acl-stream';
+export declare interface Gatt {
+    on(event: 'mtu', listener: (address: string, mtu: number) => void): this;
+    on(event: 'servicesDiscover', listener: (address: string, discoveredServices: GattService[]) => void): this;
+    on(event: 'servicesDiscovered', listener: (address: string, services: GattService[]) => void): this;
+    on(event: 'includedServicesDiscover', listener: (address: string, serviceUUID: string, includedServiceUUIDs: string[]) => void): this;
+    on(event: 'characteristicsDiscover', listener: (address: string, serviceUUID: string, discoveredCharacteristics: GattCharacteristic[]) => void): this;
+    on(event: 'characteristicsDiscovered', listener: (address: string, serviceUUID: string, characteristics: GattCharacteristic[]) => void): this;
+    on(event: 'read', listener: (address: string, serviceUUID: string, characteristicUUID: string, data: Buffer) => void): this;
+    on(event: 'write', listener: (address: string, serviceUUID: string, characteristicUUID: string) => void): this;
+    on(event: 'broadcast', listener: (address: string, serviceUUID: string, characteristicUUID: string, broadcast: boolean) => void): this;
+    on(event: 'notify', listener: (address: string, serviceUUID: string, characteristicUUID: string, notify: boolean) => void): this;
+    on(event: 'notification', listener: (address: string, serviceUUID: string, characteristicUUID: string, valueData: Buffer) => void): this;
+    on(event: 'descriptorsDiscover', listener: (address: string, serviceUUID: string, characteristicUUID: string, discoveredDescriptors: GattDescriptor[]) => void): this;
+    on(event: 'descriptorsDiscovered', listener: (address: string, serviceUUID: string, characteristicUUID: string, descriptors: GattDescriptor[]) => void): this;
+    on(event: 'valueRead', listener: (address: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer) => void): this;
+    on(event: 'valueWrite', listener: (address: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string) => void): this;
+    on(event: 'handleRead', listener: (address: string, handle: number, data: Buffer) => void): this;
+    on(event: 'handleWrite', listener: (address: string, handle: number) => void): this;
+    on(event: 'handleNotify', listener: (address: string, valueHandle: number, valueData: Buffer) => void): this;
+    on(event: 'handleConfirmation', listener: (address: string, valueHandle: number) => void): this;
+}
 export declare class Gatt extends EventEmitter {
     private address;
     private aclStream;

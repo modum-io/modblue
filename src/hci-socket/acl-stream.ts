@@ -1,20 +1,28 @@
 import { EventEmitter } from 'events';
 
+import { Hci } from './hci';
 import { Smp } from './smp';
 
+export declare interface AclStream {
+	on(event: 'data', listener: (cid: number, data: Buffer) => void): this;
+	on(event: 'end', listener: () => void): this;
+	on(event: 'encrypt', listener: (encrypt: number) => void): this;
+	on(event: 'encryptFail', listener: () => void): this;
+}
+
 export class AclStream extends EventEmitter {
-	private hci: any;
+	private hci: Hci;
 	private handle: number;
 
 	private smp: Smp;
 
 	public constructor(
-		hci: any,
+		hci: Hci,
 		handle: number,
-		localAddressType: any,
-		localAddress: any,
-		remoteAddressType: any,
-		remoteAddress: any
+		localAddressType: string,
+		localAddress: string,
+		remoteAddressType: string,
+		remoteAddress: string
 	) {
 		super();
 
@@ -22,10 +30,6 @@ export class AclStream extends EventEmitter {
 		this.handle = handle;
 
 		this.smp = new Smp(this, localAddressType, localAddress, remoteAddressType, remoteAddress);
-
-		this.onSmpStk = this.onSmpStk.bind(this);
-		this.onSmpFail = this.onSmpFail.bind(this);
-		this.onSmpEnd = this.onSmpEnd.bind(this);
 
 		this.smp.on('stk', this.onSmpStk);
 		this.smp.on('fail', this.onSmpFail);
@@ -36,11 +40,11 @@ export class AclStream extends EventEmitter {
 		this.smp.sendPairingRequest();
 	}
 
-	public write(cid: any, data: Buffer) {
+	public write(cid: number, data: Buffer) {
 		this.hci.writeAclDataPkt(this.handle, cid, data);
 	}
 
-	public push(cid: any, data: Buffer) {
+	public push(cid: number, data: Buffer) {
 		if (data) {
 			this.emit('data', cid, data);
 		} else {
@@ -48,24 +52,24 @@ export class AclStream extends EventEmitter {
 		}
 	}
 
-	public pushEncrypt(encrypt: any) {
+	public pushEncrypt(encrypt: number) {
 		this.emit('encrypt', encrypt);
 	}
 
-	private onSmpStk(stk: any) {
+	private onSmpStk = (stk: Buffer) => {
 		const random = Buffer.from('0000000000000000', 'hex');
 		const diversifier = Buffer.from('0000', 'hex');
 
 		this.hci.startLeEncryption(this.handle, random, diversifier, stk);
-	}
+	};
 
-	private onSmpFail() {
+	private onSmpFail = () => {
 		this.emit('encryptFail');
-	}
+	};
 
-	private onSmpEnd() {
-		this.smp.removeListener('stk', this.onSmpStk);
-		this.smp.removeListener('fail', this.onSmpFail);
-		this.smp.removeListener('end', this.onSmpEnd);
-	}
+	private onSmpEnd = () => {
+		this.smp.off('stk', this.onSmpStk);
+		this.smp.off('fail', this.onSmpFail);
+		this.smp.off('end', this.onSmpEnd);
+	};
 }

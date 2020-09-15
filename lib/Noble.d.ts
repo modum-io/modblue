@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
+import { NobleBindings } from './Bindings';
 export declare class Noble extends EventEmitter {
     address: string;
     state: string;
@@ -8,7 +9,7 @@ export declare class Noble extends EventEmitter {
     private allowDuplicates;
     private discoveredPeripheralUUIDs;
     private peripherals;
-    constructor(bindings: any);
+    constructor(bindings: NobleBindings);
     init(timeoutInSeconds?: number): Promise<void>;
     private onStateChange;
     private onAddressChange;
@@ -20,17 +21,17 @@ export declare class Noble extends EventEmitter {
     connect(peripheralUUID: string, requestMtu?: number): void;
     private onConnect;
     disconnect(peripheralUUID: string): void;
-    onDisconnect(peripheralUUID: string, reason: any): void;
+    onDisconnect(peripheralUUID: string, reason: number): void;
     updateRSSI(peripheralUUID: string): void;
     private onRssiUpdate;
-    private onServicesDiscovered;
     discoverServices(peripheralUUID: string, uuids: string[]): void;
     private onServicesDiscover;
+    private onServicesDiscovered;
     discoverIncludedServices(peripheralUUID: string, serviceUUID: string, serviceUUIDs: string[]): void;
     private onIncludedServicesDiscover;
-    private onCharacteristicsDiscovered;
     discoverCharacteristics(peripheralUUID: string, serviceUUID: string, characteristicUUIDs: string[]): void;
     private onCharacteristicsDiscover;
+    private onCharacteristicsDiscovered;
     read(peripheralUUID: string, serviceUUID: string, characteristicUUID: string): void;
     private onRead;
     write(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, data: any, withoutResponse: boolean): void;
@@ -41,6 +42,7 @@ export declare class Noble extends EventEmitter {
     private onNotify;
     discoverDescriptors(peripheralUUID: string, serviceUUID: string, characteristicUUID: string): void;
     private onDescriptorsDiscover;
+    private onDescriptorsDiscovered;
     readValue(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string): void;
     private onValueRead;
     writeValue(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: any): void;

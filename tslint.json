@@ -50,7 +50,7 @@
 		"prefer-const": true,
 		"quotemark": [true, "single"],
 		"radix": true,
-		"semicolon": [true, "always"],
+		"semicolon": [true, "always", "ignore-bound-class-methods"],
 		"switch-default": true,
 		"trailing-comma": [true],
 		"triple-equals": [true, "allow-null-check"],

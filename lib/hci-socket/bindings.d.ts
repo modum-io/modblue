@@ -1,6 +1,6 @@
 /// <reference types="node" />
-import { EventEmitter } from 'events';
-export declare class NobleBindings extends EventEmitter {
+import { NobleBindings } from '../Bindings';
+export declare class HciBindings extends NobleBindings {
     private state;
     private addresses;
     private addressTypes;
@@ -9,19 +9,24 @@ export declare class NobleBindings extends EventEmitter {
     private scanServiceUUIDs;
     private pendingConnectionUUID;
     private connectionQueue;
-    private handles;
+    private uuidToHandle;
+    private handleToUUID;
     private gatts;
     private aclStreams;
     private signalings;
     private hci;
     private gap;
     constructor();
+    getDevices(): {
+        id: number;
+        address: any;
+    }[];
+    init(deviceId?: number): void;
     startScanning(serviceUUIDs: string[], allowDuplicates: boolean): void;
     stopScanning(): void;
     connect(peripheralUUID: string, requestMtu?: number): void;
     disconnect(peripheralUUID: string): void;
     updateRssi(peripheralUUID: string): void;
-    init(): void;
     private onSigInt;
     private onExit;
     private onStateChange;
@@ -37,13 +42,13 @@ export declare class NobleBindings extends EventEmitter {
     private onRssiRead;
     private onAclDataPkt;
     discoverServices(peripheralUUID: string, uuids: string[]): void;
+    private onServicesDiscover;
     private onServicesDiscovered;
-    private onServicesDiscoveredEX;
     discoverIncludedServices(peripheralUUID: string, serviceUUID: string, serviceUUIDs: string[]): void;
     private onIncludedServicesDiscovered;
     discoverCharacteristics(peripheralUUID: string, serviceUUID: string, characteristicUUIDs: string[]): void;
+    private onCharacteristicsDiscover;
     private onCharacteristicsDiscovered;
-    private onCharacteristicsDiscoveredEX;
     read(peripheralUUID: string, serviceUUID: string, characteristicUUID: string): void;
     private onRead;
     write(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean): void;
@@ -54,6 +59,7 @@ export declare class NobleBindings extends EventEmitter {
     private onNotify;
     private onNotification;
     discoverDescriptors(peripheralUUID: string, serviceUUID: string, characteristicUUID: string): void;
+    private onDescriptorsDiscover;
     private onDescriptorsDiscovered;
     readValue(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string): void;
     private onValueRead;

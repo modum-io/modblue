@@ -13,6 +13,14 @@ const SMP_PAIRING_FAILED = 0x05;
 const SMP_ENCRYPT_INFO = 0x06;
 const SMP_MASTER_IDENT = 0x07;
 
+export declare interface Smp {
+	on(event: 'end', listener: () => void): this;
+	on(event: 'fail', listener: () => void): this;
+	on(event: 'stk', listener: (stk: Buffer) => void): this;
+	on(event: 'ltk', listener: (ltk: Buffer) => void): this;
+	on(event: 'masterIdent', listener: (ediv: Buffer, rand: Buffer) => void): this;
+}
+
 export class Smp extends EventEmitter {
 	private aclStream: AclStream;
 	private iat: Buffer;
@@ -41,9 +49,6 @@ export class Smp extends EventEmitter {
 		this.rat = Buffer.from([remoteAddressType === 'random' ? 0x01 : 0x00]);
 		this.ra = Buffer.from(remoteAddress.split(':').reverse().join(''), 'hex');
 
-		this.onAclStreamData = this.onAclStreamData.bind(this);
-		this.onAclStreamEnd = this.onAclStreamEnd.bind(this);
-
 		this.aclStream.on('data', this.onAclStreamData);
 		this.aclStream.on('end', this.onAclStreamEnd);
 	}
@@ -62,7 +67,7 @@ export class Smp extends EventEmitter {
 		this.write(this.preq);
 	}
 
-	private onAclStreamData(cid: any, data: Buffer) {
+	private onAclStreamData = (cid: number, data: Buffer) => {
 		if (cid !== SMP_CID) {
 			return;
 		}
@@ -82,14 +87,14 @@ export class Smp extends EventEmitter {
 		} else if (SMP_MASTER_IDENT === code) {
 			this.handleMasterIdent(data);
 		}
-	}
+	};
 
-	private onAclStreamEnd() {
+	private onAclStreamEnd = () => {
 		this.aclStream.removeListener('data', this.onAclStreamData);
 		this.aclStream.removeListener('end', this.onAclStreamEnd);
 
 		this.emit('end');
-	}
+	};
 
 	private handlePairingResponse(data: Buffer) {
 		this.pres = data;

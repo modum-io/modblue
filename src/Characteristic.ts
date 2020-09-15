@@ -15,10 +15,10 @@ export class Characteristic extends EventEmitter {
 	public readonly name: string;
 	public readonly type: string;
 
-	public properties: any;
+	public properties: string[];
 	public descriptors: Map<string, Descriptor>;
 
-	public constructor(noble: Noble, peripheralUUID: string, serviceUUID: string, uuid: string, properties: any) {
+	public constructor(noble: Noble, peripheralUUID: string, serviceUUID: string, uuid: string, properties: string[]) {
 		super();
 
 		this.noble = noble;

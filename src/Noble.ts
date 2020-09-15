@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 
+import { GattCharacteristic, GattDescriptor, GattService, NobleBindings } from './Bindings';
 import { Characteristic } from './Characteristic';
 import { Descriptor } from './Descriptor';
 import { Peripheral } from './Peripheral';
@@ -10,41 +11,45 @@ export class Noble extends EventEmitter {
 	public state: string = 'unknown';
 
 	private initialized: boolean = false;
-	private bindings: any = null;
+	private bindings: NobleBindings = null;
 	private allowDuplicates: boolean = false;
 
 	private discoveredPeripheralUUIDs: Set<string> = new Set();
 	private peripherals: Map<string, Peripheral> = new Map();
 
-	public constructor(bindings: any) {
+	public constructor(bindings: NobleBindings) {
 		super();
 
 		this.bindings = bindings;
 
-		this.bindings.on('stateChange', this.onStateChange.bind(this));
-		this.bindings.on('addressChange', this.onAddressChange.bind(this));
-		this.bindings.on('scanStart', this.onScanStart.bind(this));
-		this.bindings.on('scanStop', this.onScanStop.bind(this));
-		this.bindings.on('discover', this.onDiscover.bind(this));
-		this.bindings.on('connect', this.onConnect.bind(this));
-		this.bindings.on('disconnect', this.onDisconnect.bind(this));
-		this.bindings.on('rssiUpdate', this.onRssiUpdate.bind(this));
-		this.bindings.on('servicesDiscover', this.onServicesDiscover.bind(this));
-		this.bindings.on('servicesDiscovered', this.onServicesDiscovered.bind(this));
-		this.bindings.on('includedServicesDiscover', this.onIncludedServicesDiscover.bind(this));
-		this.bindings.on('characteristicsDiscover', this.onCharacteristicsDiscover.bind(this));
-		this.bindings.on('characteristicsDiscovered', this.onCharacteristicsDiscovered.bind(this));
-		this.bindings.on('read', this.onRead.bind(this));
-		this.bindings.on('write', this.onWrite.bind(this));
-		this.bindings.on('broadcast', this.onBroadcast.bind(this));
-		this.bindings.on('notify', this.onNotify.bind(this));
-		this.bindings.on('descriptorsDiscover', this.onDescriptorsDiscover.bind(this));
-		this.bindings.on('valueRead', this.onValueRead.bind(this));
-		this.bindings.on('valueWrite', this.onValueWrite.bind(this));
-		this.bindings.on('handleRead', this.onHandleRead.bind(this));
-		this.bindings.on('handleWrite', this.onHandleWrite.bind(this));
-		this.bindings.on('handleNotify', this.onHandleNotify.bind(this));
-		this.bindings.on('onMtu', this.onMtu.bind(this));
+		this.bindings.on('stateChange', this.onStateChange);
+		this.bindings.on('addressChange', this.onAddressChange);
+		this.bindings.on('scanStart', this.onScanStart);
+		this.bindings.on('scanStop', this.onScanStop);
+
+		this.bindings.on('discover', this.onDiscover);
+		this.bindings.on('rssi', this.onRssiUpdate);
+
+		this.bindings.on('connect', this.onConnect);
+		this.bindings.on('disconnect', this.onDisconnect);
+
+		this.bindings.on('mtu', this.onMtu);
+		this.bindings.on('servicesDiscover', this.onServicesDiscover);
+		this.bindings.on('servicesDiscovered', this.onServicesDiscovered);
+		this.bindings.on('includedServicesDiscover', this.onIncludedServicesDiscover);
+		this.bindings.on('characteristicsDiscover', this.onCharacteristicsDiscover);
+		this.bindings.on('characteristicsDiscovered', this.onCharacteristicsDiscovered);
+		this.bindings.on('read', this.onRead);
+		this.bindings.on('write', this.onWrite);
+		this.bindings.on('broadcast', this.onBroadcast);
+		this.bindings.on('notify', this.onNotify);
+		this.bindings.on('descriptorsDiscover', this.onDescriptorsDiscover);
+		this.bindings.on('descriptorsDiscovered', this.onDescriptorsDiscovered);
+		this.bindings.on('valueRead', this.onValueRead);
+		this.bindings.on('valueWrite', this.onValueWrite);
+		this.bindings.on('handleRead', this.onHandleRead);
+		this.bindings.on('handleWrite', this.onHandleWrite);
+		this.bindings.on('handleNotify', this.onHandleNotify);
 	}
 
 	public async init(timeoutInSeconds?: number) {
@@ -73,14 +78,14 @@ export class Noble extends EventEmitter {
 		return Promise.race([timeout, doInit]);
 	}
 
-	private onStateChange(state: string) {
+	private onStateChange = (state: string) => {
 		this.state = state;
 		this.emit('stateChange', state);
-	}
+	};
 
-	private onAddressChange(address: string) {
+	private onAddressChange = (address: string) => {
 		this.address = address;
-	}
+	};
 
 	public async startScanning(serviceUUIDs: string[], allowDuplicates?: boolean) {
 		await this.init();
@@ -93,9 +98,9 @@ export class Noble extends EventEmitter {
 		return new Promise<void>((resolve) => this.once('scanStart', () => resolve()));
 	}
 
-	private onScanStart() {
+	private onScanStart = () => {
 		this.emit('scanStart');
-	}
+	};
 
 	public async stopScanning() {
 		if (!this.bindings || !this.initialized) {
@@ -107,18 +112,18 @@ export class Noble extends EventEmitter {
 		return new Promise<void>((resolve) => this.once('scanStop', () => resolve()));
 	}
 
-	private onScanStop() {
+	private onScanStop = () => {
 		this.emit('scanStop');
-	}
+	};
 
-	private onDiscover(
+	private onDiscover = (
 		uuid: string,
 		address: string,
 		addressType: string,
 		connectable: boolean,
 		advertisement: any,
 		rssi: number
-	) {
+	) => {
 		let peripheral = this.peripherals.get(uuid);
 
 		if (!peripheral) {
@@ -144,26 +149,26 @@ export class Noble extends EventEmitter {
 		if (this.allowDuplicates || !previouslyDiscoverd) {
 			this.emit('discover', peripheral);
 		}
-	}
+	};
 
 	public connect(peripheralUUID: string, requestMtu?: number) {
 		this.bindings.connect(peripheralUUID, requestMtu);
 	}
 
-	private onConnect(peripheralUUID: string, error: any) {
+	private onConnect = (peripheralUUID: string, error?: Error) => {
 		const peripheral = this.peripherals.get(peripheralUUID);
 
 		if (peripheral) {
 			peripheral.state = error ? 'error' : 'connected';
 			peripheral.emit('connect', error);
 		}
-	}
+	};
 
 	public disconnect(peripheralUUID: string) {
 		this.bindings.disconnect(peripheralUUID);
 	}
 
-	public onDisconnect(peripheralUUID: string, reason: any) {
+	public onDisconnect(peripheralUUID: string, reason: number) {
 		const peripheral = this.peripherals.get(peripheralUUID);
 
 		if (peripheral) {
@@ -185,31 +190,31 @@ export class Noble extends EventEmitter {
 		}
 	}
 
-	private onServicesDiscovered(peripheralUUID: string, services: any[]) {
-		const peripheral = this.peripherals.get(peripheralUUID);
-
-		if (peripheral) {
-			peripheral.emit('servicesDiscovered', peripheral, services);
-		}
-	}
-
 	public discoverServices(peripheralUUID: string, uuids: string[]) {
 		this.bindings.discoverServices(peripheralUUID, uuids);
 	}
 
-	private onServicesDiscover(peripheralUUID: string, serviceUUIDs: string[]) {
+	private onServicesDiscover(peripheralUUID: string, discoveredServices: GattService[]) {
+		const peripheral = this.peripherals.get(peripheralUUID);
+
+		if (peripheral) {
+			peripheral.emit('servicesDiscover', peripheral, discoveredServices);
+		}
+	}
+
+	private onServicesDiscovered(peripheralUUID: string, services: GattService[]) {
 		const peripheral = this.peripherals.get(peripheralUUID);
 		if (!peripheral) {
 			return;
 		}
 
 		const newServices: Map<string, Service> = new Map();
-		for (const serviceUUID of serviceUUIDs) {
-			newServices.set(serviceUUID, new Service(this, peripheralUUID, serviceUUID));
+		for (const service of services) {
+			newServices.set(service.uuid, new Service(this, peripheralUUID, service.uuid));
 		}
 		peripheral.services = newServices;
 
-		peripheral.emit('servicesDiscover', newServices);
+		peripheral.emit('servicesDiscovered', newServices);
 	}
 
 	public discoverIncludedServices(peripheralUUID: string, serviceUUID: string, serviceUUIDs: string[]) {
@@ -231,7 +236,15 @@ export class Noble extends EventEmitter {
 		service.emit('includedServicesDiscover', includedServiceUUIDs);
 	}
 
-	private onCharacteristicsDiscovered(peripheralUUID: string, serviceUUID: string, characteristics: any[]) {
+	public discoverCharacteristics(peripheralUUID: string, serviceUUID: string, characteristicUUIDs: string[]) {
+		this.bindings.discoverCharacteristics(peripheralUUID, serviceUUID, characteristicUUIDs);
+	}
+
+	private onCharacteristicsDiscover(
+		peripheralUUID: string,
+		serviceUUID: string,
+		discoveredCharacteristics: GattCharacteristic[]
+	) {
 		const peripheral = this.peripherals.get(peripheralUUID);
 		if (!peripheral) {
 			return;
@@ -242,14 +255,14 @@ export class Noble extends EventEmitter {
 			return;
 		}
 
-		service.emit('characteristicsDiscovered', characteristics);
+		service.emit('characteristicsDiscover', discoveredCharacteristics);
 	}
 
-	public discoverCharacteristics(peripheralUUID: string, serviceUUID: string, characteristicUUIDs: string[]) {
-		this.bindings.discoverCharacteristics(peripheralUUID, serviceUUID, characteristicUUIDs);
-	}
-
-	private onCharacteristicsDiscover(peripheralUUID: string, serviceUUID: string, characteristics: any[]) {
+	private onCharacteristicsDiscovered(
+		peripheralUUID: string,
+		serviceUUID: string,
+		characteristics: GattCharacteristic[]
+	) {
 		const peripheral = this.peripherals.get(peripheralUUID);
 		if (!peripheral) {
 			return;
@@ -261,35 +274,27 @@ export class Noble extends EventEmitter {
 		}
 
 		const newCharacteristics: Map<string, Characteristic> = new Map();
-		for (const rawCharacteristic of characteristics) {
-			const characteristicUUID = rawCharacteristic.uuid;
-
-			const characteristic = new Characteristic(
+		for (const characteristic of characteristics) {
+			const char = new Characteristic(
 				this,
 				peripheralUUID,
 				serviceUUID,
-				characteristicUUID,
-				rawCharacteristic.properties
+				characteristic.uuid,
+				characteristic.properties
 			);
 
-			newCharacteristics.set(characteristicUUID, characteristic);
+			newCharacteristics.set(characteristic.uuid, char);
 		}
 		service.characteristics = newCharacteristics;
 
-		service.emit('characteristicsDiscover', newCharacteristics);
+		service.emit('characteristicsDiscovered', newCharacteristics);
 	}
 
 	public read(peripheralUUID: string, serviceUUID: string, characteristicUUID: string) {
 		this.bindings.read(peripheralUUID, serviceUUID, characteristicUUID);
 	}
 
-	private onRead(
-		peripheralUUID: string,
-		serviceUUID: string,
-		characteristicUUID: string,
-		data: any,
-		isNotification: boolean
-	) {
+	private onRead(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, data: any) {
 		const peripheral = this.peripherals.get(peripheralUUID);
 		if (!peripheral) {
 			return;
@@ -305,8 +310,7 @@ export class Noble extends EventEmitter {
 			return;
 		}
 
-		characteristic.emit('data', data, isNotification);
-		characteristic.emit('read', data, isNotification); // for backwards compatbility
+		characteristic.emit('read', data);
 	}
 
 	public write(
@@ -392,7 +396,31 @@ export class Noble extends EventEmitter {
 		peripheralUUID: string,
 		serviceUUID: string,
 		characteristicUUID: string,
-		descriptorUUIDs: string
+		discoveredDescriptors: GattDescriptor[]
+	) {
+		const peripheral = this.peripherals.get(peripheralUUID);
+		if (!peripheral) {
+			return;
+		}
+
+		const service = peripheral.services.get(serviceUUID);
+		if (!service) {
+			return;
+		}
+
+		const characteristic = service.characteristics.get(characteristicUUID);
+		if (!characteristic) {
+			return;
+		}
+
+		characteristic.emit('descriptorsDiscover', discoveredDescriptors);
+	}
+
+	private onDescriptorsDiscovered(
+		peripheralUUID: string,
+		serviceUUID: string,
+		characteristicUUID: string,
+		descriptors: GattDescriptor[]
 	) {
 		const peripheral = this.peripherals.get(peripheralUUID);
 		if (!peripheral) {
@@ -410,13 +438,13 @@ export class Noble extends EventEmitter {
 		}
 
 		const newDescriptors: Map<string, Descriptor> = new Map();
-		for (const descriptorUUID of descriptorUUIDs) {
-			const descriptor = new Descriptor(this, peripheralUUID, serviceUUID, characteristicUUID, descriptorUUID);
-			newDescriptors.set(descriptorUUID, descriptor);
+		for (const descriptor of descriptors) {
+			const desc = new Descriptor(this, peripheralUUID, serviceUUID, characteristicUUID, descriptor.uuid);
+			newDescriptors.set(descriptor.uuid, desc);
 		}
 		characteristic.descriptors = newDescriptors;
 
-		characteristic.emit('descriptorsDiscover', newDescriptors);
+		characteristic.emit('descriptorsDiscovered', newDescriptors);
 	}
 
 	public readValue(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string) {

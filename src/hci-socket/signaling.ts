@@ -8,6 +8,19 @@ const CONNECTION_PARAMETER_UPDATE_RESPONSE = 0x13;
 
 const SIGNALING_CID = 0x0005;
 
+export declare interface Signaling {
+	on(
+		event: 'connectionParameterUpdateRequest',
+		listener: (
+			handle: number,
+			minInterval: number,
+			maxInterval: number,
+			latency: number,
+			supervisionTimeout: number
+		) => void
+	): this;
+}
+
 export class Signaling extends EventEmitter {
 	private handle: number;
 	private aclStream: AclStream;
@@ -18,14 +31,11 @@ export class Signaling extends EventEmitter {
 		this.handle = handle;
 		this.aclStream = aclStream;
 
-		this.onAclStreamData = this.onAclStreamData.bind(this);
-		this.onAclStreamEnd = this.onAclStreamEnd.bind(this);
-
 		this.aclStream.on('data', this.onAclStreamData);
 		this.aclStream.on('end', this.onAclStreamEnd);
 	}
 
-	private onAclStreamData(cid: any, data: Buffer) {
+	private onAclStreamData = (cid: number, data: Buffer) => {
 		if (cid !== SIGNALING_CID) {
 			return;
 		}
@@ -38,14 +48,14 @@ export class Signaling extends EventEmitter {
 		if (code === CONNECTION_PARAMETER_UPDATE_REQUEST) {
 			this.processConnectionParameterUpdateRequest(identifier, signalingData);
 		}
-	}
+	};
 
-	private onAclStreamEnd() {
-		this.aclStream.removeListener('data', this.onAclStreamData);
-		this.aclStream.removeListener('end', this.onAclStreamEnd);
-	}
+	private onAclStreamEnd = () => {
+		this.aclStream.off('data', this.onAclStreamData);
+		this.aclStream.off('end', this.onAclStreamEnd);
+	};
 
-	private processConnectionParameterUpdateRequest(identifier: any, data: Buffer) {
+	private processConnectionParameterUpdateRequest(identifier: number, data: Buffer) {
 		const minInterval = data.readUInt16LE(0) * 1.25;
 		const maxInterval = data.readUInt16LE(2) * 1.25;
 		const latency = data.readUInt16LE(4);

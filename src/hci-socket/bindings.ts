@@ -1,14 +1,12 @@
-import { EventEmitter } from 'events';
+import { AddressType, GattCharacteristic, GattDescriptor, GattService, NobleBindings } from '../Bindings';
 
 import { AclStream } from './acl-stream';
 import { Gap } from './gap';
 import { Gatt } from './gatt';
-import Hci from './hci';
+import { Hci } from './hci';
 import { Signaling } from './signaling';
 
-type MapKey = string | number;
-
-export class NobleBindings extends EventEmitter {
+export class HciBindings extends NobleBindings {
 	private state: string;
 	private addresses: Map<string, any>;
 	private addressTypes: Map<string, any>;
@@ -19,12 +17,13 @@ export class NobleBindings extends EventEmitter {
 	private pendingConnectionUUID: string;
 	private connectionQueue: string[];
 
-	private handles: Map<any, MapKey>;
-	private gatts: Map<MapKey, Gatt>;
-	private aclStreams: Map<MapKey, AclStream>;
-	private signalings: Map<MapKey, Signaling>;
+	private uuidToHandle: Map<string, number>;
+	private handleToUUID: Map<number, string>;
+	private gatts: Map<number, Gatt>;
+	private aclStreams: Map<number, AclStream>;
+	private signalings: Map<number, Signaling>;
 
-	private hci: any;
+	private hci: Hci;
 	private gap: Gap;
 
 	public constructor() {
@@ -40,13 +39,41 @@ export class NobleBindings extends EventEmitter {
 		this.pendingConnectionUUID = null;
 		this.connectionQueue = [];
 
-		this.handles = new Map();
+		this.uuidToHandle = new Map();
+		this.handleToUUID = new Map();
 		this.gatts = new Map();
 		this.aclStreams = new Map();
 		this.signalings = new Map();
 
 		this.hci = new Hci();
 		this.gap = new Gap(this.hci);
+
+		this.gap.on('scanStart', this.onScanStart);
+		this.gap.on('scanStop', this.onScanStop);
+		this.gap.on('discover', this.onDiscover);
+
+		this.hci.on('stateChange', this.onStateChange);
+		this.hci.on('addressChange', this.onAddressChange);
+		this.hci.on('leConnComplete', this.onLeConnComplete);
+		this.hci.on('leConnUpdateComplete', this.onLeConnUpdateComplete);
+		this.hci.on('rssiRead', this.onRssiRead);
+		this.hci.on('disconnComplete', this.onDisconnComplete);
+		this.hci.on('encryptChange', this.onEncryptChange);
+		this.hci.on('aclDataPkt', this.onAclDataPkt);
+	}
+
+	public getDevices() {
+		return this.hci.getDevices().map((dev) => ({ id: dev.devId, address: null }));
+	}
+
+	public init(deviceId?: number) {
+		this.hci.init(deviceId);
+
+		/* Add exit handlers after `init()` has completed. If no adaptor
+		is present it can throw an exception - in which case we don't
+		want to try and clear up afterwards (issue #502) */
+		process.on('SIGINT', this.onSigInt);
+		process.on('exit', this.onExit);
 	}
 
 	public startScanning(serviceUUIDs: string[], allowDuplicates: boolean) {
@@ -78,39 +105,14 @@ export class NobleBindings extends EventEmitter {
 	}
 
 	public disconnect(peripheralUUID: string) {
-		this.hci.disconnect(this.handles.get(peripheralUUID));
+		this.hci.disconnect(this.uuidToHandle.get(peripheralUUID));
 	}
 
 	public updateRssi(peripheralUUID: string) {
-		this.hci.readRssi(this.handles.get(peripheralUUID));
+		this.hci.readRssi(this.uuidToHandle.get(peripheralUUID));
 	}
 
-	public init() {
-		this.onSigInt = this.onSigInt.bind(this);
-
-		this.gap.on('scanStart', this.onScanStart.bind(this));
-		this.gap.on('scanStop', this.onScanStop.bind(this));
-		this.gap.on('discover', this.onDiscover.bind(this));
-
-		this.hci.on('stateChange', this.onStateChange.bind(this));
-		this.hci.on('addressChange', this.onAddressChange.bind(this));
-		this.hci.on('leConnComplete', this.onLeConnComplete.bind(this));
-		this.hci.on('leConnUpdateComplete', this.onLeConnUpdateComplete.bind(this));
-		this.hci.on('rssiRead', this.onRssiRead.bind(this));
-		this.hci.on('disconnComplete', this.onDisconnComplete.bind(this));
-		this.hci.on('encryptChange', this.onEncryptChange.bind(this));
-		this.hci.on('aclDataPkt', this.onAclDataPkt.bind(this));
-
-		this.hci.init();
-
-		/* Add exit handlers after `init()` has completed. If no adaptor
-		is present it can throw an exception - in which case we don't
-		want to try and clear up afterwards (issue #502) */
-		process.on('SIGINT', this.onSigInt);
-		process.on('exit', this.onExit.bind(this));
-	}
-
-	private onSigInt() {
+	private onSigInt = () => {
 		const sigIntListeners = process.listeners('SIGINT');
 
 		if (sigIntListeners[sigIntListeners.length - 1] === this.onSigInt) {
@@ -118,17 +120,17 @@ export class NobleBindings extends EventEmitter {
 			// this will trigger onExit, and clean up
 			process.exit(1);
 		}
-	}
+	};
 
-	private onExit() {
+	private onExit = () => {
 		this.stopScanning();
 
 		for (const handle of this.aclStreams.keys()) {
 			this.hci.disconnect(handle);
 		}
-	}
+	};
 
-	private onStateChange(state: string) {
+	private onStateChange = (state: string) => {
 		if (this.state === state) {
 			return;
 		}
@@ -145,28 +147,28 @@ export class NobleBindings extends EventEmitter {
 		}
 
 		this.emit('stateChange', state);
-	}
+	};
 
-	private onAddressChange(address: string) {
+	private onAddressChange = (address: string) => {
 		this.emit('addressChange', address);
-	}
+	};
 
-	private onScanStart(filterDuplicates: boolean) {
+	private onScanStart = (filterDuplicates: boolean) => {
 		this.emit('scanStart', filterDuplicates);
-	}
+	};
 
-	private onScanStop() {
+	private onScanStop = () => {
 		this.emit('scanStop');
-	}
+	};
 
-	private onDiscover(
+	private onDiscover = (
 		status: number,
 		address: string,
-		addressType: string,
+		addressType: AddressType,
 		connectable: boolean,
 		advertisement: any,
 		rssi: number
-	) {
+	) => {
 		if (this.scanServiceUUIDs === undefined) {
 			return;
 		}
@@ -201,9 +203,9 @@ export class NobleBindings extends EventEmitter {
 
 			this.emit('discover', uuid, address, addressType, connectable, advertisement, rssi);
 		}
-	}
+	};
 
-	private onLeConnComplete(
+	private onLeConnComplete = (
 		status: number,
 		handle: number,
 		role: number,
@@ -213,7 +215,7 @@ export class NobleBindings extends EventEmitter {
 		latency: number,
 		supervisionTimeout: number,
 		masterClockAccuracy: number
-	) {
+	) => {
 		if (role !== 0) {
 			// not master, ignore
 			return;
@@ -229,36 +231,33 @@ export class NobleBindings extends EventEmitter {
 			const gatt = new Gatt(address, aclStream);
 			const signaling = new Signaling(handle, aclStream);
 
-			this.gatts.set(uuid, gatt);
 			this.gatts.set(handle, gatt);
-
-			this.signalings.set(uuid, signaling);
 			this.signalings.set(handle, signaling);
-
 			this.aclStreams.set(handle, aclStream);
 
-			this.handles.set(uuid, handle);
-			this.handles.set(handle, uuid);
+			this.handleToUUID.set(handle, uuid);
+			this.uuidToHandle.set(uuid, handle);
 
-			gatt.on('mtu', this.onMtu.bind(this));
-			gatt.on('servicesDiscover', this.onServicesDiscovered.bind(this));
-			gatt.on('servicesDiscovered', this.onServicesDiscoveredEX.bind(this));
-			gatt.on('includedServicesDiscover', this.onIncludedServicesDiscovered.bind(this));
-			gatt.on('characteristicsDiscover', this.onCharacteristicsDiscovered.bind(this));
-			gatt.on('characteristicsDiscovered', this.onCharacteristicsDiscoveredEX.bind(this));
-			gatt.on('read', this.onRead.bind(this));
-			gatt.on('write', this.onWrite.bind(this));
-			gatt.on('broadcast', this.onBroadcast.bind(this));
-			gatt.on('notify', this.onNotify.bind(this));
-			gatt.on('notification', this.onNotification.bind(this));
-			gatt.on('descriptorsDiscover', this.onDescriptorsDiscovered.bind(this));
-			gatt.on('valueRead', this.onValueRead.bind(this));
-			gatt.on('valueWrite', this.onValueWrite.bind(this));
-			gatt.on('handleRead', this.onHandleRead.bind(this));
-			gatt.on('handleWrite', this.onHandleWrite.bind(this));
-			gatt.on('handleNotify', this.onHandleNotify.bind(this));
+			gatt.on('mtu', this.onMtu);
+			gatt.on('servicesDiscover', this.onServicesDiscover);
+			gatt.on('servicesDiscovered', this.onServicesDiscovered);
+			gatt.on('includedServicesDiscover', this.onIncludedServicesDiscovered);
+			gatt.on('characteristicsDiscover', this.onCharacteristicsDiscover);
+			gatt.on('characteristicsDiscovered', this.onCharacteristicsDiscovered);
+			gatt.on('read', this.onRead);
+			gatt.on('write', this.onWrite);
+			gatt.on('broadcast', this.onBroadcast);
+			gatt.on('notify', this.onNotify);
+			gatt.on('notification', this.onNotification);
+			gatt.on('descriptorsDiscover', this.onDescriptorsDiscover);
+			gatt.on('descriptorsDiscovered', this.onDescriptorsDiscovered);
+			gatt.on('valueRead', this.onValueRead);
+			gatt.on('valueWrite', this.onValueWrite);
+			gatt.on('handleRead', this.onHandleRead);
+			gatt.on('handleWrite', this.onHandleWrite);
+			gatt.on('handleNotify', this.onHandleNotify);
 
-			signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest.bind(this));
+			signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 
 			const mtu = this.requestedMtu.get(address) || 256;
 			this.requestedMtu.delete(address);
@@ -286,62 +285,58 @@ export class NobleBindings extends EventEmitter {
 		} else {
 			this.pendingConnectionUUID = null;
 		}
-	}
+	};
 
-	private onLeConnUpdateComplete(handle: number, interval: number, latency: number, supervisionTimeout: number) {
+	private onLeConnUpdateComplete = (handle: number, interval: number, latency: number, supervisionTimeout: number) => {
 		// NO-OP
-	}
+	};
 
-	private onDisconnComplete(handle: number, reason: string) {
-		const uuid = this.handles.get(handle);
+	private onDisconnComplete = (handle: number, reason: number) => {
+		const uuid = this.handleToUUID.get(handle);
 
 		if (uuid) {
 			this.aclStreams.get(handle).push(null, null);
 			this.gatts.get(handle).removeAllListeners();
 			this.signalings.get(handle).removeAllListeners();
 
-			this.gatts.delete(uuid);
 			this.gatts.delete(handle);
-
-			this.signalings.delete(uuid);
 			this.signalings.delete(handle);
-
 			this.aclStreams.delete(handle);
 
-			this.handles.delete(uuid);
-			this.handles.delete(handle);
+			this.uuidToHandle.delete(uuid);
+			this.handleToUUID.delete(handle);
 
 			this.emit('disconnect', uuid, reason);
 		}
-	}
+	};
 
-	private onEncryptChange(handle: number, encrypt: any) {
+	private onEncryptChange = (handle: number, encrypt: any) => {
 		const aclStream = this.aclStreams.get(handle);
 
 		if (aclStream) {
 			aclStream.pushEncrypt(encrypt);
 		}
-	}
+	};
 
-	private onMtu(address: string, mtu: number) {
+	private onMtu = (address: string, mtu: number) => {
 		const uuid = address.split(':').join('').toLowerCase();
-		this.emit('onMtu', uuid, mtu);
-	}
+		this.emit('mtu', uuid, mtu);
+	};
 
-	private onRssiRead(handle: number, rssi: number) {
-		this.emit('rssiUpdate', this.handles.get(handle), rssi);
-	}
+	private onRssiRead = (handle: number, rssi: number) => {
+		this.emit('rssi', this.handleToUUID.get(handle), rssi);
+	};
 
-	private onAclDataPkt(handle: number, cid: any, data: Buffer) {
+	private onAclDataPkt = (handle: number, cid: any, data: Buffer) => {
 		const aclStream = this.aclStreams.get(handle);
 
 		if (aclStream) {
 			aclStream.push(cid, data);
 		}
-	}
+	};
 
 	public discoverServices(peripheralUUID: string, uuids: string[]) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -349,18 +344,18 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onServicesDiscovered(address: string, serviceUUIDs: string[]) {
+	private onServicesDiscover = (address: string, discoveredServices: GattService[]) => {
 		const uuid = address.split(':').join('').toLowerCase();
-		this.emit('servicesDiscover', uuid, serviceUUIDs);
-	}
+		this.emit('servicesDiscover', uuid, discoveredServices);
+	};
 
-	private onServicesDiscoveredEX(address: string, services: any[]) {
+	private onServicesDiscovered = (address: string, services: GattService[]) => {
 		const uuid = address.split(':').join('').toLowerCase();
 		this.emit('servicesDiscovered', uuid, services);
-	}
+	};
 
 	public discoverIncludedServices(peripheralUUID: string, serviceUUID: string, serviceUUIDs: string[]) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -368,13 +363,13 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onIncludedServicesDiscovered(address: string, serviceUUID: string, includedServiceUUIDs: string[]) {
+	private onIncludedServicesDiscovered = (address: string, serviceUUID: string, includedServiceUUIDs: string[]) => {
 		const uuid = address.split(':').join('').toLowerCase();
 		this.emit('includedServicesDiscover', uuid, serviceUUID, includedServiceUUIDs);
-	}
+	};
 
 	public discoverCharacteristics(peripheralUUID: string, serviceUUID: string, characteristicUUIDs: string[]) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -382,18 +377,26 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onCharacteristicsDiscovered(address: string, serviceUUID: string, characteristics: any) {
+	private onCharacteristicsDiscover = (
+		address: string,
+		serviceUUID: string,
+		discoveredCharacteristics: GattCharacteristic[]
+	) => {
 		const uuid = address.split(':').join('').toLowerCase();
-		this.emit('characteristicsDiscover', uuid, serviceUUID, characteristics);
-	}
+		this.emit('characteristicsDiscover', uuid, serviceUUID, discoveredCharacteristics);
+	};
 
-	private onCharacteristicsDiscoveredEX(address: string, serviceUUID: string, characteristics: any) {
+	private onCharacteristicsDiscovered = (
+		address: string,
+		serviceUUID: string,
+		characteristics: GattCharacteristic[]
+	) => {
 		const uuid = address.split(':').join('').toLowerCase();
 		this.emit('characteristicsDiscovered', uuid, serviceUUID, characteristics);
-	}
+	};
 
 	public read(peripheralUUID: string, serviceUUID: string, characteristicUUID: string) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -401,10 +404,10 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onRead(address: string, serviceUUID: string, characteristicUUID: string, data: Buffer) {
+	private onRead = (address: string, serviceUUID: string, characteristicUUID: string, data: Buffer) => {
 		const uuid = address.split(':').join('').toLowerCase();
-		this.emit('read', uuid, serviceUUID, characteristicUUID, data, false);
-	}
+		this.emit('read', uuid, serviceUUID, characteristicUUID, data);
+	};
 
 	public write(
 		peripheralUUID: string,
@@ -413,7 +416,7 @@ export class NobleBindings extends EventEmitter {
 		data: Buffer,
 		withoutResponse: boolean
 	) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -421,13 +424,13 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onWrite(address: string, serviceUUID: string, characteristicUUID: string) {
+	private onWrite = (address: string, serviceUUID: string, characteristicUUID: string) => {
 		const uuid = address.split(':').join('').toLowerCase();
 		this.emit('write', uuid, serviceUUID, characteristicUUID);
-	}
+	};
 
 	public broadcast(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, broadcast: boolean) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -435,14 +438,14 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onBroadcast(address: string, serviceUUID: string, characteristicUUID: string, state: boolean) {
+	private onBroadcast = (address: string, serviceUUID: string, characteristicUUID: string, state: boolean) => {
 		const uuid = address.split(':').join('').toLowerCase();
 
 		this.emit('broadcast', uuid, serviceUUID, characteristicUUID, state);
-	}
+	};
 
 	public notify(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, notify: boolean) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -450,18 +453,18 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onNotify(address: string, serviceUUID: string, characteristicUUID: string, state: boolean) {
+	private onNotify = (address: string, serviceUUID: string, characteristicUUID: string, state: boolean) => {
 		const uuid = address.split(':').join('').toLowerCase();
 		this.emit('notify', uuid, serviceUUID, characteristicUUID, state);
-	}
+	};
 
-	private onNotification(address: string, serviceUUID: string, characteristicUUID: string, data: Buffer) {
+	private onNotification = (address: string, serviceUUID: string, characteristicUUID: string, data: Buffer) => {
 		const uuid = address.split(':').join('').toLowerCase();
-		this.emit('read', uuid, serviceUUID, characteristicUUID, data, true);
-	}
+		this.emit('notification', uuid, serviceUUID, characteristicUUID, data);
+	};
 
 	public discoverDescriptors(peripheralUUID: string, serviceUUID: string, characteristicUUID: string) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -469,18 +472,28 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onDescriptorsDiscovered(
+	private onDescriptorsDiscover = (
 		address: string,
 		serviceUUID: string,
 		characteristicUUID: string,
-		descriptorUUIDs: string[]
-	) {
+		discoveredDescriptors: GattDescriptor[]
+	) => {
 		const uuid = address.split(':').join('').toLowerCase();
-		this.emit('descriptorsDiscover', uuid, serviceUUID, characteristicUUID, descriptorUUIDs);
-	}
+		this.emit('descriptorsDiscover', uuid, serviceUUID, characteristicUUID, discoveredDescriptors);
+	};
+
+	private onDescriptorsDiscovered = (
+		address: string,
+		serviceUUID: string,
+		characteristicUUID: string,
+		descriptors: GattDescriptor[]
+	) => {
+		const uuid = address.split(':').join('').toLowerCase();
+		this.emit('descriptorsDiscovered', uuid, serviceUUID, characteristicUUID, descriptors);
+	};
 
 	public readValue(peripheralUUID: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -488,16 +501,16 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onValueRead(
+	private onValueRead = (
 		address: string,
 		serviceUUID: string,
 		characteristicUUID: string,
 		descriptorUUID: string,
 		data: Buffer
-	) {
+	) => {
 		const uuid = address.split(':').join('').toLowerCase();
 		this.emit('valueRead', uuid, serviceUUID, characteristicUUID, descriptorUUID, data);
-	}
+	};
 
 	public writeValue(
 		peripheralUUID: string,
@@ -506,7 +519,7 @@ export class NobleBindings extends EventEmitter {
 		descriptorUUID: string,
 		data: Buffer
 	) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -514,13 +527,13 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onValueWrite(address: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string) {
+	private onValueWrite = (address: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string) => {
 		const uuid = address.split(':').join('').toLowerCase();
 		this.emit('valueWrite', uuid, serviceUUID, characteristicUUID, descriptorUUID);
-	}
+	};
 
 	public readHandle(peripheralUUID: string, attHandle: number) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -528,13 +541,13 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onHandleRead(address: string, handle: number, data: Buffer) {
+	private onHandleRead = (address: string, handle: number, data: Buffer) => {
 		const uuid = address.split(':').join('').toLowerCase();
 		this.emit('handleRead', uuid, handle, data);
-	}
+	};
 
 	public writeHandle(peripheralUUID: string, attHandle: number, data: Buffer, withoutResponse: boolean) {
-		const handle = this.handles.get(peripheralUUID);
+		const handle = this.uuidToHandle.get(peripheralUUID);
 		const gatt = this.gatts.get(handle);
 
 		if (gatt) {
@@ -542,25 +555,25 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	private onHandleWrite(address: string, handle: number) {
+	private onHandleWrite = (address: string, handle: number) => {
 		const uuid = address.split(':').join('').toLowerCase();
 
 		this.emit('handleWrite', uuid, handle);
-	}
+	};
 
-	private onHandleNotify(address: string, handle: number, data: Buffer) {
+	private onHandleNotify = (address: string, handle: number, data: Buffer) => {
 		const uuid = address.split(':').join('').toLowerCase();
 
 		this.emit('handleNotify', uuid, handle, data);
-	}
+	};
 
-	private onConnectionParameterUpdateRequest(
+	private onConnectionParameterUpdateRequest = (
 		handle: number,
 		minInterval: number,
 		maxInterval: number,
 		latency: number,
 		supervisionTimeout: number
-	) {
+	) => {
 		this.hci.connUpdateLe(handle, minInterval, maxInterval, latency, supervisionTimeout);
-	}
+	};
 }
