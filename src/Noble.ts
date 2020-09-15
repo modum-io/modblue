@@ -52,10 +52,10 @@ export class Noble extends EventEmitter {
 		this.bindings.on('handleNotify', this.onHandleNotify);
 	}
 
-	public async init(timeoutInSeconds?: number) {
+	public async init(deviceId?: number, timeoutInSeconds?: number) {
 		if (!this.initialized) {
 			this.initialized = true;
-			this.bindings.init();
+			this.bindings.init(deviceId);
 		}
 
 		if (this.state === 'poweredOn') {
