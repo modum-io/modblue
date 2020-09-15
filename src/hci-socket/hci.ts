@@ -77,6 +77,12 @@ interface HciDevice {
 	devUp: boolean;
 }
 
+interface HandleBuffer {
+	length: number;
+	cid: number;
+	data: Buffer;
+}
+
 export declare interface Hci {
 	on(event: 'stateChange', listener: (state: string) => void): this;
 	on(event: 'addressChange', listener: (address: string) => void): this;
@@ -118,14 +124,14 @@ export declare interface Hci {
 export class Hci extends EventEmitter {
 	public static STATUS_MAPPER: string[] = STATUS_MAPPER;
 
-	public address: string;
 	public addressType: AddressType;
+	public address: string;
 
 	private socket: any;
-	private isDevUp: any;
-	private state: any;
-	private deviceId: any;
-	private handleBuffers: any;
+	private isDevUp: boolean;
+	private state: string;
+	private deviceId: number;
+	private handleBuffers: Map<number, HandleBuffer>;
 	private pollTimer: NodeJS.Timer;
 
 	public constructor() {
@@ -135,7 +141,7 @@ export class Hci extends EventEmitter {
 		this.state = null;
 		this.deviceId = null;
 
-		this.handleBuffers = {};
+		this.handleBuffers = new Map();
 
 		this.on('stateChange', this.onStateChange);
 
@@ -519,23 +525,25 @@ export class Hci extends EventEmitter {
 				if (length === pktData.length) {
 					this.emit('aclDataPkt', handle, cid, pktData);
 				} else {
-					this.handleBuffers[handle] = {
+					this.handleBuffers.set(handle, {
 						length: length,
 						cid: cid,
 						data: pktData
-					};
+					});
 				}
 			} else if (ACL_CONT === flags) {
-				if (!this.handleBuffers[handle] || !this.handleBuffers[handle].data) {
+				const buff = this.handleBuffers.get(handle);
+
+				if (!buff || !buff.data) {
 					return;
 				}
 
-				this.handleBuffers[handle].data = Buffer.concat([this.handleBuffers[handle].data, data.slice(5)]);
+				buff.data = Buffer.concat([buff.data, data.slice(5)]);
 
-				if (this.handleBuffers[handle].data.length === this.handleBuffers[handle].length) {
-					this.emit('aclDataPkt', handle, this.handleBuffers[handle].cid, this.handleBuffers[handle].data);
+				if (buff.data.length === buff.length) {
+					this.emit('aclDataPkt', handle, buff.cid, buff.data);
 
-					delete this.handleBuffers[handle];
+					this.handleBuffers.delete(handle);
 				}
 			}
 		} else if (HCI_COMMAND_PKT === eventType) {

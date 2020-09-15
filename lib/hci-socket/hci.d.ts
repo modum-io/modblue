@@ -22,8 +22,8 @@ export declare interface Hci {
 }
 export declare class Hci extends EventEmitter {
     static STATUS_MAPPER: string[];
-    address: string;
     addressType: AddressType;
+    address: string;
     private socket;
     private isDevUp;
     private state;
