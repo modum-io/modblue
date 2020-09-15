@@ -78,6 +78,9 @@ export class HciBindings extends NobleBindings {
 
 	public dispose() {
 		this.stopScanning();
+		for (const handle of this.aclStreams.keys()) {
+			this.hci.disconnect(handle);
+		}
 
 		process.off('SIGINT', this.onSigInt);
 		process.off('exit', this.onExit);
@@ -95,10 +98,6 @@ export class HciBindings extends NobleBindings {
 		this.hci.off('disconnComplete', this.onDisconnComplete);
 		this.hci.off('encryptChange', this.onEncryptChange);
 		this.hci.off('aclDataPkt', this.onAclDataPkt);
-
-		for (const handle of this.aclStreams.keys()) {
-			this.hci.disconnect(handle);
-		}
 
 		this.hci.dispose();
 		this.hci = null;
