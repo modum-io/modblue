@@ -62,9 +62,6 @@ export class Noble extends EventEmitter {
 			return;
 		}
 
-		const timeout = new Promise<void>((_, reject) =>
-			setTimeout(() => reject('Initializing timed out'), timeoutInSeconds * 1000)
-		);
 		const doInit = new Promise<void>((resolve) => {
 			const callback = (state: string) => {
 				if (state === 'poweredOn') {
@@ -74,6 +71,14 @@ export class Noble extends EventEmitter {
 			};
 			this.on('stateChange', callback);
 		});
+
+		if (!timeoutInSeconds) {
+			return doInit;
+		}
+
+		const timeout = new Promise<void>((_, reject) =>
+			setTimeout(() => reject('Initializing timed out'), timeoutInSeconds * 1000)
+		);
 
 		return Promise.race([timeout, doInit]);
 	}
