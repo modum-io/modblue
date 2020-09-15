@@ -11,6 +11,7 @@ export declare class Noble extends EventEmitter {
     private peripherals;
     constructor(bindings: NobleBindings);
     init(deviceId?: number, timeoutInSeconds?: number): Promise<void>;
+    dispose(): void;
     private onStateChange;
     private onAddressChange;
     startScanning(serviceUUIDs: string[], allowDuplicates?: boolean): Promise<void>;

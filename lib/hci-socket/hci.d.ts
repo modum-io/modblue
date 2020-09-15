@@ -25,12 +25,14 @@ export declare class Hci extends EventEmitter {
     private state;
     private deviceId;
     private handleBuffers;
+    private pollTimer;
     constructor();
     getDevices(): {
         devId: number;
         devUp: boolean;
     }[];
     init(deviceId?: number): void;
+    dispose(): void;
     private pollIsDevUp;
     private setSocketFilter;
     private setEventMask;

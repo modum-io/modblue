@@ -76,6 +76,34 @@ export class HciBindings extends NobleBindings {
 		process.on('exit', this.onExit);
 	}
 
+	public dispose() {
+		this.stopScanning();
+
+		process.off('SIGINT', this.onSigInt);
+		process.off('exit', this.onExit);
+
+		this.gap.off('scanStart', this.onScanStart);
+		this.gap.off('scanStop', this.onScanStop);
+		this.gap.off('discover', this.onDiscover);
+		this.gap = null;
+
+		this.hci.off('stateChange', this.onStateChange);
+		this.hci.off('addressChange', this.onAddressChange);
+		this.hci.off('leConnComplete', this.onLeConnComplete);
+		this.hci.off('leConnUpdateComplete', this.onLeConnUpdateComplete);
+		this.hci.off('rssiRead', this.onRssiRead);
+		this.hci.off('disconnComplete', this.onDisconnComplete);
+		this.hci.off('encryptChange', this.onEncryptChange);
+		this.hci.off('aclDataPkt', this.onAclDataPkt);
+
+		for (const handle of this.aclStreams.keys()) {
+			this.hci.disconnect(handle);
+		}
+
+		this.hci.dispose();
+		this.hci = null;
+	}
+
 	public startScanning(serviceUUIDs: string[], allowDuplicates: boolean) {
 		this.scanServiceUUIDs = serviceUUIDs || [];
 		this.gap.startScanning(allowDuplicates);

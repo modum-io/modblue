@@ -22,6 +22,7 @@ export declare class HciBindings extends NobleBindings {
         address: any;
     }[];
     init(deviceId?: number): void;
+    dispose(): void;
     startScanning(serviceUUIDs: string[], allowDuplicates: boolean): void;
     stopScanning(): void;
     connect(peripheralUUID: string, requestMtu?: number): void;

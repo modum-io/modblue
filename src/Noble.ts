@@ -78,6 +78,11 @@ export class Noble extends EventEmitter {
 		return Promise.race([timeout, doInit]);
 	}
 
+	public dispose() {
+		this.bindings.dispose();
+		this.bindings = null;
+	}
+
 	private onStateChange = (state: string) => {
 		this.state = state;
 		this.emit('stateChange', state);

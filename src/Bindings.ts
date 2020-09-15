@@ -195,6 +195,7 @@ export declare interface NobleBindings {
 export abstract class NobleBindings extends EventEmitter {
 	public abstract getDevices(): Device[];
 	public abstract init(deviceId?: number): void;
+	public abstract dispose(): void;
 
 	public abstract startScanning(serviceUUIDs: string[], allowDuplicates: boolean): void;
 	public abstract stopScanning(): void;

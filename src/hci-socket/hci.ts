@@ -121,6 +121,7 @@ export class Hci extends EventEmitter {
 	private state: any;
 	private deviceId: any;
 	private handleBuffers: any;
+	private pollTimer: NodeJS.Timer;
 
 	public constructor() {
 		super();
@@ -146,7 +147,14 @@ export class Hci extends EventEmitter {
 		this.deviceId = this.socket.bindRaw(deviceId);
 		this.socket.start();
 
-		this.pollIsDevUp();
+		this.pollTimer = setInterval(() => this.pollIsDevUp(), 1000);
+	}
+
+	public dispose() {
+		clearInterval(this.pollTimer);
+
+		this.socket.stop();
+		this.socket = null;
 	}
 
 	private pollIsDevUp() {
@@ -173,8 +181,6 @@ export class Hci extends EventEmitter {
 
 			this.isDevUp = isDevUp;
 		}
-
-		setTimeout(() => this.pollIsDevUp(), 1000);
 	}
 
 	private setSocketFilter() {
