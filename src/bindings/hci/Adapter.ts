@@ -21,7 +21,6 @@ export class Adapter extends BaseAdapter<Noble> {
 	private initialized: boolean = false;
 	private scanning: boolean = false;
 	private requestScanStop: boolean = false;
-	private requestScanRestart: boolean = false;
 
 	private hci: Hci;
 	private gap: Gap;
@@ -123,9 +122,10 @@ export class Adapter extends BaseAdapter<Noble> {
 			return;
 		}
 
-		// Some devices stop scanning when connecting.
-		// We want to automatically start scanning again as soon as we're connected
-		this.requestScanRestart = true;
+		// Some adapters stop scanning when connecting. We want to automatically start scanning again.
+		this.startScanning().catch(() => {
+			// NO-OP
+		});
 	};
 
 	private onDiscover = (
@@ -259,15 +259,6 @@ export class Adapter extends BaseAdapter<Noble> {
 			const newRequest = this.connectionRequestQueue.shift();
 			this.connectionRequest = newRequest;
 			this.hci.createLeConn(newRequest.peripheral.address, newRequest.peripheral.addressType);
-		} else {
-			// If we stopped scanning because of the connection event and there are
-			// no more pending connections, then restart scanning
-			if (this.requestScanRestart) {
-				this.requestScanRestart = false;
-				this.startScanning().catch(() => {
-					// NO-OP
-				});
-			}
 		}
 	};
 

@@ -5,7 +5,6 @@ export declare class Adapter extends BaseAdapter<Noble> {
     private initialized;
     private scanning;
     private requestScanStop;
-    private requestScanRestart;
     private hci;
     private gap;
     private peripherals;
