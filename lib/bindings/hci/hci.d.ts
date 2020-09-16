@@ -24,14 +24,16 @@ export declare class Hci extends EventEmitter {
     static STATUS_MAPPER: string[];
     addressType: AddressType;
     address: string;
+    isUp: boolean;
     state: string;
     deviceId: number;
     private socket;
     private handleBuffers;
+    private pollTimer;
     constructor(deviceId?: number);
     static getDeviceList(): HciDevice[];
     init(): Promise<void>;
-    dispose(): void;
+    private pollIsDevUp;
     private setSocketFilter;
     private setEventMask;
     private reset;

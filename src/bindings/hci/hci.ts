@@ -127,25 +127,24 @@ export class Hci extends EventEmitter {
 	public addressType: AddressType;
 	public address: string;
 
+	public isUp: boolean;
 	public state: string;
 	public deviceId: number;
 
 	private socket: any;
 	private handleBuffers: Map<number, HandleBuffer>;
+	private pollTimer: NodeJS.Timer;
 
 	public constructor(deviceId?: number) {
 		super();
 
+		this.isUp = null;
 		this.state = null;
 		this.deviceId = deviceId;
 
 		this.handleBuffers = new Map();
 
 		this.on('stateChange', this.onStateChange);
-
-		this.socket = new BluetoothHciSocket();
-		this.socket.on('data', this.onSocketData);
-		this.socket.on('error', this.onSocketError);
 	}
 
 	public static getDeviceList() {
@@ -155,21 +154,18 @@ export class Hci extends EventEmitter {
 
 	public async init() {
 		this.deviceId = this.socket.bindRaw(this.deviceId);
+
+		this.socket = new BluetoothHciSocket();
+		this.socket.on('data', this.onSocketData);
+		this.socket.on('error', this.onSocketError);
 		this.socket.start();
+
+		this.pollTimer = setInterval(() => this.pollIsDevUp(), 1000);
 
 		return new Promise<void>((resolve) => {
 			const onReady = (state: string) => {
 				if (state === 'poweredOn') {
 					this.off('stateChange', onReady);
-
-					this.setSocketFilter();
-					this.setEventMask();
-					this.setLeEventMask();
-					this.readLocalVersion();
-					this.writeLeHostSupported();
-					this.readLeHostSupported();
-					this.readBdAddr();
-
 					resolve();
 				}
 			};
@@ -178,9 +174,29 @@ export class Hci extends EventEmitter {
 		});
 	}
 
-	public dispose() {
-		this.socket.stop();
-		this.socket = null;
+	private pollIsDevUp() {
+		const isDevUp = this.socket.isDevUp();
+
+		if (this.isUp !== isDevUp) {
+			if (isDevUp) {
+				this.setSocketFilter();
+				this.setEventMask();
+				this.setLeEventMask();
+				this.readLocalVersion();
+				this.writeLeHostSupported();
+				this.readLeHostSupported();
+				this.readBdAddr();
+			} else {
+				this.socket.stop();
+				this.socket.removeAllListeners();
+				this.socket = null;
+
+				this.state = null;
+				this.emit('stateChange', 'poweredOff');
+			}
+
+			this.isUp = isDevUp;
+		}
 	}
 
 	private setSocketFilter() {
