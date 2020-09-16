@@ -81,7 +81,17 @@ export class Adapter extends BaseAdapter<Noble> {
 
 		this.gap.on('discover', this.onDiscover);
 
-		this.gap.startScanning(true);
+		return new Promise<void>((resolve) => {
+			const done = () => {
+				this.gap.off('scanStart', done);
+
+				resolve();
+			};
+
+			this.gap.on('scanStart', done);
+
+			this.gap.startScanning(true);
+		});
 	}
 
 	private onScanStart = () => {
@@ -91,8 +101,18 @@ export class Adapter extends BaseAdapter<Noble> {
 	public async stopScanning(): Promise<void> {
 		this.gap.off('discover', this.onDiscover);
 
-		this.requestScanStop = true;
-		this.gap.stopScanning();
+		return new Promise<void>((resolve) => {
+			const done = () => {
+				this.gap.off('scanStop', done);
+
+				resolve();
+			};
+
+			this.gap.on('scanStop', done);
+
+			this.requestScanStop = true;
+			this.gap.stopScanning();
+		});
 	}
 
 	private onScanStop = () => {
