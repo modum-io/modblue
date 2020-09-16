@@ -1,7 +1,7 @@
 import { BaseAdapter } from './Adapter';
 import { BaseNoble } from './Noble';
 import { BaseService } from './Service';
-import { AddressType } from './types';
+import { AddressType, PeripheralState } from './types';
 
 export abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends BaseAdapter = BaseAdapter> {
 	protected readonly noble: N;
@@ -16,7 +16,7 @@ export abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends 
 	public advertisement: any;
 	public rssi: number;
 
-	protected _state: string;
+	protected _state: PeripheralState;
 	public get state() {
 		return this._state;
 	}

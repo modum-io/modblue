@@ -15,10 +15,12 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	private services: Map<string, Service> = new Map();
 
 	public async connect(requestMtu?: number): Promise<void> {
+		this._state = 'connecting';
 		this._mtu = requestMtu;
 		await this.adapter.connect(this, requestMtu);
 	}
 	public onConnect(aclStream: AclStream, gatt: Gatt, signaling: Signaling) {
+		this._state = 'connected';
 		this.aclStream = aclStream;
 		this.gatt = gatt;
 		this.signaling = signaling;
@@ -31,9 +33,11 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	};
 
 	public async disconnect(): Promise<number> {
+		this._state = 'disconnecting';
 		return this.adapter.disconnect(this);
 	}
 	public onDisconnect() {
+		this._state = 'disconnected';
 		this.aclStream.push(null, null);
 		this.gatt.removeAllListeners();
 		this.signaling.removeAllListeners();
