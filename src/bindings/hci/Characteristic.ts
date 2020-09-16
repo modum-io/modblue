@@ -9,6 +9,9 @@ export class Characteristic extends BaseCharacteristic<Noble, Service> {
 	private gatt: Gatt;
 
 	private descriptors: Map<string, Descriptor> = new Map();
+	public getDiscoveredDescriptors() {
+		return [...this.descriptors.values()];
+	}
 
 	public constructor(noble: Noble, service: Service, uuid: string, properties: string[], gatt: Gatt) {
 		super(noble, service, uuid, properties);

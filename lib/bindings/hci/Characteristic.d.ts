@@ -7,6 +7,7 @@ import { Service } from './Service';
 export declare class Characteristic extends BaseCharacteristic<Noble, Service> {
     private gatt;
     private descriptors;
+    getDiscoveredDescriptors(): Descriptor[];
     constructor(noble: Noble, service: Service, uuid: string, properties: string[], gatt: Gatt);
     read(): Promise<Buffer>;
     write(data: Buffer, withoutResponse: boolean): Promise<void>;

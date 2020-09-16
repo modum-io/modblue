@@ -9,6 +9,9 @@ export class Service extends BaseService<Noble, Peripheral> {
 	private gatt: Gatt;
 
 	private characteristics: Map<string, Characteristic> = new Map();
+	public getDiscoveredCharacteristics() {
+		return [...this.characteristics.values()];
+	}
 
 	public constructor(noble: Noble, peripheral: Peripheral, uuid: string, gatt: Gatt) {
 		super(noble, peripheral, uuid);

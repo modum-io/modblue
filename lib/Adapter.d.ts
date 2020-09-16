@@ -17,5 +17,5 @@ export declare abstract class BaseAdapter<N extends BaseNoble = BaseNoble> exten
     abstract isScanning(): Promise<boolean>;
     abstract startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;
     abstract stopScanning(): Promise<void>;
-    abstract getAllPeripherals(): Promise<BasePeripheral[]>;
+    abstract getScannedPeripherals(): Promise<BasePeripheral[]>;
 }

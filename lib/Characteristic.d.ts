@@ -15,5 +15,6 @@ export declare abstract class BaseCharacteristic<N extends BaseNoble = BaseNoble
     abstract broadcast(broadcast: boolean): Promise<boolean>;
     abstract subscribe(): Promise<void>;
     abstract unsubscribe(): Promise<void>;
+    abstract getDiscoveredDescriptors(): BaseDescriptor[];
     abstract discoverDescriptors(): Promise<BaseDescriptor[]>;
 }

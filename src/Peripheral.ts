@@ -67,5 +67,7 @@ export abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends 
 
 	public abstract async disconnect(): Promise<number>;
 
+	public abstract getDiscoveredServices(): BaseService[];
+
 	public abstract async discoverServices(serviceUUIDs: string[]): Promise<BaseService[]>;
 }

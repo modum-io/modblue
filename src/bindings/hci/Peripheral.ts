@@ -13,6 +13,9 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	private signaling: Signaling;
 
 	private services: Map<string, Service> = new Map();
+	public getDiscoveredServices() {
+		return [...this.services.values()];
+	}
 
 	public async connect(requestMtu?: number): Promise<void> {
 		this._state = 'connecting';

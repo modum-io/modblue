@@ -25,5 +25,7 @@ export abstract class BaseService<N extends BaseNoble = BaseNoble, P extends Bas
 
 	public abstract async discoverIncludedServices(serviceUUIDs: string[]): Promise<BaseService[]>;
 
+	public abstract getDiscoveredCharacteristics(): BaseCharacteristic[];
+
 	public abstract async discoverCharacteristics(characteristicUUIDs?: string[]): Promise<BaseCharacteristic[]>;
 }

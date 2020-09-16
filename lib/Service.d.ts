@@ -8,5 +8,6 @@ export declare abstract class BaseService<N extends BaseNoble = BaseNoble, P ext
     constructor(noble: N, peripheral: P, uuid: string);
     toString(): string;
     abstract discoverIncludedServices(serviceUUIDs: string[]): Promise<BaseService[]>;
+    abstract getDiscoveredCharacteristics(): BaseCharacteristic[];
     abstract discoverCharacteristics(characteristicUUIDs?: string[]): Promise<BaseCharacteristic[]>;
 }

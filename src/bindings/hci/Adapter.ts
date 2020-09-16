@@ -37,7 +37,7 @@ export class Adapter extends BaseAdapter<Noble> {
 	private connectionRequestQueue: ConnectRequest[] = [];
 	private disconnectRequest: Map<string, DisconnectRequest> = new Map();
 
-	public async getAllPeripherals(): Promise<Peripheral[]> {
+	public async getScannedPeripherals(): Promise<Peripheral[]> {
 		return [...this.peripherals.values()];
 	}
 

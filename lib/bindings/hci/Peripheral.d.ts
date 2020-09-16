@@ -10,6 +10,7 @@ export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     private gatt;
     private signaling;
     private services;
+    getDiscoveredServices(): Service[];
     connect(requestMtu?: number): Promise<void>;
     onConnect(aclStream: AclStream, gatt: Gatt, signaling: Signaling): void;
     private onMtu;

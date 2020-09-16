@@ -12,7 +12,7 @@ export declare class Adapter extends BaseAdapter<Noble> {
     private connectionRequest;
     private connectionRequestQueue;
     private disconnectRequest;
-    getAllPeripherals(): Promise<Peripheral[]>;
+    getScannedPeripherals(): Promise<Peripheral[]>;
     isPowered(): Promise<boolean>;
     isScanning(): Promise<boolean>;
     private init;

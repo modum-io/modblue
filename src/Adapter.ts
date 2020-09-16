@@ -40,5 +40,5 @@ export abstract class BaseAdapter<N extends BaseNoble = BaseNoble> extends Event
 	public abstract async startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;
 	public abstract async stopScanning(): Promise<void>;
 
-	public abstract async getAllPeripherals(): Promise<BasePeripheral[]>;
+	public abstract async getScannedPeripherals(): Promise<BasePeripheral[]>;
 }

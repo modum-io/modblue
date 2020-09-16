@@ -43,5 +43,7 @@ export abstract class BaseCharacteristic<
 	public abstract async subscribe(): Promise<void>;
 	public abstract async unsubscribe(): Promise<void>;
 
+	public abstract getDiscoveredDescriptors(): BaseDescriptor[];
+
 	public abstract async discoverDescriptors(): Promise<BaseDescriptor[]>;
 }
