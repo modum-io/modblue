@@ -4,6 +4,8 @@ import { Peripheral } from './Peripheral';
 export declare class Adapter extends BaseAdapter<Noble> {
     private initialized;
     private scanning;
+    private requestScanStop;
+    private requestScanRestart;
     private hci;
     private gap;
     private peripherals;
@@ -16,8 +18,8 @@ export declare class Adapter extends BaseAdapter<Noble> {
     private init;
     dispose(): void;
     startScanning(): Promise<void>;
-    stopScanning(): Promise<void>;
     private onScanStart;
+    stopScanning(): Promise<void>;
     private onScanStop;
     private onDiscover;
     connect(peripheral: Peripheral, requestedMTU?: number): Promise<void>;
