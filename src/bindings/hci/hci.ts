@@ -153,11 +153,11 @@ export class Hci extends EventEmitter {
 	}
 
 	public async init() {
-		this.deviceId = this.socket.bindRaw(this.deviceId);
-
 		this.socket = new BluetoothHciSocket();
 		this.socket.on('data', this.onSocketData);
 		this.socket.on('error', this.onSocketError);
+
+		this.deviceId = this.socket.bindRaw(this.deviceId);
 		this.socket.start();
 
 		this.pollTimer = setInterval(() => this.pollIsDevUp(), 1000);
