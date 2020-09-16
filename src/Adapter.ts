@@ -14,7 +14,10 @@ export abstract class BaseAdapter<N extends BaseNoble = BaseNoble> extends Event
 
 	public readonly id: string;
 	public readonly name: string;
-	public readonly address: string;
+	protected _address: string;
+	public get address() {
+		return this._address;
+	}
 
 	public constructor(noble: N, id: string, name: string, address: string) {
 		super();
@@ -23,7 +26,7 @@ export abstract class BaseAdapter<N extends BaseNoble = BaseNoble> extends Event
 
 		this.id = id;
 		this.name = name;
-		this.address = address;
+		this._address = address;
 	}
 
 	public toString() {

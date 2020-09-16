@@ -17,11 +17,6 @@ interface ConnectRequest {
 	isDone?: boolean;
 }
 
-interface DisconnectRequest {
-	resolve?: () => void;
-	reject?: (error: any) => void;
-}
-
 export class Adapter extends BaseAdapter<Noble> {
 	private initialized: boolean = false;
 	private scanning: boolean = false;
@@ -35,7 +30,6 @@ export class Adapter extends BaseAdapter<Noble> {
 
 	private connectionRequest: ConnectRequest;
 	private connectionRequestQueue: ConnectRequest[] = [];
-	private disconnectRequest: Map<string, DisconnectRequest> = new Map();
 
 	public async getScannedPeripherals(): Promise<Peripheral[]> {
 		return [...this.peripherals.values()];
@@ -56,7 +50,7 @@ export class Adapter extends BaseAdapter<Noble> {
 		}
 
 		this.hci = new Hci();
-		this.hci.on('addressChange', (addr) => console.log(`Address change: ${addr}`));
+		this.hci.on('addressChange', (addr) => (this._address = addr));
 		this.hci.on('leConnComplete', this.onLeConnComplete);
 
 		this.gap = new Gap(this.hci);

@@ -11,7 +11,6 @@ export declare class Adapter extends BaseAdapter<Noble> {
     private handleToUUID;
     private connectionRequest;
     private connectionRequestQueue;
-    private disconnectRequest;
     getScannedPeripherals(): Promise<Peripheral[]>;
     isPowered(): Promise<boolean>;
     isScanning(): Promise<boolean>;

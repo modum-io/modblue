@@ -10,7 +10,8 @@ export declare abstract class BaseAdapter<N extends BaseNoble = BaseNoble> exten
     protected readonly noble: N;
     readonly id: string;
     readonly name: string;
-    readonly address: string;
+    protected _address: string;
+    get address(): string;
     constructor(noble: N, id: string, name: string, address: string);
     toString(): string;
     abstract isPowered(): Promise<boolean>;
