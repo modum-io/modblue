@@ -5,5 +5,6 @@ export declare abstract class BaseNoble {
     protected _address: string;
     get address(): string;
     abstract init(): Promise<void>;
+    abstract dispose(): Promise<void>;
     abstract getAdapters(): Promise<BaseAdapter[]>;
 }

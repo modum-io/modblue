@@ -11,6 +11,10 @@ export class Noble extends BaseNoble {
 		// NO-OP
 	}
 
+	public async dispose() {
+		// NO-OP
+	}
+
 	public async getAdapters() {
 		const adapters = Hci.getDeviceList();
 		for (const rawAdapter of adapters) {
