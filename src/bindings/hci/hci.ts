@@ -127,20 +127,17 @@ export class Hci extends EventEmitter {
 	public addressType: AddressType;
 	public address: string;
 
-	public isUp: boolean;
 	public state: string;
 	public deviceId: number;
 
 	private socket: any;
 	private handleBuffers: Map<number, HandleBuffer>;
-	private pollTimer: NodeJS.Timer;
 
-	public constructor() {
+	public constructor(deviceId?: number) {
 		super();
 
-		this.isUp = null;
 		this.state = null;
-		this.deviceId = null;
+		this.deviceId = deviceId;
 
 		this.handleBuffers = new Map();
 
@@ -156,44 +153,34 @@ export class Hci extends EventEmitter {
 		return socket.getDeviceList() as HciDevice[];
 	}
 
-	public init(deviceId?: number) {
-		this.deviceId = this.socket.bindRaw(deviceId);
+	public async init() {
+		this.deviceId = this.socket.bindRaw(this.deviceId);
 		this.socket.start();
 
-		this.pollTimer = setInterval(() => this.pollIsDevUp(), 1000);
+		return new Promise<void>((resolve) => {
+			const onReady = (state: string) => {
+				if (state === 'poweredOn') {
+					this.off('stateChange', onReady);
+
+					this.setSocketFilter();
+					this.setEventMask();
+					this.setLeEventMask();
+					this.readLocalVersion();
+					this.writeLeHostSupported();
+					this.readLeHostSupported();
+					this.readBdAddr();
+
+					resolve();
+				}
+			};
+
+			this.on('stateChange', onReady);
+		});
 	}
 
 	public dispose() {
-		clearInterval(this.pollTimer);
-
 		this.socket.stop();
 		this.socket = null;
-	}
-
-	private pollIsDevUp() {
-		const isDevUp = this.socket.isDevUp();
-
-		if (this.isUp !== isDevUp) {
-			if (isDevUp) {
-				if (this.state === 'poweredOff') {
-					this.socket.removeAllListeners();
-					this.state = null;
-					this.init();
-					return;
-				}
-				this.setSocketFilter();
-				this.setEventMask();
-				this.setLeEventMask();
-				this.readLocalVersion();
-				this.writeLeHostSupported();
-				this.readLeHostSupported();
-				this.readBdAddr();
-			} else {
-				this.emit('stateChange', 'poweredOff');
-			}
-
-			this.isUp = isDevUp;
-		}
 	}
 
 	private setSocketFilter() {

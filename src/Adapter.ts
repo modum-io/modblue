@@ -37,7 +37,6 @@ export abstract class BaseAdapter<N extends BaseNoble = BaseNoble> extends Event
 		});
 	}
 
-	public abstract async isPowered(): Promise<boolean>;
 	public abstract async isScanning(): Promise<boolean>;
 
 	public abstract async startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;

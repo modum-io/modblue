@@ -14,7 +14,6 @@ export declare abstract class BaseAdapter<N extends BaseNoble = BaseNoble> exten
     get address(): string;
     constructor(noble: N, id: string, name: string, address: string);
     toString(): string;
-    abstract isPowered(): Promise<boolean>;
     abstract isScanning(): Promise<boolean>;
     abstract startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;
     abstract stopScanning(): Promise<void>;

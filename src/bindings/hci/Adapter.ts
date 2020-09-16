@@ -35,21 +35,18 @@ export class Adapter extends BaseAdapter<Noble> {
 		return [...this.peripherals.values()];
 	}
 
-	public async isPowered(): Promise<boolean> {
-		this.init();
-		return this.hci.isUp;
-	}
-
 	public async isScanning(): Promise<boolean> {
 		return this.scanning;
 	}
 
-	private init() {
+	private async init() {
 		if (this.initialized) {
 			return;
 		}
 
-		this.hci = new Hci();
+		this.initialized = true;
+
+		this.hci = new Hci(Number(this.id));
 		this.hci.on('addressChange', (addr) => (this._address = addr));
 		this.hci.on('leConnComplete', this.onLeConnComplete);
 
@@ -57,13 +54,11 @@ export class Adapter extends BaseAdapter<Noble> {
 		this.gap.on('scanStart', this.onScanStart);
 		this.gap.on('scanStop', this.onScanStop);
 
-		this.hci.init(Number(this.id));
-
-		this.initialized = true;
+		await this.hci.init();
 	}
 
 	public async startScanning(): Promise<void> {
-		this.init();
+		await this.init();
 
 		this.gap.on('discover', this.onDiscover);
 
