@@ -1,28 +1,23 @@
-/// <reference types="node" />
-import { EventEmitter } from 'events';
-import { AddressType } from './Bindings';
-import { Characteristic } from './Characteristic';
-import { Noble } from './Noble';
-import { Service } from './Service';
-export declare class Peripheral extends EventEmitter {
-    private readonly noble;
+import { BaseAdapter } from './Adapter';
+import { BaseNoble } from './Noble';
+import { BaseService } from './Service';
+import { AddressType } from './types';
+export declare abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends BaseAdapter = BaseAdapter> {
+    protected readonly noble: N;
+    readonly adapter: A;
     readonly uuid: string;
-    state: string;
-    address: string;
-    addressType: AddressType;
+    readonly address: string;
+    readonly addressType: AddressType;
     connectable: boolean;
     advertisement: any;
     rssi: number;
-    mtu: number;
-    services: Map<string, Service>;
-    constructor(noble: Noble, uuid: string, address: string, addressType: AddressType, connectable: boolean, advertisement: any, rssi: number);
+    protected _state: string;
+    get state(): string;
+    protected _mtu: number;
+    get mtu(): number;
+    constructor(noble: N, adapter: A, uuid: string, address: string, addressType: AddressType, connectable: boolean, advertisement: any, rssi: number);
     toString(): string;
-    connect(requestMtu?: number): Promise<void>;
-    disconnect(): Promise<string>;
-    updateRSSI(): Promise<number>;
-    discoverServices(uuids: string[]): Promise<Map<string, Service>>;
-    discoverSomeServicesAndCharacteristics(serviceUUIDs: string[], characteristicsUUIDs: string[]): Promise<[Service[], Characteristic[]]>;
-    discoverAllServicesAndCharacteristics(): Promise<[Service[], Characteristic[]]>;
-    readHandle(handle: number): Promise<Buffer>;
-    writeHandle(handle: number, data: Buffer, withoutResponse: boolean): Promise<void>;
+    abstract connect(requestMtu?: number): Promise<void>;
+    abstract disconnect(): Promise<number>;
+    abstract discoverServices(serviceUUIDs: string[]): Promise<BaseService[]>;
 }

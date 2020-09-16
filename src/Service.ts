@@ -1,62 +1,29 @@
-import { EventEmitter } from 'events';
+import { BaseCharacteristic } from './Characteristic';
+import { BaseNoble } from './Noble';
+import { BasePeripheral } from './Peripheral';
 
-import { Characteristic } from './Characteristic';
-import knownServices from './data/services.json';
-import { Noble } from './Noble';
+export abstract class BaseService<N extends BaseNoble = BaseNoble, P extends BasePeripheral = BasePeripheral> {
+	protected readonly noble: N;
 
-type KnownServices = { [uuid: string]: { name: string; type: string } };
-
-export class Service extends EventEmitter {
-	private readonly noble: Noble;
-	private readonly peripheralUUID: string;
+	public readonly peripheral: P;
 
 	public readonly uuid: string;
-	public readonly name: string;
-	public readonly type: string;
 
-	public includedServiceUUIDs: string[];
-	public characteristics: Map<string, Characteristic>;
-
-	public constructor(noble: Noble, peripheralUUID: string, uuid: string) {
-		super();
-
+	public constructor(noble: N, peripheral: P, uuid: string) {
 		this.noble = noble;
-		this.peripheralUUID = peripheralUUID;
+		this.peripheral = peripheral;
 
 		this.uuid = uuid;
-		this.name = null;
-		this.type = null;
-
-		this.includedServiceUUIDs = [];
-		this.characteristics = new Map();
-
-		const service = (knownServices as KnownServices)[uuid];
-		if (service) {
-			this.name = service.name;
-			this.type = service.type;
-		}
 	}
 
 	public toString() {
 		return JSON.stringify({
-			uuid: this.uuid,
-			name: this.name,
-			type: this.type,
-			includedServiceUUIDs: this.includedServiceUUIDs
+			peripheralUUID: this.peripheral.uuid,
+			uuid: this.uuid
 		});
 	}
 
-	public async discoverIncludedServices(serviceUUIDs: string[]) {
-		this.noble.discoverIncludedServices(this.peripheralUUID, this.uuid, serviceUUIDs);
-		return new Promise<string[]>((resolve) =>
-			this.once('includedServicesDiscover', (includedServiceUUIDs) => resolve(includedServiceUUIDs))
-		);
-	}
+	public abstract async discoverIncludedServices(serviceUUIDs: string[]): Promise<BaseService[]>;
 
-	public async discoverCharacteristics(characteristicUUIDs: string[]) {
-		this.noble.discoverCharacteristics(this.peripheralUUID, this.uuid, characteristicUUIDs);
-		return new Promise<Map<string, Characteristic>>((resolve) =>
-			this.once('characteristicsDiscover', (characteristics) => resolve(characteristics))
-		);
-	}
+	public abstract async discoverCharacteristics(characteristicUUIDs?: string[]): Promise<BaseCharacteristic[]>;
 }

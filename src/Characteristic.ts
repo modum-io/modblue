@@ -1,96 +1,47 @@
 import { EventEmitter } from 'events';
 
-import knownCharacteristics from './data/characteristics.json';
-import { Descriptor } from './Descriptor';
-import { Noble } from './Noble';
+import { BaseDescriptor } from './Descriptor';
+import { BaseNoble } from './Noble';
+import { BaseService } from './Service';
 
-type KnownCharacteristics = { [uuid: string]: { name: string; type: string } };
+export abstract class BaseCharacteristic<
+	N extends BaseNoble = BaseNoble,
+	S extends BaseService = BaseService
+> extends EventEmitter {
+	protected readonly noble: N;
 
-export class Characteristic extends EventEmitter {
-	private noble: Noble;
-	private peripheralUUID: string;
-	private serviceUUID: string;
+	public readonly service: S;
 
 	public readonly uuid: string;
-	public readonly name: string;
-	public readonly type: string;
 
-	public properties: string[];
-	public descriptors: Map<string, Descriptor>;
+	public readonly properties: string[];
 
-	public constructor(noble: Noble, peripheralUUID: string, serviceUUID: string, uuid: string, properties: string[]) {
+	public constructor(noble: N, service: S, uuid: string, properties: string[]) {
 		super();
 
 		this.noble = noble;
-		this.peripheralUUID = peripheralUUID;
-		this.serviceUUID = serviceUUID;
+		this.service = service;
 
 		this.uuid = uuid;
-		this.name = null;
-		this.type = null;
 
 		this.properties = properties;
-		this.descriptors = new Map();
-
-		const characteristic = (knownCharacteristics as KnownCharacteristics)[uuid];
-		if (characteristic) {
-			this.name = characteristic.name;
-			this.type = characteristic.type;
-		}
 	}
 
 	public toString() {
 		return JSON.stringify({
+			serviceUUID: this.service.uuid,
 			uuid: this.uuid,
-			name: this.name,
-			type: this.type,
 			properties: this.properties
 		});
 	}
 
-	public async read() {
-		this.noble.read(this.peripheralUUID, this.serviceUUID, this.uuid);
-		return new Promise<Buffer>((resolve) => {
-			const onRead = (data: Buffer, isNotification: boolean) => {
-				// only call the callback if 'read' event and non-notification
-				// 'read' for non-notifications is only present for backwards compatbility
-				if (!isNotification) {
-					// remove the listener
-					this.removeListener('read', onRead);
-					resolve(data);
-				}
-			};
+	public abstract async read(): Promise<Buffer>;
+	public abstract async write(data: Buffer, withoutResponse: boolean): Promise<void>;
 
-			this.on('read', onRead);
-		});
-	}
+	public abstract async broadcast(broadcast: boolean): Promise<boolean>;
 
-	public async write(data: Buffer, withoutResponse: boolean) {
-		this.noble.write(this.peripheralUUID, this.serviceUUID, this.uuid, data, withoutResponse);
-		return new Promise<void>((resolve) => this.once('write', () => resolve()));
-	}
+	public abstract async subscribe(): Promise<void>;
+	public abstract async unsubscribe(): Promise<void>;
 
-	public async broadcast(broadcast: any) {
-		this.noble.broadcast(this.peripheralUUID, this.serviceUUID, this.uuid, broadcast);
-		return new Promise<void>((resolve) => this.once('broadcast', () => resolve()));
-	}
-
-	// deprecated in favour of subscribe/unsubscribe
-	public async notify(notify: boolean) {
-		this.noble.notify(this.peripheralUUID, this.serviceUUID, this.uuid, notify);
-		return new Promise<void>((resolve) => this.once('notify', () => resolve()));
-	}
-
-	public async subscribe() {
-		await this.notify(true);
-	}
-
-	public async unsubscribe() {
-		await this.notify(false);
-	}
-
-	public async discoverDescriptors() {
-		this.noble.discoverDescriptors(this.peripheralUUID, this.serviceUUID, this.uuid);
-		return new Promise<any[]>((resolve) => this.once('descriptorsDiscover', (descriptors) => resolve(descriptors)));
-	}
+	public abstract async discoverDescriptors(): Promise<BaseDescriptor[]>;
 }

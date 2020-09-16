@@ -1,7 +1,5 @@
 import { EventEmitter } from 'events';
 
-import { GattCharacteristic, GattDescriptor, GattService } from '../../Bindings';
-
 import { AclStream } from './acl-stream';
 
 /* eslint-disable no-unused-vars */
@@ -65,70 +63,61 @@ interface GattCommand {
 	writeCallback?: () => void;
 }
 
+export interface GattService {
+	uuid: string;
+	startHandle: number;
+	endHandle: number;
+}
+
+export interface GattCharacteristic {
+	uuid: string;
+	startHandle: number;
+	endHandle?: number;
+	propertiesFlags: number;
+	properties: string[];
+	valueHandle: number;
+}
+
+export interface GattDescriptor {
+	uuid: string;
+	handle: number;
+}
+
 export declare interface Gatt {
-	on(event: 'mtu', listener: (address: string, mtu: number) => void): this;
-	on(event: 'servicesDiscover', listener: (address: string, discoveredServices: GattService[]) => void): this;
-	on(event: 'servicesDiscovered', listener: (address: string, services: GattService[]) => void): this;
+	on(event: 'mtu', listener: (mtu: number) => void): this;
+	on(event: 'servicesDiscovered', listener: (services: GattService[]) => void): this;
 	on(
-		event: 'includedServicesDiscover',
-		listener: (address: string, serviceUUID: string, includedServiceUUIDs: string[]) => void
-	): this;
-	on(
-		event: 'characteristicsDiscover',
-		listener: (address: string, serviceUUID: string, discoveredCharacteristics: GattCharacteristic[]) => void
+		event: 'includedServicesDiscovered',
+		listener: (serviceUUID: string, includedServices: GattService[]) => void
 	): this;
 	on(
 		event: 'characteristicsDiscovered',
-		listener: (address: string, serviceUUID: string, characteristics: GattCharacteristic[]) => void
+		listener: (serviceUUID: string, characteristics: GattCharacteristic[]) => void
 	): this;
-	on(
-		event: 'read',
-		listener: (address: string, serviceUUID: string, characteristicUUID: string, data: Buffer) => void
-	): this;
-	on(event: 'write', listener: (address: string, serviceUUID: string, characteristicUUID: string) => void): this;
-	on(
-		event: 'broadcast',
-		listener: (address: string, serviceUUID: string, characteristicUUID: string, broadcast: boolean) => void
-	): this;
-	on(
-		event: 'notify',
-		listener: (address: string, serviceUUID: string, characteristicUUID: string, notify: boolean) => void
-	): this;
+	on(event: 'read', listener: (serviceUUID: string, characteristicUUID: string, data: Buffer) => void): this;
+	on(event: 'write', listener: (serviceUUID: string, characteristicUUID: string) => void): this;
+	on(event: 'broadcast', listener: (serviceUUID: string, characteristicUUID: string, broadcast: boolean) => void): this;
+	on(event: 'notify', listener: (serviceUUID: string, characteristicUUID: string, notify: boolean) => void): this;
 	on(
 		event: 'notification',
-		listener: (address: string, serviceUUID: string, characteristicUUID: string, valueData: Buffer) => void
-	): this;
-	on(
-		event: 'descriptorsDiscover',
-		listener: (
-			address: string,
-			serviceUUID: string,
-			characteristicUUID: string,
-			discoveredDescriptors: GattDescriptor[]
-		) => void
+		listener: (serviceUUID: string, characteristicUUID: string, valueData: Buffer) => void
 	): this;
 	on(
 		event: 'descriptorsDiscovered',
-		listener: (address: string, serviceUUID: string, characteristicUUID: string, descriptors: GattDescriptor[]) => void
+		listener: (serviceUUID: string, characteristicUUID: string, descriptors: GattDescriptor[]) => void
 	): this;
 	on(
 		event: 'valueRead',
-		listener: (
-			address: string,
-			serviceUUID: string,
-			characteristicUUID: string,
-			descriptorUUID: string,
-			data: Buffer
-		) => void
+		listener: (serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer) => void
 	): this;
 	on(
 		event: 'valueWrite',
-		listener: (address: string, serviceUUID: string, characteristicUUID: string, descriptorUUID: string) => void
+		listener: (serviceUUID: string, characteristicUUID: string, descriptorUUID: string) => void
 	): this;
-	on(event: 'handleRead', listener: (address: string, handle: number, data: Buffer) => void): this;
-	on(event: 'handleWrite', listener: (address: string, handle: number) => void): this;
-	on(event: 'handleNotify', listener: (address: string, valueHandle: number, valueData: Buffer) => void): this;
-	on(event: 'handleConfirmation', listener: (address: string, valueHandle: number) => void): this;
+	on(event: 'handleRead', listener: (handle: number, data: Buffer) => void): this;
+	on(event: 'handleWrite', listener: (handle: number) => void): this;
+	on(event: 'handleNotify', listener: (valueHandle: number, valueData: Buffer) => void): this;
+	on(event: 'handleConfirmation', listener: (valueHandle: number) => void): this;
 }
 
 export class Gatt extends EventEmitter {
@@ -185,18 +174,18 @@ export class Gatt extends EventEmitter {
 			const valueHandle = data.readUInt16LE(1);
 			const valueData = data.slice(3);
 
-			this.emit('handleNotify', this.address, valueHandle, valueData);
+			this.emit('handleNotify', valueHandle, valueData);
 
 			if (data[0] === ATT_OP_HANDLE_IND) {
 				this.queueCommand(this.handleConfirmation(), null, () => {
-					this.emit('handleConfirmation', this.address, valueHandle);
+					this.emit('handleConfirmation', valueHandle);
 				});
 			}
 
 			for (const serviceUuid of this.services.keys()) {
 				for (const characteristicUuid in this.characteristics.get(serviceUuid).keys()) {
 					if (this.characteristics.get(serviceUuid).get(characteristicUuid).valueHandle === valueHandle) {
-						this.emit('notification', this.address, serviceUuid, characteristicUuid, valueData);
+						this.emit('notification', serviceUuid, characteristicUuid, valueData);
 					}
 				}
 			}
@@ -405,7 +394,7 @@ export class Gatt extends EventEmitter {
 				this.mtu = newMtu;
 			}
 
-			this.emit('mtu', this.address, this.mtu);
+			this.emit('mtu', this.mtu);
 		});
 	}
 
@@ -440,17 +429,16 @@ export class Gatt extends EventEmitter {
 			}
 
 			if (opcode !== ATT_OP_READ_BY_GROUP_RESP || services[services.length - 1].endHandle === 0xffff) {
-				const servicesDiscovered: GattService[] = [];
+				const wantedServices: GattService[] = [];
 				for (i = 0; i < services.length; i++) {
 					const uuid = services[i].uuid.trim();
-					if ((uuids.length === 0 || uuids.indexOf(uuid) !== -1) && !servicesDiscovered.some((s) => s.uuid === uuid)) {
-						servicesDiscovered.push(services[i]);
+					if (uuids.length === 0 || uuids.indexOf(uuid) !== -1) {
+						wantedServices.push(services[i]);
 					}
 
 					this.services.set(services[i].uuid, services[i]);
 				}
-				this.emit('servicesDiscover', this.address, servicesDiscovered);
-				this.emit('servicesDiscovered', this.address, services);
+				this.emit('servicesDiscovered', wantedServices);
 			} else {
 				this.queueCommand(
 					this.readByGroupRequest(services[services.length - 1].endHandle + 1, 0xffff, GATT_PRIM_SVC_UUID),
@@ -497,15 +485,15 @@ export class Gatt extends EventEmitter {
 				opcode !== ATT_OP_READ_BY_TYPE_RESP ||
 				includedServices[includedServices.length - 1].endHandle === service.endHandle
 			) {
-				const includedServiceUuids = [];
+				const wantedIncludedServices: GattService[] = [];
 
 				for (i = 0; i < includedServices.length; i++) {
 					if (uuids.length === 0 || uuids.indexOf(includedServices[i].uuid) !== -1) {
-						includedServiceUuids.push(includedServices[i].uuid);
+						wantedIncludedServices.push(includedServices[i]);
 					}
 				}
 
-				this.emit('includedServicesDiscover', this.address, service.uuid, includedServiceUuids);
+				this.emit('includedServicesDiscovered', service.uuid, wantedIncludedServices);
 			} else {
 				this.queueCommand(
 					this.readByTypeRequest(
@@ -589,7 +577,7 @@ export class Gatt extends EventEmitter {
 				opcode !== ATT_OP_READ_BY_TYPE_RESP ||
 				characteristics[characteristics.length - 1].valueHandle === service.endHandle
 			) {
-				const characteristicsDiscovered: GattCharacteristic[] = [];
+				const wantedCharacteristics: GattCharacteristic[] = [];
 				for (i = 0; i < characteristics.length; i++) {
 					const characteristic = characteristics[i];
 
@@ -604,12 +592,11 @@ export class Gatt extends EventEmitter {
 					this.characteristics.get(serviceUUID).set(characteristic.uuid, characteristic);
 
 					if (characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(characteristic.uuid) !== -1) {
-						characteristicsDiscovered.push(characteristic);
+						wantedCharacteristics.push(characteristic);
 					}
 				}
 
-				this.emit('characteristicsDiscover', this.address, serviceUUID, characteristicsDiscovered);
-				this.emit('characteristicsDiscovered', this.address, serviceUUID, characteristics);
+				this.emit('characteristicsDiscovered', serviceUUID, wantedCharacteristics);
 			} else {
 				this.queueCommand(
 					this.readByTypeRequest(
@@ -639,10 +626,10 @@ export class Gatt extends EventEmitter {
 				if (data.length === this.mtu) {
 					this.queueCommand(this.readBlobRequest(characteristic.valueHandle, readData.length), callback);
 				} else {
-					this.emit('read', this.address, serviceUUID, characteristicUUID, readData);
+					this.emit('read', serviceUUID, characteristicUUID, readData);
 				}
 			} else {
-				this.emit('read', this.address, serviceUUID, characteristicUUID, readData);
+				this.emit('read', serviceUUID, characteristicUUID, readData);
 			}
 		};
 
@@ -654,7 +641,7 @@ export class Gatt extends EventEmitter {
 
 		if (withoutResponse) {
 			this.queueCommand(this.writeRequest(characteristic.valueHandle, data, true), null, () => {
-				this.emit('write', this.address, serviceUUID, characteristicUUID);
+				this.emit('write', serviceUUID, characteristicUUID);
 			});
 		} else if (data.length + 3 > this.mtu) {
 			return this.longWrite(serviceUUID, characteristicUUID, data, withoutResponse);
@@ -663,7 +650,7 @@ export class Gatt extends EventEmitter {
 				const opcode = moreData[0];
 
 				if (opcode === ATT_OP_WRITE_RESP) {
-					this.emit('write', this.address, serviceUUID, characteristicUUID);
+					this.emit('write', serviceUUID, characteristicUUID);
 				}
 			});
 		}
@@ -709,7 +696,7 @@ export class Gatt extends EventEmitter {
 			const opcode = resp[0];
 
 			if (opcode === ATT_OP_EXECUTE_WRITE_RESP && !withoutResponse) {
-				this.emit('write', this.address, serviceUUID, characteristicUUID);
+				this.emit('write', serviceUUID, characteristicUUID);
 			}
 		});
 	}
@@ -738,7 +725,7 @@ export class Gatt extends EventEmitter {
 						const moreOpcode = moreData[0];
 
 						if (moreOpcode === ATT_OP_WRITE_RESP) {
-							this.emit('broadcast', this.address, serviceUUID, characteristicUUID, broadcast);
+							this.emit('broadcast', serviceUUID, characteristicUUID, broadcast);
 						}
 					});
 				}
@@ -781,7 +768,7 @@ export class Gatt extends EventEmitter {
 						const moreOpcode = moreData[0];
 
 						if (moreOpcode === ATT_OP_WRITE_RESP) {
-							this.emit('notify', this.address, serviceUUID, characteristicUUID, notify);
+							this.emit('notify', serviceUUID, characteristicUUID, notify);
 						}
 					});
 				}
@@ -817,9 +804,7 @@ export class Gatt extends EventEmitter {
 					this.descriptors.get(serviceUUID).get(characteristicUUID).set(descriptors[i].uuid, descriptors[i]);
 				}
 
-				const allDescriptors = [...this.descriptors.get(serviceUUID).get(characteristicUUID).values()];
-				this.emit('descriptorsDiscover', this.address, serviceUUID, characteristicUUID, discoveredDescriptors);
-				this.emit('descriptorsDiscovered', this.address, serviceUUID, characteristicUUID, allDescriptors);
+				this.emit('descriptorsDiscovered', serviceUUID, characteristicUUID, discoveredDescriptors);
 			} else {
 				this.queueCommand(
 					this.findInfoRequest(descriptors[descriptors.length - 1].handle + 1, characteristic.endHandle),
@@ -843,10 +828,10 @@ export class Gatt extends EventEmitter {
 				if (data.length === this.mtu) {
 					this.queueCommand(this.readBlobRequest(descriptor.handle, readData.length), callback);
 				} else {
-					this.emit('valueRead', this.address, serviceUUID, characteristicUUID, descriptorUUID, readData);
+					this.emit('valueRead', serviceUUID, characteristicUUID, descriptorUUID, readData);
 				}
 			} else {
-				this.emit('valueRead', this.address, serviceUUID, characteristicUUID, descriptorUUID, readData);
+				this.emit('valueRead', serviceUUID, characteristicUUID, descriptorUUID, readData);
 			}
 		};
 
@@ -860,7 +845,7 @@ export class Gatt extends EventEmitter {
 			const opcode = moreData[0];
 
 			if (opcode === ATT_OP_WRITE_RESP) {
-				this.emit('valueWrite', this.address, serviceUUID, characteristicUUID, descriptorUUID);
+				this.emit('valueWrite', serviceUUID, characteristicUUID, descriptorUUID);
 			}
 		});
 	}
@@ -875,10 +860,10 @@ export class Gatt extends EventEmitter {
 				if (data.length === this.mtu) {
 					this.queueCommand(this.readBlobRequest(handle, readData.length), callback);
 				} else {
-					this.emit('handleRead', this.address, handle, readData);
+					this.emit('handleRead', handle, readData);
 				}
 			} else {
-				this.emit('handleRead', this.address, handle, readData);
+				this.emit('handleRead', handle, readData);
 			}
 		};
 
@@ -888,14 +873,14 @@ export class Gatt extends EventEmitter {
 	public writeHandle(handle: number, data: Buffer, withoutResponse: boolean) {
 		if (withoutResponse) {
 			this.queueCommand(this.writeRequest(handle, data, true), null, () => {
-				this.emit('handleWrite', this.address, handle);
+				this.emit('handleWrite', handle);
 			});
 		} else {
 			this.queueCommand(this.writeRequest(handle, data, false), (moreData: Buffer) => {
 				const opcode = moreData[0];
 
 				if (opcode === ATT_OP_WRITE_RESP) {
-					this.emit('handleWrite', this.address, handle);
+					this.emit('handleWrite', handle);
 				}
 			});
 		}

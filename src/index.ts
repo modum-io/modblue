@@ -1,7 +1,8 @@
-export { Noble } from './Noble';
-export { Characteristic } from './Characteristic';
-export { Descriptor } from './Descriptor';
-export { Peripheral } from './Peripheral';
-export { Service } from './Service';
+export { BaseAdapter } from './Adapter';
+export { BaseCharacteristic } from './Characteristic';
+export { BaseDescriptor } from './Descriptor';
+export { BaseNoble } from './Noble';
+export { BasePeripheral } from './Peripheral';
+export { BaseService } from './Service';
 
-export { HciBindings } from './bindings/hci-socket/bindings';
+export * as HCI from './bindings/hci-socket';

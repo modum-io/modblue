@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { AddressType } from '../../Bindings';
+import { AddressType } from '../../types';
 interface HciDevice {
     devId: number;
     devUp: boolean;
@@ -24,14 +24,14 @@ export declare class Hci extends EventEmitter {
     static STATUS_MAPPER: string[];
     addressType: AddressType;
     address: string;
+    isUp: boolean;
+    state: string;
+    deviceId: number;
     private socket;
-    private isDevUp;
-    private state;
-    private deviceId;
     private handleBuffers;
     private pollTimer;
     constructor();
-    getDeviceList(): HciDevice[];
+    static getDeviceList(): HciDevice[];
     init(deviceId?: number): void;
     dispose(): void;
     private pollIsDevUp;

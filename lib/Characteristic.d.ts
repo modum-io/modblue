@@ -1,23 +1,19 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { Descriptor } from './Descriptor';
-import { Noble } from './Noble';
-export declare class Characteristic extends EventEmitter {
-    private noble;
-    private peripheralUUID;
-    private serviceUUID;
+import { BaseDescriptor } from './Descriptor';
+import { BaseNoble } from './Noble';
+import { BaseService } from './Service';
+export declare abstract class BaseCharacteristic<N extends BaseNoble = BaseNoble, S extends BaseService = BaseService> extends EventEmitter {
+    protected readonly noble: N;
+    readonly service: S;
     readonly uuid: string;
-    readonly name: string;
-    readonly type: string;
-    properties: string[];
-    descriptors: Map<string, Descriptor>;
-    constructor(noble: Noble, peripheralUUID: string, serviceUUID: string, uuid: string, properties: string[]);
+    readonly properties: string[];
+    constructor(noble: N, service: S, uuid: string, properties: string[]);
     toString(): string;
-    read(): Promise<Buffer>;
-    write(data: Buffer, withoutResponse: boolean): Promise<void>;
-    broadcast(broadcast: any): Promise<void>;
-    notify(notify: boolean): Promise<void>;
-    subscribe(): Promise<void>;
-    unsubscribe(): Promise<void>;
-    discoverDescriptors(): Promise<any[]>;
+    abstract read(): Promise<Buffer>;
+    abstract write(data: Buffer, withoutResponse: boolean): Promise<void>;
+    abstract broadcast(broadcast: boolean): Promise<boolean>;
+    abstract subscribe(): Promise<void>;
+    abstract unsubscribe(): Promise<void>;
+    abstract discoverDescriptors(): Promise<BaseDescriptor[]>;
 }

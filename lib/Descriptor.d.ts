@@ -1,16 +1,12 @@
 /// <reference types="node" />
-import { EventEmitter } from 'events';
-import { Noble } from './Noble';
-export declare class Descriptor extends EventEmitter {
-    private noble;
-    private peripheralUUID;
-    private serviceUUID;
-    private characteristicUUID;
+import { BaseCharacteristic } from './Characteristic';
+import { BaseNoble } from './Noble';
+export declare abstract class BaseDescriptor<N extends BaseNoble = BaseNoble, C extends BaseCharacteristic = BaseCharacteristic> {
+    protected readonly noble: N;
+    readonly characteristic: C;
     readonly uuid: string;
-    readonly name: string;
-    readonly type: string;
-    constructor(noble: Noble, peripheralUUID: string, serviceUUID: string, characteristicUUID: string, uuid: string);
+    constructor(noble: N, characteristic: C, uuid: string);
     toString(): string;
-    readValue(): Promise<Buffer>;
-    writeValue(data: Buffer): Promise<void>;
+    abstract readValue(): Promise<Buffer>;
+    abstract writeValue(data: Buffer): Promise<void>;
 }

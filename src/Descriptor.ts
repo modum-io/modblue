@@ -1,60 +1,31 @@
-import { EventEmitter } from 'events';
+import { BaseCharacteristic } from './Characteristic';
+import { BaseNoble } from './Noble';
 
-import knownDescriptors from './data/descriptors.json';
-import { Noble } from './Noble';
+export abstract class BaseDescriptor<
+	N extends BaseNoble = BaseNoble,
+	C extends BaseCharacteristic = BaseCharacteristic
+> {
+	protected readonly noble: N;
 
-type KnownDescriptors = { [uuid: string]: { name: string; type: string } };
-
-export class Descriptor extends EventEmitter {
-	private noble: Noble;
-	private peripheralUUID: string;
-	private serviceUUID: string;
-	private characteristicUUID: string;
+	public readonly characteristic: C;
 
 	public readonly uuid: string;
-	public readonly name: string;
-	public readonly type: string;
 
-	public constructor(
-		noble: Noble,
-		peripheralUUID: string,
-		serviceUUID: string,
-		characteristicUUID: string,
-		uuid: string
-	) {
-		super();
-
+	public constructor(noble: N, characteristic: C, uuid: string) {
 		this.noble = noble;
-		this.peripheralUUID = peripheralUUID;
-		this.serviceUUID = serviceUUID;
-		this.characteristicUUID = characteristicUUID;
+		this.characteristic = characteristic;
 
 		this.uuid = uuid;
-		this.name = null;
-		this.type = null;
-
-		const descriptor = (knownDescriptors as KnownDescriptors)[uuid];
-		if (descriptor) {
-			this.name = descriptor.name;
-			this.type = descriptor.type;
-		}
 	}
 
 	public toString() {
 		return JSON.stringify({
-			uuid: this.uuid,
-			name: this.name,
-			type: this.type
+			characteristicUUID: this.characteristic.uuid,
+			uuid: this.uuid
 		});
 	}
 
-	public async readValue() {
-		this.noble.readValue(this.peripheralUUID, this.serviceUUID, this.characteristicUUID, this.uuid);
-		return new Promise<Buffer>((resolve) => this.once('valueRead', (data) => resolve(data)));
-	}
+	public abstract async readValue(): Promise<Buffer>;
 
-	public async writeValue(data: Buffer) {
-		this.noble.writeValue(this.peripheralUUID, this.serviceUUID, this.characteristicUUID, this.uuid, data);
-		return new Promise<void>((resolve) => this.once('valueWrite', () => resolve()));
-	}
+	public abstract async writeValue(data: Buffer): Promise<void>;
 }

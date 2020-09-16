@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import { AddressType } from '../../Bindings';
+import { AddressType } from '../../types';
 
 import STATUS_MAPPER from './hci-status.json';
 
@@ -127,17 +127,18 @@ export class Hci extends EventEmitter {
 	public addressType: AddressType;
 	public address: string;
 
+	public isUp: boolean;
+	public state: string;
+	public deviceId: number;
+
 	private socket: any;
-	private isDevUp: boolean;
-	private state: string;
-	private deviceId: number;
 	private handleBuffers: Map<number, HandleBuffer>;
 	private pollTimer: NodeJS.Timer;
 
 	public constructor() {
 		super();
 
-		this.isDevUp = null;
+		this.isUp = null;
 		this.state = null;
 		this.deviceId = null;
 
@@ -150,8 +151,9 @@ export class Hci extends EventEmitter {
 		this.socket.on('error', this.onSocketError);
 	}
 
-	public getDeviceList() {
-		return this.socket.getDeviceList() as HciDevice[];
+	public static getDeviceList() {
+		const socket = new BluetoothHciSocket();
+		return socket.getDeviceList() as HciDevice[];
 	}
 
 	public init(deviceId?: number) {
@@ -171,7 +173,7 @@ export class Hci extends EventEmitter {
 	private pollIsDevUp() {
 		const isDevUp = this.socket.isDevUp();
 
-		if (this.isDevUp !== isDevUp) {
+		if (this.isUp !== isDevUp) {
 			if (isDevUp) {
 				if (this.state === 'poweredOff') {
 					this.socket.removeAllListeners();
@@ -190,7 +192,7 @@ export class Hci extends EventEmitter {
 				this.emit('stateChange', 'poweredOff');
 			}
 
-			this.isDevUp = isDevUp;
+			this.isUp = isDevUp;
 		}
 	}
 

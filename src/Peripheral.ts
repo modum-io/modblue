@@ -1,26 +1,33 @@
-import { EventEmitter } from 'events';
+import { BaseAdapter } from './Adapter';
+import { BaseNoble } from './Noble';
+import { BaseService } from './Service';
+import { AddressType } from './types';
 
-import { AddressType } from './Bindings';
-import { Characteristic } from './Characteristic';
-import { Noble } from './Noble';
-import { Service } from './Service';
+export abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends BaseAdapter = BaseAdapter> {
+	protected readonly noble: N;
 
-export class Peripheral extends EventEmitter {
-	private readonly noble: Noble;
+	public readonly adapter: A;
 
 	public readonly uuid: string;
-	public state: string;
-	public address: string;
-	public addressType: AddressType;
+	public readonly address: string;
+	public readonly addressType: AddressType;
+
 	public connectable: boolean;
 	public advertisement: any;
 	public rssi: number;
-	public mtu: number;
 
-	public services: Map<string, Service>;
+	protected _state: string;
+	public get state() {
+		return this._state;
+	}
+	protected _mtu: number;
+	public get mtu() {
+		return this._mtu;
+	}
 
 	public constructor(
-		noble: Noble,
+		noble: N,
+		adapter: A,
 		uuid: string,
 		address: string,
 		addressType: AddressType,
@@ -28,19 +35,19 @@ export class Peripheral extends EventEmitter {
 		advertisement: any,
 		rssi: number
 	) {
-		super();
-
 		this.noble = noble;
 
+		this.adapter = adapter;
 		this.uuid = uuid;
 		this.address = address;
 		this.addressType = addressType;
+
 		this.connectable = connectable;
 		this.advertisement = advertisement;
 		this.rssi = rssi;
-		this.services = new Map();
-		this.mtu = null;
-		this.state = 'disconnected';
+
+		this._state = 'disconnected';
+		this._mtu = null;
 	}
 
 	public toString() {
@@ -51,76 +58,14 @@ export class Peripheral extends EventEmitter {
 			connectable: this.connectable,
 			advertisement: this.advertisement,
 			rssi: this.rssi,
-			mtu: this.mtu,
-			state: this.state
+			state: this._state,
+			mtu: this._mtu
 		});
 	}
 
-	public async connect(requestMtu?: number) {
-		if (this.state === 'connected') {
-			this.emit('connect');
-		} else {
-			this.state = 'connecting';
-			this.noble.connect(this.uuid, requestMtu);
-		}
+	public abstract async connect(requestMtu?: number): Promise<void>;
 
-		return new Promise<void>((resolve, reject) => this.once('connect', (error) => (error ? reject(error) : resolve())));
-	}
+	public abstract async disconnect(): Promise<number>;
 
-	public async disconnect() {
-		this.state = 'disconnecting';
-		this.noble.disconnect(this.uuid);
-		return new Promise<string>((resolve) => this.once('disconnect', (reason) => resolve(reason)));
-	}
-
-	public async updateRSSI() {
-		this.noble.updateRSSI(this.uuid);
-		return new Promise<number>((resolve) => this.once('rssiUpdate', (rssi) => resolve(rssi)));
-	}
-
-	public async discoverServices(uuids: string[]) {
-		this.noble.discoverServices(this.uuid, uuids);
-		return new Promise<Map<string, Service>>((resolve) =>
-			this.once('servicesDiscover', (services) => resolve(services))
-		);
-	}
-
-	public async discoverSomeServicesAndCharacteristics(
-		serviceUUIDs: string[],
-		characteristicsUUIDs: string[]
-	): Promise<[Service[], Characteristic[]]> {
-		const services = await this.discoverServices(serviceUUIDs);
-
-		if (serviceUUIDs.some((serviceUUID) => !services.has(serviceUUID))) {
-			throw new Error('Could not find all requested services');
-		}
-
-		let allCharacteristics: Characteristic[] = [];
-
-		for (const service of services.values()) {
-			try {
-				const characteristics = await service.discoverCharacteristics(characteristicsUUIDs);
-				allCharacteristics = allCharacteristics.concat([...characteristics.values()]);
-			} catch {
-				// The characteristics might be inside another service
-				// TODO: Handle not finding all characteristics
-			}
-		}
-
-		return [[...services.values()], allCharacteristics];
-	}
-
-	public async discoverAllServicesAndCharacteristics() {
-		return this.discoverSomeServicesAndCharacteristics([], []);
-	}
-
-	public async readHandle(handle: number) {
-		this.noble.readHandle(this.uuid, handle);
-		return new Promise<Buffer>((resolve) => this.once(`handleRead${handle}`, (data) => resolve(data)));
-	}
-
-	public async writeHandle(handle: number, data: Buffer, withoutResponse: boolean) {
-		this.noble.writeHandle(this.uuid, handle, data, withoutResponse);
-		return new Promise<void>((resolve) => this.once(`handleWrite${handle}`, () => resolve()));
-	}
+	public abstract async discoverServices(serviceUUIDs: string[]): Promise<BaseService[]>;
 }

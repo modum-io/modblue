@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { AddressType } from '../../Bindings';
+import { AddressType } from '../../types';
 export declare interface Gap {
     on(event: 'scanStart', listener: (filterDuplicates: boolean) => void): this;
     on(event: 'scanStop', listener: () => void): this;

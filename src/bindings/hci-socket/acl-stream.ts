@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import { AddressType } from '../../Bindings';
+import { AddressType } from '../../types';
 
 import { Hci } from './hci';
 import { Smp } from './smp';
