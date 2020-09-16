@@ -14,6 +14,7 @@ interface ConnectRequest {
 	requestedMTU?: number;
 	resolve?: () => void;
 	reject?: (error: any) => void;
+	isDone?: boolean;
 }
 
 interface DisconnectRequest {
@@ -113,7 +114,7 @@ export class Adapter extends BaseAdapter<Noble> {
 	};
 
 	public async connect(peripheral: Peripheral, requestedMTU?: number) {
-		const request: ConnectRequest = { peripheral, requestedMTU };
+		const request: ConnectRequest = { peripheral, requestedMTU, isDone: false };
 
 		if (!this.connectionRequest) {
 			this.connectionRequest = request;
@@ -121,6 +122,31 @@ export class Adapter extends BaseAdapter<Noble> {
 		} else {
 			this.connectionRequestQueue.push(request);
 		}
+
+		const disconnect = (disconnHandle: number, reason: number) => {
+			// If the device connected then the handle should be there
+			const handle = this.uuidToHandle.get(peripheral.uuid);
+
+			if (!handle || disconnHandle !== handle) {
+				// This isn't our peripheral, ignore
+				return;
+			}
+
+			peripheral.onDisconnect();
+
+			this.uuidToHandle.delete(peripheral.uuid);
+			this.handleToUUID.delete(handle);
+
+			this.hci.off('disconnComplete', disconnect);
+
+			if (!request.isDone) {
+				request.isDone = true;
+				request.reject(new Error(`Disconnect while connecting: Code ${reason}`));
+			}
+		};
+
+		// Add a disconnect handler in case our peripheral gets disconnect while connecting
+		this.hci.on('disconnComplete', disconnect);
 
 		// Create a promise to resolve once the connection request is done
 		// (we may have to wait in queue for other connections to complete first)
@@ -178,10 +204,16 @@ export class Adapter extends BaseAdapter<Noble> {
 
 			peripheral.onConnect(aclStream, gatt, signaling);
 
-			request.resolve();
+			if (!request.isDone) {
+				request.isDone = true;
+				request.resolve();
+			}
 		} else {
 			const statusMessage = (Hci.STATUS_MAPPER[status] || 'HCI Error: Unknown') + ` (0x${status.toString(16)})`;
-			request.reject(new Error(statusMessage));
+			if (!request.isDone) {
+				request.isDone = true;
+				request.reject(new Error(statusMessage));
+			}
 		}
 
 		this.connectionRequest = null;
