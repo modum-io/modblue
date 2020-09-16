@@ -59,6 +59,21 @@ export class Adapter extends BaseAdapter<Noble> {
 		await this.hci.init();
 	}
 
+	public dispose() {
+		if (!this.initialized) {
+			return;
+		}
+
+		this.initialized = false;
+
+		this.hci.removeAllListeners();
+		this.hci.dispose();
+		this.hci = null;
+
+		this.gap.removeAllListeners();
+		this.gap = null;
+	}
+
 	public async startScanning(): Promise<void> {
 		await this.init();
 

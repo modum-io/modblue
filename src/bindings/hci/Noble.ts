@@ -1,18 +1,20 @@
-import { BaseAdapter } from '../../Adapter';
 import { BaseNoble } from '../../Noble';
 
 import { Adapter } from './Adapter';
 import { Hci } from './hci';
 
 export class Noble extends BaseNoble {
-	private adapters: Map<number, BaseAdapter> = new Map();
+	private adapters: Map<number, Adapter> = new Map();
 
 	public async init() {
 		// NO-OP
 	}
 
 	public async dispose() {
-		// NO-OP
+		for (const adapter of this.adapters.values()) {
+			adapter.dispose();
+		}
+		this.adapters = new Map();
 	}
 
 	public async getAdapters() {

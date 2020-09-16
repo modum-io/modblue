@@ -174,6 +174,15 @@ export class Hci extends EventEmitter {
 		});
 	}
 
+	public dispose() {
+		this.socket.stop();
+		this.socket.removeAllListeners();
+		this.socket = null;
+
+		clearInterval(this.pollTimer);
+		this.pollTimer = null;
+	}
+
 	private pollIsDevUp() {
 		const isDevUp = this.socket.isDevUp();
 

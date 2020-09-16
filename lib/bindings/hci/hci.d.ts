@@ -33,6 +33,7 @@ export declare class Hci extends EventEmitter {
     constructor(deviceId?: number);
     static getDeviceList(): HciDevice[];
     init(): Promise<void>;
+    dispose(): void;
     private pollIsDevUp;
     private setSocketFilter;
     private setEventMask;

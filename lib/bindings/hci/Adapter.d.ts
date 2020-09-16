@@ -14,6 +14,7 @@ export declare class Adapter extends BaseAdapter<Noble> {
     getScannedPeripherals(): Promise<Peripheral[]>;
     isScanning(): Promise<boolean>;
     private init;
+    dispose(): void;
     startScanning(): Promise<void>;
     stopScanning(): Promise<void>;
     private onScanStart;
