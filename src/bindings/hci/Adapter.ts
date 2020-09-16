@@ -56,6 +56,7 @@ export class Adapter extends BaseAdapter<Noble> {
 		this.gap = new Gap(this.hci);
 		this.gap.on('scanStart', this.onScanStart);
 		this.gap.on('scanStop', this.onScanStop);
+		this.gap.on('discover', this.onDiscover);
 
 		await this.hci.init();
 	}
@@ -78,8 +79,6 @@ export class Adapter extends BaseAdapter<Noble> {
 	public async startScanning(): Promise<void> {
 		await this.init();
 
-		this.gap.on('discover', this.onDiscover);
-
 		return new Promise<void>((resolve) => {
 			const done = () => {
 				this.gap.off('scanStart', done);
@@ -98,8 +97,6 @@ export class Adapter extends BaseAdapter<Noble> {
 	};
 
 	public async stopScanning(): Promise<void> {
-		this.gap.off('discover', this.onDiscover);
-
 		return new Promise<void>((resolve) => {
 			const done = () => {
 				this.gap.off('scanStop', done);
