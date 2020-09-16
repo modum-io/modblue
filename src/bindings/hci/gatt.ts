@@ -121,7 +121,6 @@ export declare interface Gatt {
 }
 
 export class Gatt extends EventEmitter {
-	private address: string;
 	private aclStream: AclStream;
 
 	private services: Map<string, GattService>;
@@ -134,10 +133,9 @@ export class Gatt extends EventEmitter {
 	private mtu: number;
 	private security: string;
 
-	public constructor(address: string, aclStream: AclStream) {
+	public constructor(aclStream: AclStream) {
 		super();
 
-		this.address = address;
 		this.aclStream = aclStream;
 
 		this.services = new Map();

@@ -9,6 +9,7 @@ export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     private aclStream;
     private gatt;
     private signaling;
+    getACLStream(): AclStream;
     private services;
     getDiscoveredServices(): Service[];
     connect(requestMtu?: number): Promise<void>;

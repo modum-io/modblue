@@ -12,6 +12,10 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	private gatt: Gatt;
 	private signaling: Signaling;
 
+	public getACLStream() {
+		return this.aclStream;
+	}
+
 	private services: Map<string, Service> = new Map();
 	public getDiscoveredServices() {
 		return [...this.services.values()];
@@ -24,6 +28,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	}
 	public onConnect(aclStream: AclStream, gatt: Gatt, signaling: Signaling) {
 		this._state = 'connected';
+
 		this.aclStream = aclStream;
 		this.gatt = gatt;
 		this.signaling = signaling;

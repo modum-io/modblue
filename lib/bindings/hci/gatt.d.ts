@@ -37,7 +37,6 @@ export declare interface Gatt {
     on(event: 'handleConfirmation', listener: (valueHandle: number) => void): this;
 }
 export declare class Gatt extends EventEmitter {
-    private address;
     private aclStream;
     private services;
     private characteristics;
@@ -46,7 +45,7 @@ export declare class Gatt extends EventEmitter {
     private commandQueue;
     private mtu;
     private security;
-    constructor(address: string, aclStream: AclStream);
+    constructor(aclStream: AclStream);
     private onAclStreamData;
     private onAclStreamEncrypt;
     private onAclStreamEncryptFail;

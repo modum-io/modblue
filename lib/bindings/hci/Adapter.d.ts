@@ -22,5 +22,7 @@ export declare class Adapter extends BaseAdapter<Noble> {
     connect(peripheral: Peripheral, requestedMTU?: number): Promise<void>;
     private onLeConnComplete;
     private onConnectionParameterUpdateRequest;
+    private onEncryptChange;
+    private onAclDataPkt;
     disconnect(peripheral: Peripheral): Promise<number>;
 }

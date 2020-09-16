@@ -49,6 +49,8 @@ export class Adapter extends BaseAdapter<Noble> {
 		this.hci = new Hci(Number(this.id));
 		this.hci.on('addressChange', (addr) => (this._address = addr));
 		this.hci.on('leConnComplete', this.onLeConnComplete);
+		this.hci.on('encryptChange', this.onEncryptChange);
+		this.hci.on('aclDataPkt', this.onAclDataPkt);
 
 		this.gap = new Gap(this.hci);
 		this.gap.on('scanStart', this.onScanStart);
@@ -183,15 +185,15 @@ export class Adapter extends BaseAdapter<Noble> {
 
 			const aclStream = new AclStream(this.hci, handle, this.hci.addressType, this.hci.address, addressType, address);
 
-			const gatt = new Gatt(address, aclStream);
+			const gatt = new Gatt(aclStream);
 
 			const signaling = new Signaling(handle, aclStream);
 			signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 
+			peripheral.onConnect(aclStream, gatt, signaling);
+
 			const mtu = request.requestedMTU || 256;
 			gatt.exchangeMtu(mtu);
-
-			peripheral.onConnect(aclStream, gatt, signaling);
 
 			if (!request.isDone) {
 				request.isDone = true;
@@ -221,6 +223,26 @@ export class Adapter extends BaseAdapter<Noble> {
 		supervisionTimeout: number
 	) => {
 		this.hci.connUpdateLe(handle, minInterval, maxInterval, latency, supervisionTimeout);
+	};
+
+	private onEncryptChange = (handle: number, encrypt: number) => {
+		const uuid = this.handleToUUID.get(handle);
+		const peripheral = this.peripherals.get(uuid);
+		if (!peripheral) {
+			return;
+		}
+
+		peripheral.getACLStream().pushEncrypt(encrypt);
+	};
+
+	private onAclDataPkt = (handle: number, cid: number, data: Buffer) => {
+		const uuid = this.handleToUUID.get(handle);
+		const peripheral = this.peripherals.get(uuid);
+		if (!peripheral) {
+			return;
+		}
+
+		peripheral.getACLStream().push(cid, data);
 	};
 
 	public async disconnect(peripheral: Peripheral) {
