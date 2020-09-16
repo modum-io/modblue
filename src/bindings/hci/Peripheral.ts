@@ -46,7 +46,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.signaling.removeAllListeners();
 	}
 
-	public async discoverServices(serviceUUIDs: string[]): Promise<Service[]> {
+	public async discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
 		return new Promise<Service[]>((resolve) => {
 			const done = (services: GattService[]) => {
 				this.gatt.off('servicesDiscovered', done);

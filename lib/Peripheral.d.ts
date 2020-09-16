@@ -20,5 +20,5 @@ export declare abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A 
     abstract connect(requestMtu?: number): Promise<void>;
     abstract disconnect(): Promise<number>;
     abstract getDiscoveredServices(): BaseService[];
-    abstract discoverServices(serviceUUIDs: string[]): Promise<BaseService[]>;
+    abstract discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]>;
 }

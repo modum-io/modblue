@@ -16,6 +16,6 @@ export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     private onMtu;
     disconnect(): Promise<number>;
     onDisconnect(): void;
-    discoverServices(serviceUUIDs: string[]): Promise<Service[]>;
+    discoverServices(serviceUUIDs?: string[]): Promise<Service[]>;
     discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]): Promise<Service[]>;
 }
