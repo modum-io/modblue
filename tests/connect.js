@@ -1,6 +1,5 @@
 const { HCINoble } = require('../lib');
 
-const TOTAL_CONNECTS = 100;
 const PERIPHERAL_UUIDS = process.argv[2].split('|');
 const SERVICE_UUID = process.argv[3];
 const CHAR_UUID = process.argv[4];
@@ -34,11 +33,12 @@ const main = async () => {
 
 	const peripherals = await adapter.getScannedPeripherals();
 
-	const time = console.time('Connect');
+	console.time('Connect');
+	let total = 0;
 	let success = 0;
 
 	while (true) {
-		const targetUUID = PERIPHERAL_UUIDS[i % PERIPHERAL_UUIDS.length];
+		const targetUUID = PERIPHERAL_UUIDS[total % PERIPHERAL_UUIDS.length];
 
 		console.log(`Using peripheral ${targetUUID}`);
 
@@ -89,8 +89,10 @@ const main = async () => {
 			console.error(err);
 		}
 
+		total++;
+
 		console.timeEnd('Connect');
-		console.log(`Finished ${success}/${TOTAL_CONNECTS} connects`);
+		console.log(`Finished ${success}/${total} connects`);
 	}
 };
 
