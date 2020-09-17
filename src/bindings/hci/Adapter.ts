@@ -187,7 +187,10 @@ export class Adapter extends BaseAdapter<Noble> {
 		// (we may have to wait in queue for other connections to complete first)
 		// tslint:disable-next-line: promise-must-complete
 		return new Promise<void>((res, rej) => {
-			request.resolve = res;
+			request.resolve = () => {
+				this.hci.off('disconnComplete', disconnect);
+				res();
+			};
 			request.reject = rej;
 		});
 	}
