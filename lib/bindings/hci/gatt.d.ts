@@ -64,7 +64,8 @@ export declare class Gatt extends EventEmitter {
     private executeWriteRequest;
     private handleConfirmation;
     exchangeMtu(mtu: number): Promise<number>;
-    discoverServices(uuids: string[]): void;
+    discoverServices(uuids: string[]): Promise<GattService[]>;
+    private doDiscoverServices;
     discoverIncludedServices(serviceUUID: string, uuids: string[]): void;
     discoverCharacteristics(serviceUUID: string, characteristicUUIDs: string[]): void;
     read(serviceUUID: string, characteristicUUID: string): void;

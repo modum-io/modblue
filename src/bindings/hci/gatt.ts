@@ -162,6 +162,7 @@ export class Gatt extends EventEmitter {
 			// NO-OP
 		} else if (data[0] % 2 === 0) {
 			// NO-OP
+			// This used to be noble multi role stuff
 		} else if (data[0] === ATT_OP_HANDLE_NOTIFY || data[0] === ATT_OP_HANDLE_IND) {
 			const valueHandle = data.readUInt16LE(1);
 			const valueData = data.slice(3);
@@ -417,10 +418,31 @@ export class Gatt extends EventEmitter {
 		return this.mtu;
 	}
 
-	public discoverServices(uuids: string[]) {
-		const services: GattService[] = [];
+	public async discoverServices(uuids: string[]) {
+		const services: GattService[] = await this.doDiscoverServices();
 
-		const callback = (data: Buffer) => {
+		const wantedServices: GattService[] = [];
+		for (const service of services) {
+			const uuid = service.uuid.trim();
+			if (uuids.length === 0 || uuids.indexOf(uuid) !== -1) {
+				wantedServices.push(service);
+			}
+
+			this.services.set(service.uuid, service);
+		}
+
+		return wantedServices;
+	}
+	private async doDiscoverServices(): Promise<GattService[]> {
+		const services: GattService[] = [];
+		let startHandle = 0x0001;
+
+		while (true) {
+			const data = await this.queueCommandAsync(
+				this.readByGroupRequest(startHandle, 0xffff, GATT_PRIM_SVC_UUID),
+				false
+			);
+
 			const opcode = data[0];
 			let i = 0;
 
@@ -448,25 +470,13 @@ export class Gatt extends EventEmitter {
 			}
 
 			if (opcode !== ATT_OP_READ_BY_GROUP_RESP || services[services.length - 1].endHandle === 0xffff) {
-				const wantedServices: GattService[] = [];
-				for (i = 0; i < services.length; i++) {
-					const uuid = services[i].uuid.trim();
-					if (uuids.length === 0 || uuids.indexOf(uuid) !== -1) {
-						wantedServices.push(services[i]);
-					}
-
-					this.services.set(services[i].uuid, services[i]);
-				}
-				this.emit('servicesDiscovered', wantedServices);
+				break;
 			} else {
-				this.queueCommand(
-					this.readByGroupRequest(services[services.length - 1].endHandle + 1, 0xffff, GATT_PRIM_SVC_UUID),
-					callback
-				);
+				startHandle = services[services.length - 1].endHandle + 1;
 			}
-		};
+		}
 
-		this.queueCommand(this.readByGroupRequest(0x0001, 0xffff, GATT_PRIM_SVC_UUID), callback);
+		return services;
 	}
 
 	public discoverIncludedServices(serviceUUID: string, uuids: string[]) {
