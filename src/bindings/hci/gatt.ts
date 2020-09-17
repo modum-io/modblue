@@ -132,6 +132,7 @@ export class Gatt {
 	public dispose() {
 		this.hci.off('aclDataPkt', this.onAclStreamData);
 		this.hci = null;
+		this.handle = null;
 	}
 
 	private onAclStreamData = async (handle: number, cid: number, data: Buffer) => {

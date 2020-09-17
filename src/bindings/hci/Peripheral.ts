@@ -66,6 +66,8 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.handle = null;
 		this._state = 'disconnected';
 		this._mtu = undefined;
+
+		this.services = new Map();
 	}
 
 	public async discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
