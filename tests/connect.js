@@ -1,5 +1,6 @@
 const { HCINoble } = require('../lib');
 
+const TOTAL_CONNECTS = 100;
 const PERIPHERAL_UUID = process.argv[2];
 const SERVICE_UUID = process.argv[3];
 const CHAR_UUID = process.argv[4];
@@ -41,39 +42,53 @@ const main = async () => {
 
 	console.log(`Using peripheral ${peripheral.uuid}`);
 
-	for (let i = 0; i < 10; i++) {
-		console.log(`Connecting ${i}...`);
+	const time = console.time('connect');
+	let success = 0;
 
-		await peripheral.connect();
+	for (let i = 0; i < TOTAL_CONNECTS; i++) {
+		try {
+			console.log(`Connecting ${i}...`);
 
-		console.log(`Connected (mtu: ${peripheral.mtu}), discovering services...`);
+			await peripheral.connect();
 
-		const services = await peripheral.discoverServices();
-		const service = services.find((s) => s.uuid === SERVICE_UUID);
-		if (!service) {
-			throw new Error(`Could not find service with UUID ${SERVICE_UUID}.\n${services.map((s) => s.uuid).join(', ')}`);
+			console.log(`Connected (mtu: ${peripheral.mtu}), discovering services...`);
+
+			const services = await peripheral.discoverServices();
+			const service = services.find((s) => s.uuid === SERVICE_UUID);
+			if (!service) {
+				throw new Error(`Could not find service with UUID ${SERVICE_UUID}.\n${services.map((s) => s.uuid).join(', ')}`);
+			}
+
+			console.log('Discovering characteristics...');
+
+			const chars = await service.discoverCharacteristics();
+			const char = chars.find((c) => c.uuid === CHAR_UUID);
+			if (!char) {
+				throw new Error(
+					`Could not find characteristic with UUID ${CHAR_UUID}.\n${chars.map((c) => c.uuid).join(', ')}`
+				);
+			}
+
+			console.log('Reading...');
+
+			const data = await char.read();
+
+			console.log(data);
+
+			console.log('Disconnecting...');
+
+			await peripheral.disconnect();
+
+			console.log('Disconnected');
+
+			success++;
+		} catch (err) {
+			console.error(err);
 		}
-
-		console.log('Discovering characteristics...');
-
-		const chars = await service.discoverCharacteristics();
-		const char = chars.find((c) => c.uuid === CHAR_UUID);
-		if (!char) {
-			throw new Error(`Could not find characteristic with UUID ${CHAR_UUID}.\n${chars.map((c) => c.uuid).join(', ')}`);
-		}
-
-		console.log('Reading...');
-
-		const data = await char.read();
-
-		console.log(data);
-
-		console.log('Disconnecting...');
-
-		await peripheral.disconnect();
-
-		console.log('Disconnected');
 	}
+
+	console.log(`Finished ${success}/${TOTAL_CONNECTS} connects`);
+	console.timeEnd('connect');
 };
 
 main()
