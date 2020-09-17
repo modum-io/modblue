@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import os from 'os';
 
-import { AclStream } from './acl-stream';
+import { Hci } from './hci';
 
 const CONNECTION_PARAMETER_UPDATE_REQUEST = 0x12;
 const CONNECTION_PARAMETER_UPDATE_RESPONSE = 0x13;
@@ -16,19 +16,23 @@ export declare interface Signaling {
 }
 
 export class Signaling extends EventEmitter {
-	private aclStream: AclStream;
+	private hci: Hci;
+	private handle: number;
 
-	public constructor(aclStream: AclStream) {
+	public constructor(hci: Hci, handle: number) {
 		super();
 
-		this.aclStream = aclStream;
-
-		this.aclStream.on('data', this.onAclStreamData);
-		this.aclStream.on('end', this.onAclStreamEnd);
+		this.handle = handle;
+		this.hci = hci;
+		this.hci.on('aclDataPkt', this.onAclStreamData);
 	}
 
-	private onAclStreamData = (cid: number, data: Buffer) => {
-		if (cid !== SIGNALING_CID) {
+	public dispose() {
+		this.hci.off('aclDataPkt', this.onAclStreamData);
+	}
+
+	private onAclStreamData = (handle: number, cid: number, data: Buffer) => {
+		if (handle !== this.handle || cid !== SIGNALING_CID) {
 			return;
 		}
 
@@ -40,11 +44,6 @@ export class Signaling extends EventEmitter {
 		if (code === CONNECTION_PARAMETER_UPDATE_REQUEST) {
 			this.processConnectionParameterUpdateRequest(identifier, signalingData);
 		}
-	};
-
-	private onAclStreamEnd = () => {
-		this.aclStream.off('data', this.onAclStreamData);
-		this.aclStream.off('end', this.onAclStreamEnd);
 	};
 
 	private processConnectionParameterUpdateRequest(identifier: number, data: Buffer) {
@@ -61,7 +60,7 @@ export class Signaling extends EventEmitter {
 			response.writeUInt16LE(2, 2); // length
 			response.writeUInt16LE(0, 4);
 
-			this.aclStream.write(SIGNALING_CID, response);
+			this.hci.writeAclDataPkt(this.handle, SIGNALING_CID, response);
 
 			this.emit('connectionParameterUpdateRequest', minInterval, maxInterval, latency, supervisionTimeout);
 		}

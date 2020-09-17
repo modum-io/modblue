@@ -1,6 +1,5 @@
 import { BasePeripheral } from '../../Peripheral';
 
-import { AclStream } from './acl-stream';
 import { Adapter } from './Adapter';
 import { Gatt } from './gatt';
 import { Hci } from './hci';
@@ -11,7 +10,6 @@ import { Signaling } from './signaling';
 export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	private hci: Hci;
 	private handle: number;
-	private aclStream: AclStream;
 	private gatt: Gatt;
 	private signaling: Signaling;
 	private requestedMTU: number;
@@ -30,14 +28,10 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.handle = handle;
 
 		this.hci = hci;
-		this.hci.on('encryptChange', this.onEncryptChange);
-		this.hci.on('aclDataPkt', this.onAclDataPkt);
 
-		this.aclStream = new AclStream(hci, handle, hci.addressType, hci.address, this.addressType, this.address);
+		this.gatt = new Gatt(this.hci, this.handle);
 
-		this.gatt = new Gatt(this.aclStream);
-
-		this.signaling = new Signaling(this.aclStream);
+		this.signaling = new Signaling(this.hci, this.handle);
 		this.signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 
 		const wantedMtu = this.requestedMTU || 256;
@@ -46,22 +40,6 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this._state = 'connected';
 		this._mtu = mtu;
 	}
-
-	private onEncryptChange = (handle: number, encrypt: number) => {
-		if (handle !== this.handle) {
-			return;
-		}
-
-		this.aclStream.pushEncrypt(encrypt);
-	};
-
-	private onAclDataPkt = (handle: number, cid: number, data: Buffer) => {
-		if (handle !== this.handle) {
-			return;
-		}
-
-		this.aclStream.push(cid, data);
-	};
 
 	private onConnectionParameterUpdateRequest = (
 		minInterval: number,
@@ -77,17 +55,12 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		return this.adapter.disconnect(this);
 	}
 	public onDisconnect() {
-		this.aclStream.push(null, null);
-		this.aclStream = null;
-
 		this.gatt.dispose();
 		this.gatt = null;
 
 		this.signaling.off('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 		this.signaling = null;
 
-		this.hci.off('encryptChange', this.onEncryptChange);
-		this.hci.off('aclDataPkt', this.onAclDataPkt);
 		this.hci = null;
 
 		this.handle = null;

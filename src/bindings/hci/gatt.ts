@@ -1,6 +1,7 @@
-import { AclStream } from './acl-stream';
-
 /* eslint-disable no-unused-vars */
+
+import { Hci } from './hci';
+
 // tslint:disable: no-bitwise
 const ATT_OP_ERROR = 0x01;
 const ATT_OP_MTU_REQ = 0x02;
@@ -57,8 +58,8 @@ const ATT_CID = 0x0004;
 
 interface GattCommand {
 	buffer: Buffer;
-	callback?: (data: Buffer) => void;
-	writeCallback?: () => void;
+	resolve: (data: Buffer) => void;
+	resolveOnWrite: () => void;
 }
 
 export interface GattService {
@@ -82,7 +83,8 @@ export interface GattDescriptor {
 }
 
 export class Gatt {
-	private aclStream: AclStream;
+	private hci: Hci;
+	private handle: number;
 
 	private services: Map<string, GattService>;
 	private characteristics: Map<string, Map<string, GattCharacteristic>>;
@@ -94,8 +96,9 @@ export class Gatt {
 	private mtu: number;
 	private security: string;
 
-	public constructor(aclStream: AclStream) {
-		this.aclStream = aclStream;
+	public constructor(hci: Hci, handle: number) {
+		this.hci = hci;
+		this.handle = handle;
 
 		this.services = new Map();
 		this.characteristics = new Map();
@@ -107,21 +110,32 @@ export class Gatt {
 		this.mtu = 23;
 		this.security = 'low';
 
-		this.aclStream.on('data', this.onAclStreamData);
-		this.aclStream.on('encrypt', this.onAclStreamEncrypt);
-		this.aclStream.on('encryptFail', this.onAclStreamEncryptFail);
-		this.aclStream.on('end', this.onAclStreamEnd);
+		this.hci.on('aclDataPkt', this.onAclStreamData);
+	}
+
+	private processCommands() {
+		while (this.commandQueue.length) {
+			this.currentCommand = this.commandQueue.shift();
+
+			this.writeAtt(this.currentCommand.buffer);
+
+			if (this.currentCommand.resolve) {
+				// If the command has a callback stop processing and wait for the callback
+				break;
+			} else if (this.currentCommand.resolveOnWrite) {
+				this.currentCommand.resolveOnWrite();
+				this.currentCommand = null;
+			}
+		}
 	}
 
 	public dispose() {
-		this.aclStream.off('data', this.onAclStreamData);
-		this.aclStream.off('encrypt', this.onAclStreamEncrypt);
-		this.aclStream.off('encryptFail', this.onAclStreamEncryptFail);
-		this.aclStream.off('end', this.onAclStreamEnd);
+		this.hci.off('aclDataPkt', this.onAclStreamData);
+		this.hci = null;
 	}
 
-	private onAclStreamData = async (cid: number, data: Buffer) => {
-		if (cid !== ATT_CID) {
+	private onAclStreamData = async (handle: number, cid: number, data: Buffer) => {
+		if (handle !== this.handle || cid !== ATT_CID) {
 			return;
 		}
 
@@ -158,50 +172,19 @@ export class Gatt {
 					data[4] === ATT_ECODE_INSUFF_ENC) &&
 				this.security !== 'medium'
 			) {
-				this.aclStream.encrypt();
+				// this.aclStream.encrypt();
 				return;
 			}
 
-			this.currentCommand.callback(data);
+			this.currentCommand.resolve(data);
 
 			this.currentCommand = null;
-			while (this.commandQueue.length) {
-				this.currentCommand = this.commandQueue.shift();
-
-				this.writeAtt(this.currentCommand.buffer);
-
-				if (this.currentCommand.callback) {
-					// If the command has a callback stop processing and wait for the callback
-					break;
-				} else if (this.currentCommand.writeCallback) {
-					this.currentCommand.writeCallback();
-					this.currentCommand = null;
-				}
-			}
+			this.processCommands();
 		}
-	};
-
-	private onAclStreamEncrypt = (encrypt: number) => {
-		if (encrypt) {
-			this.security = 'medium';
-
-			this.writeAtt(this.currentCommand.buffer);
-		}
-	};
-
-	private onAclStreamEncryptFail = () => {
-		// NO-OP
-	};
-
-	private onAclStreamEnd = () => {
-		this.aclStream.off('data', this.onAclStreamData);
-		this.aclStream.off('encrypt', this.onAclStreamEncrypt);
-		this.aclStream.off('encryptFail', this.onAclStreamEncryptFail);
-		this.aclStream.off('end', this.onAclStreamEnd);
 	};
 
 	private writeAtt(data: Buffer) {
-		this.aclStream.write(ATT_CID, data);
+		this.hci.writeAclDataPkt(this.handle, ATT_CID, data);
 	}
 
 	private errorResponse(opcode: number, handle: number, status: number) {
@@ -221,24 +204,12 @@ export class Gatt {
 		return new Promise<any>((resolve) => {
 			this.commandQueue.push({
 				buffer: buffer,
-				callback: !resolveOnWrite ? (data) => resolve(data) : undefined,
-				writeCallback: resolveOnWrite ? () => resolve() : undefined
+				resolve: !resolveOnWrite ? (data) => resolve(data) : undefined,
+				resolveOnWrite: resolveOnWrite ? () => resolve() : undefined
 			});
 
 			if (this.currentCommand === null) {
-				while (this.commandQueue.length) {
-					this.currentCommand = this.commandQueue.shift();
-
-					this.writeAtt(this.currentCommand.buffer);
-
-					if (this.currentCommand.callback) {
-						// If the command has a callback stop processing and wait for the callback
-						break;
-					} else if (this.currentCommand.writeCallback) {
-						this.currentCommand.writeCallback();
-						this.currentCommand = null;
-					}
-				}
+				this.processCommands();
 			}
 		});
 	}

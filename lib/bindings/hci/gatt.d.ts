@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { AclStream } from './acl-stream';
+import { Hci } from './hci';
 export interface GattService {
     uuid: string;
     startHandle: number;
@@ -18,7 +18,8 @@ export interface GattDescriptor {
     handle: number;
 }
 export declare class Gatt {
-    private aclStream;
+    private hci;
+    private handle;
     private services;
     private characteristics;
     private descriptors;
@@ -26,12 +27,10 @@ export declare class Gatt {
     private commandQueue;
     private mtu;
     private security;
-    constructor(aclStream: AclStream);
+    constructor(hci: Hci, handle: number);
+    private processCommands;
     dispose(): void;
     private onAclStreamData;
-    private onAclStreamEncrypt;
-    private onAclStreamEncryptFail;
-    private onAclStreamEnd;
     private writeAtt;
     private errorResponse;
     private queueCommand;
