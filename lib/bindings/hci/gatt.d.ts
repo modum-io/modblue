@@ -19,7 +19,6 @@ export interface GattDescriptor {
     handle: number;
 }
 export declare interface Gatt {
-    on(event: 'servicesDiscovered', listener: (services: GattService[]) => void): this;
     on(event: 'includedServicesDiscovered', listener: (serviceUUID: string, includedServices: GattService[]) => void): this;
     on(event: 'characteristicsDiscovered', listener: (serviceUUID: string, characteristics: GattCharacteristic[]) => void): this;
     on(event: 'read', listener: (serviceUUID: string, characteristicUUID: string, data: Buffer) => void): this;

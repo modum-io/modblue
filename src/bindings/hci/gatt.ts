@@ -84,7 +84,6 @@ export interface GattDescriptor {
 }
 
 export declare interface Gatt {
-	on(event: 'servicesDiscovered', listener: (services: GattService[]) => void): this;
 	on(
 		event: 'includedServicesDiscovered',
 		listener: (serviceUUID: string, includedServices: GattService[]) => void
@@ -444,13 +443,12 @@ export class Gatt extends EventEmitter {
 			);
 
 			const opcode = data[0];
-			let i = 0;
 
 			if (opcode === ATT_OP_READ_BY_GROUP_RESP) {
 				const type = data[1];
 				const num = (data.length - 2) / type;
 
-				for (i = 0; i < num; i++) {
+				for (let i = 0; i < num; i++) {
 					const offset = 2 + i * type;
 					services.push({
 						startHandle: data.readUInt16LE(offset),

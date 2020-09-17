@@ -92,25 +92,15 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	}
 
 	public async discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
-		return new Promise<Service[]>((resolve) => {
-			const done = (services: GattService[]) => {
-				this.gatt.off('servicesDiscovered', done);
-
-				for (const rawService of services) {
-					let service = this.services.get(rawService.uuid);
-					if (!service) {
-						service = new Service(this.noble, this, rawService.uuid, this.gatt);
-						this.services.set(rawService.uuid, service);
-					}
-				}
-
-				resolve([...this.services.values()]);
-			};
-
-			this.gatt.on('servicesDiscovered', done);
-
-			this.gatt.discoverServices(serviceUUIDs || []);
-		});
+		const services = await this.gatt.discoverServices(serviceUUIDs || []);
+		for (const rawService of services) {
+			let service = this.services.get(rawService.uuid);
+			if (!service) {
+				service = new Service(this.noble, this, rawService.uuid, this.gatt);
+				this.services.set(rawService.uuid, service);
+			}
+		}
+		return [...this.services.values()];
 	}
 
 	public async discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]) {
