@@ -37,7 +37,7 @@ const main = async () => {
 	const time = console.time('Connect');
 	let success = 0;
 
-	for (let i = 0; i < TOTAL_CONNECTS; i++) {
+	while (true) {
 		const targetUUID = PERIPHERAL_UUIDS[i % PERIPHERAL_UUIDS.length];
 
 		console.log(`Using peripheral ${targetUUID}`);
@@ -88,10 +88,10 @@ const main = async () => {
 		} catch (err) {
 			console.error(err);
 		}
-	}
 
-	console.log(`Finished ${success}/${TOTAL_CONNECTS} connects`);
-	console.timeEnd('Connect');
+		console.timeEnd('Connect');
+		console.log(`Finished ${success}/${TOTAL_CONNECTS} connects`);
+	}
 };
 
 main()
