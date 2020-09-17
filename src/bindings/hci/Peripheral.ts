@@ -88,7 +88,8 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.signaling = null;
 
 		this.hci.off('encryptChange', this.onEncryptChange);
-		this.hci.off('onAclDataPkt', this.onAclDataPkt);
+		this.hci.off('aclDataPkt', this.onAclDataPkt);
+		this.hci = null;
 	}
 
 	public async discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
