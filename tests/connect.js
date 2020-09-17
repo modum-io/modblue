@@ -1,6 +1,8 @@
 const { HCINoble } = require('../lib');
 
-const UUID = process.argv[2];
+const PERIPHERAL_UUID = process.argv[2];
+const SERVICE_UUID = process.argv[3];
+const CHAR_UUID = process.argv[4];
 
 const main = async () => {
 	console.log('Initializing noble...');
@@ -30,10 +32,11 @@ const main = async () => {
 	console.log('Getting peripherals...');
 
 	const peripherals = await adapter.getScannedPeripherals();
-
-	const peripheral = peripherals.find((p) => p.uuid === UUID);
+	const peripheral = peripherals.find((p) => p.uuid === PERIPHERAL_UUID);
 	if (!peripheral) {
-		throw new Error(`Could not find peripheral with UUID ${UUID}.\n${peripherals.map((p) => p.uuid).join(', ')}`);
+		throw new Error(
+			`Could not find peripheral with UUID ${PERIPHERAL_UUID}.\n${peripherals.map((p) => p.uuid).join(', ')}`
+		);
 	}
 
 	console.log(`Using peripheral ${peripheral.uuid}`);
@@ -43,7 +46,27 @@ const main = async () => {
 
 		await peripheral.connect();
 
-		console.log(`Connected, ${peripheral.mtu}`);
+		console.log(`Connected (mtu: ${peripheral.mtu}), discovering services...`);
+
+		const services = await peripheral.discoverServices();
+		const service = services.find((s) => s.uuid === SERVICE_UUID);
+		if (!service) {
+			throw new Error(`Could not find service with UUID ${SERVICE_UUID}.\n${services.map((s) => s.uuid).join(', ')}`);
+		}
+
+		console.log('Discovering characteristics...');
+
+		const chars = await service.discoverCharacteristics();
+		const char = chars.find((c) => c.uuid === CHAR_UUID);
+		if (!char) {
+			throw new Error(`Could not find characteristic with UUID ${CHAR_UUID}.\n${chars.map((c) => c.uuid).join(', ')}`);
+		}
+
+		console.log('Reading...');
+
+		const data = await char.read();
+
+		console.log(data);
 
 		console.log('Disconnecting...');
 
