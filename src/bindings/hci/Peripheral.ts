@@ -3,14 +3,18 @@ import { BasePeripheral } from '../../Peripheral';
 import { AclStream } from './acl-stream';
 import { Adapter } from './Adapter';
 import { Gatt, GattService } from './gatt';
+import { Hci } from './hci';
 import { Noble } from './Noble';
 import { Service } from './Service';
 import { Signaling } from './signaling';
 
 export class Peripheral extends BasePeripheral<Noble, Adapter> {
+	private hci: Hci;
+	private handle: number;
 	private aclStream: AclStream;
 	private gatt: Gatt;
 	private signaling: Signaling;
+	private requestedMTU: number;
 
 	public getACLStream() {
 		return this.aclStream;
@@ -23,21 +27,31 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 
 	public async connect(requestMtu?: number): Promise<void> {
 		this._state = 'connecting';
-		this._mtu = requestMtu;
-		await this.adapter.connect(this, requestMtu);
+		this.requestedMTU = requestMtu;
+		await this.adapter.connect(this);
 	}
-	public onConnect(aclStream: AclStream, gatt: Gatt, signaling: Signaling) {
+	public async onConnect(hci: Hci, handle: number) {
+		this.hci = hci;
+		this.handle = handle;
+		this.aclStream = new AclStream(hci, handle, hci.addressType, hci.address, this.addressType, this.address);
+		this.gatt = new Gatt(this.aclStream);
+		this.signaling = new Signaling(handle, this.aclStream);
+		this.signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
+
+		const wantedMtu = this.requestedMTU || 256;
+		const mtu = await this.gatt.exchangeMtu(wantedMtu);
+
 		this._state = 'connected';
-
-		this.aclStream = aclStream;
-		this.gatt = gatt;
-		this.signaling = signaling;
-
-		gatt.on('mtu', this.onMtu);
+		this._mtu = mtu;
 	}
 
-	private onMtu = (mtu: number) => {
-		this._mtu = mtu;
+	private onConnectionParameterUpdateRequest = (
+		minInterval: number,
+		maxInterval: number,
+		latency: number,
+		supervisionTimeout: number
+	) => {
+		this.hci.connUpdateLe(this.handle, minInterval, maxInterval, latency, supervisionTimeout);
 	};
 
 	public async disconnect(): Promise<number> {
@@ -46,6 +60,8 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	}
 	public onDisconnect() {
 		this._state = 'disconnected';
+		this._mtu = undefined;
+
 		this.aclStream.push(null, null);
 		this.gatt.removeAllListeners();
 		this.signaling.removeAllListeners();

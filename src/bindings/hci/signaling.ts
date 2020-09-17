@@ -11,13 +11,7 @@ const SIGNALING_CID = 0x0005;
 export declare interface Signaling {
 	on(
 		event: 'connectionParameterUpdateRequest',
-		listener: (
-			handle: number,
-			minInterval: number,
-			maxInterval: number,
-			latency: number,
-			supervisionTimeout: number
-		) => void
+		listener: (minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number) => void
 	): this;
 }
 
@@ -71,7 +65,7 @@ export class Signaling extends EventEmitter {
 
 			this.aclStream.write(SIGNALING_CID, response);
 
-			this.emit('connectionParameterUpdateRequest', this.handle, minInterval, maxInterval, latency, supervisionTimeout);
+			this.emit('connectionParameterUpdateRequest', minInterval, maxInterval, latency, supervisionTimeout);
 		}
 	}
 }

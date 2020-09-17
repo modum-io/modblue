@@ -11,7 +11,6 @@ import { Signaling } from './signaling';
 
 interface ConnectRequest {
 	peripheral: Peripheral;
-	requestedMTU?: number;
 	resolve?: () => void;
 	reject?: (error: any) => void;
 	isDone?: boolean;
@@ -148,8 +147,8 @@ export class Adapter extends BaseAdapter<Noble> {
 		this.emit('discover', peripheral);
 	};
 
-	public async connect(peripheral: Peripheral, requestedMTU?: number) {
-		const request: ConnectRequest = { peripheral, requestedMTU, isDone: false };
+	public async connect(peripheral: Peripheral) {
+		const request: ConnectRequest = { peripheral, isDone: false };
 
 		if (!this.connectionRequest) {
 			this.connectionRequest = request;
@@ -195,7 +194,7 @@ export class Adapter extends BaseAdapter<Noble> {
 		});
 	}
 
-	private onLeConnComplete = (
+	private onLeConnComplete = async (
 		status: number,
 		handle: number,
 		role: number,
@@ -230,17 +229,7 @@ export class Adapter extends BaseAdapter<Noble> {
 			this.uuidToHandle.set(uuid, handle);
 			this.handleToUUID.set(handle, uuid);
 
-			const aclStream = new AclStream(this.hci, handle, this.hci.addressType, this.hci.address, addressType, address);
-
-			const gatt = new Gatt(aclStream);
-
-			const signaling = new Signaling(handle, aclStream);
-			signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
-
-			peripheral.onConnect(aclStream, gatt, signaling);
-
-			const mtu = request.requestedMTU || 256;
-			gatt.exchangeMtu(mtu);
+			await peripheral.onConnect(this.hci, handle);
 
 			if (!request.isDone) {
 				request.isDone = true;
@@ -260,16 +249,6 @@ export class Adapter extends BaseAdapter<Noble> {
 			this.connectionRequest = newRequest;
 			this.hci.createLeConn(newRequest.peripheral.address, newRequest.peripheral.addressType);
 		}
-	};
-
-	private onConnectionParameterUpdateRequest = (
-		handle: number,
-		minInterval: number,
-		maxInterval: number,
-		latency: number,
-		supervisionTimeout: number
-	) => {
-		this.hci.connUpdateLe(handle, minInterval, maxInterval, latency, supervisionTimeout);
 	};
 
 	private onEncryptChange = (handle: number, encrypt: number) => {

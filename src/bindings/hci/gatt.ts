@@ -84,7 +84,6 @@ export interface GattDescriptor {
 }
 
 export declare interface Gatt {
-	on(event: 'mtu', listener: (mtu: number) => void): this;
 	on(event: 'servicesDiscovered', listener: (services: GattService[]) => void): this;
 	on(
 		event: 'includedServicesDiscovered',
@@ -383,16 +382,18 @@ export class Gatt extends EventEmitter {
 		return buf;
 	}
 
-	public exchangeMtu(mtu: number) {
-		this.queueCommand(this.mtuRequest(mtu), (data: Buffer) => {
-			const opcode = data[0];
+	public async exchangeMtu(mtu: number) {
+		return new Promise<number>((resolve) => {
+			this.queueCommand(this.mtuRequest(mtu), (data: Buffer) => {
+				const opcode = data[0];
 
-			if (opcode === ATT_OP_MTU_RESP) {
-				const newMtu = data.readUInt16LE(1);
-				this.mtu = newMtu;
-			}
+				if (opcode === ATT_OP_MTU_RESP) {
+					const newMtu = data.readUInt16LE(1);
+					this.mtu = newMtu;
+				}
 
-			this.emit('mtu', this.mtu);
+				resolve(this.mtu);
+			});
 		});
 	}
 

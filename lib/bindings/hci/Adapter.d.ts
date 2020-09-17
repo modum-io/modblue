@@ -21,9 +21,8 @@ export declare class Adapter extends BaseAdapter<Noble> {
     stopScanning(): Promise<void>;
     private onScanStop;
     private onDiscover;
-    connect(peripheral: Peripheral, requestedMTU?: number): Promise<void>;
+    connect(peripheral: Peripheral): Promise<void>;
     private onLeConnComplete;
-    private onConnectionParameterUpdateRequest;
     private onEncryptChange;
     private onAclDataPkt;
     disconnect(peripheral: Peripheral): Promise<number>;

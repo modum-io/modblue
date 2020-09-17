@@ -19,7 +19,6 @@ export interface GattDescriptor {
     handle: number;
 }
 export declare interface Gatt {
-    on(event: 'mtu', listener: (mtu: number) => void): this;
     on(event: 'servicesDiscovered', listener: (services: GattService[]) => void): this;
     on(event: 'includedServicesDiscovered', listener: (serviceUUID: string, includedServices: GattService[]) => void): this;
     on(event: 'characteristicsDiscovered', listener: (serviceUUID: string, characteristics: GattCharacteristic[]) => void): this;
@@ -63,7 +62,7 @@ export declare class Gatt extends EventEmitter {
     private prepareWriteRequest;
     private executeWriteRequest;
     private handleConfirmation;
-    exchangeMtu(mtu: number): void;
+    exchangeMtu(mtu: number): Promise<number>;
     discoverServices(uuids: string[]): void;
     discoverIncludedServices(serviceUUID: string, uuids: string[]): void;
     discoverCharacteristics(serviceUUID: string, characteristicUUIDs: string[]): void;
