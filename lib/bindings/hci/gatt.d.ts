@@ -27,6 +27,7 @@ export declare class Gatt {
     private mtu;
     private security;
     constructor(aclStream: AclStream);
+    dispose(): void;
     private onAclStreamData;
     private onAclStreamEncrypt;
     private onAclStreamEncryptFail;

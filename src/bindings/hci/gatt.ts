@@ -113,6 +113,13 @@ export class Gatt {
 		this.aclStream.on('end', this.onAclStreamEnd);
 	}
 
+	public dispose() {
+		this.aclStream.off('data', this.onAclStreamData);
+		this.aclStream.off('encrypt', this.onAclStreamEncrypt);
+		this.aclStream.off('encryptFail', this.onAclStreamEncryptFail);
+		this.aclStream.off('end', this.onAclStreamEnd);
+	}
+
 	private onAclStreamData = async (cid: number, data: Buffer) => {
 		if (cid !== ATT_CID) {
 			return;

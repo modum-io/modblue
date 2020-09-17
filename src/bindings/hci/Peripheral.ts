@@ -77,19 +77,22 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		return this.adapter.disconnect(this);
 	}
 	public onDisconnect() {
-		this._state = 'disconnected';
-		this._mtu = undefined;
-		this.handle = null;
-
 		this.aclStream.push(null, null);
 		this.aclStream = null;
+
+		this.gatt.dispose();
 		this.gatt = null;
-		this.signaling.removeAllListeners();
+
+		this.signaling.off('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 		this.signaling = null;
 
 		this.hci.off('encryptChange', this.onEncryptChange);
 		this.hci.off('aclDataPkt', this.onAclDataPkt);
 		this.hci = null;
+
+		this.handle = null;
+		this._state = 'disconnected';
+		this._mtu = undefined;
 	}
 
 	public async discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
