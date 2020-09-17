@@ -1,5 +1,4 @@
 import { BasePeripheral } from '../../Peripheral';
-import { AclStream } from './acl-stream';
 import { Adapter } from './Adapter';
 import { Hci } from './hci';
 import { Noble } from './Noble';
@@ -11,11 +10,12 @@ export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     private gatt;
     private signaling;
     private requestedMTU;
-    getACLStream(): AclStream;
     private services;
     getDiscoveredServices(): Service[];
     connect(requestMtu?: number): Promise<void>;
     onConnect(hci: Hci, handle: number): Promise<void>;
+    private onEncryptChange;
+    private onAclDataPkt;
     private onConnectionParameterUpdateRequest;
     disconnect(): Promise<number>;
     onDisconnect(): void;

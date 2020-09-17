@@ -23,7 +23,5 @@ export declare class Adapter extends BaseAdapter<Noble> {
     private onDiscover;
     connect(peripheral: Peripheral): Promise<void>;
     private onLeConnComplete;
-    private onEncryptChange;
-    private onAclDataPkt;
     disconnect(peripheral: Peripheral): Promise<number>;
 }

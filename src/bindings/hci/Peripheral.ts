@@ -16,10 +16,6 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	private signaling: Signaling;
 	private requestedMTU: number;
 
-	public getACLStream() {
-		return this.aclStream;
-	}
-
 	private services: Map<string, Service> = new Map();
 	public getDiscoveredServices() {
 		return [...this.services.values()];
@@ -31,10 +27,16 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		await this.adapter.connect(this);
 	}
 	public async onConnect(hci: Hci, handle: number) {
-		this.hci = hci;
 		this.handle = handle;
+
+		this.hci = hci;
+		this.hci.on('encryptChange', this.onEncryptChange);
+		this.hci.on('aclDataPkt', this.onAclDataPkt);
+
 		this.aclStream = new AclStream(hci, handle, hci.addressType, hci.address, this.addressType, this.address);
+
 		this.gatt = new Gatt(this.aclStream);
+
 		this.signaling = new Signaling(handle, this.aclStream);
 		this.signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 
@@ -44,6 +46,22 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this._state = 'connected';
 		this._mtu = mtu;
 	}
+
+	private onEncryptChange = (handle: number, encrypt: number) => {
+		if (handle !== this.handle) {
+			return;
+		}
+
+		this.aclStream.pushEncrypt(encrypt);
+	};
+
+	private onAclDataPkt = (handle: number, cid: number, data: Buffer) => {
+		if (handle !== this.handle) {
+			return;
+		}
+
+		this.aclStream.push(cid, data);
+	};
 
 	private onConnectionParameterUpdateRequest = (
 		minInterval: number,
@@ -65,6 +83,9 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.aclStream.push(null, null);
 		this.gatt.removeAllListeners();
 		this.signaling.removeAllListeners();
+
+		this.hci.off('encryptChange', this.onEncryptChange);
+		this.hci.off('onAclDataPkt', this.onAclDataPkt);
 	}
 
 	public async discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {

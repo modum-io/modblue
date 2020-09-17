@@ -1,13 +1,10 @@
 import { BaseAdapter } from '../../Adapter';
 import { AddressType } from '../../types';
 
-import { AclStream } from './acl-stream';
 import { Gap } from './gap';
-import { Gatt } from './gatt';
 import { Hci } from './hci';
 import { Noble } from './Noble';
 import { Peripheral } from './Peripheral';
-import { Signaling } from './signaling';
 
 interface ConnectRequest {
 	peripheral: Peripheral;
@@ -49,8 +46,6 @@ export class Adapter extends BaseAdapter<Noble> {
 		this.hci = new Hci(Number(this.id));
 		this.hci.on('addressChange', (addr) => (this._address = addr));
 		this.hci.on('leConnComplete', this.onLeConnComplete);
-		this.hci.on('encryptChange', this.onEncryptChange);
-		this.hci.on('aclDataPkt', this.onAclDataPkt);
 
 		this.gap = new Gap(this.hci);
 		this.gap.on('scanStart', this.onScanStart);
@@ -249,26 +244,6 @@ export class Adapter extends BaseAdapter<Noble> {
 			this.connectionRequest = newRequest;
 			this.hci.createLeConn(newRequest.peripheral.address, newRequest.peripheral.addressType);
 		}
-	};
-
-	private onEncryptChange = (handle: number, encrypt: number) => {
-		const uuid = this.handleToUUID.get(handle);
-		const peripheral = this.peripherals.get(uuid);
-		if (!peripheral) {
-			return;
-		}
-
-		peripheral.getACLStream().pushEncrypt(encrypt);
-	};
-
-	private onAclDataPkt = (handle: number, cid: number, data: Buffer) => {
-		const uuid = this.handleToUUID.get(handle);
-		const peripheral = this.peripherals.get(uuid);
-		if (!peripheral) {
-			return;
-		}
-
-		peripheral.getACLStream().push(cid, data);
 	};
 
 	public async disconnect(peripheral: Peripheral) {
