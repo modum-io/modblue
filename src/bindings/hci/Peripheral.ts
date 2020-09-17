@@ -2,7 +2,7 @@ import { BasePeripheral } from '../../Peripheral';
 
 import { AclStream } from './acl-stream';
 import { Adapter } from './Adapter';
-import { Gatt, GattService } from './gatt';
+import { Gatt } from './gatt';
 import { Hci } from './hci';
 import { Noble } from './Noble';
 import { Service } from './Service';
@@ -79,10 +79,10 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	public onDisconnect() {
 		this._state = 'disconnected';
 		this._mtu = undefined;
+		this.handle = null;
 
 		this.aclStream.push(null, null);
 		this.aclStream = null;
-		this.gatt.removeAllListeners();
 		this.gatt = null;
 		this.signaling.removeAllListeners();
 		this.signaling = null;
@@ -105,29 +105,14 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	}
 
 	public async discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]) {
-		return new Promise<Service[]>((resolve) => {
-			const done = (serviceUUID: string, services: GattService[]) => {
-				if (serviceUUID !== this.uuid) {
-					// This isn't our service, ignore
-					return;
-				}
-
-				this.gatt.off('includedServicesDiscovered', done);
-
-				for (const rawService of services) {
-					let service = this.services.get(rawService.uuid);
-					if (!service) {
-						service = new Service(this.noble, this, rawService.uuid, this.gatt);
-						this.services.set(rawService.uuid, service);
-					}
-				}
-
-				resolve([...this.services.values()]);
-			};
-
-			this.gatt.on('includedServicesDiscovered', done);
-
-			this.gatt.discoverIncludedServices(baseService.uuid, serviceUUIDs || []);
-		});
+		const services = await this.gatt.discoverIncludedServices(baseService.uuid, serviceUUIDs);
+		for (const rawService of services) {
+			let service = this.services.get(rawService.uuid);
+			if (!service) {
+				service = new Service(this.noble, this, rawService.uuid, this.gatt);
+				this.services.set(rawService.uuid, service);
+			}
+		}
+		return [...this.services.values()];
 	}
 }

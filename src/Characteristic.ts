@@ -38,7 +38,7 @@ export abstract class BaseCharacteristic<
 	public abstract async read(): Promise<Buffer>;
 	public abstract async write(data: Buffer, withoutResponse: boolean): Promise<void>;
 
-	public abstract async broadcast(broadcast: boolean): Promise<boolean>;
+	public abstract async broadcast(broadcast: boolean): Promise<void>;
 
 	public abstract async subscribe(): Promise<void>;
 	public abstract async unsubscribe(): Promise<void>;

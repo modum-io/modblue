@@ -1,5 +1,4 @@
 /// <reference types="node" />
-import { EventEmitter } from 'events';
 import { AclStream } from './acl-stream';
 export interface GattService {
     uuid: string;
@@ -18,22 +17,7 @@ export interface GattDescriptor {
     uuid: string;
     handle: number;
 }
-export declare interface Gatt {
-    on(event: 'includedServicesDiscovered', listener: (serviceUUID: string, includedServices: GattService[]) => void): this;
-    on(event: 'read', listener: (serviceUUID: string, characteristicUUID: string, data: Buffer) => void): this;
-    on(event: 'write', listener: (serviceUUID: string, characteristicUUID: string) => void): this;
-    on(event: 'broadcast', listener: (serviceUUID: string, characteristicUUID: string, broadcast: boolean) => void): this;
-    on(event: 'notify', listener: (serviceUUID: string, characteristicUUID: string, notify: boolean) => void): this;
-    on(event: 'notification', listener: (serviceUUID: string, characteristicUUID: string, valueData: Buffer) => void): this;
-    on(event: 'descriptorsDiscovered', listener: (serviceUUID: string, characteristicUUID: string, descriptors: GattDescriptor[]) => void): this;
-    on(event: 'valueRead', listener: (serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer) => void): this;
-    on(event: 'valueWrite', listener: (serviceUUID: string, characteristicUUID: string, descriptorUUID: string) => void): this;
-    on(event: 'handleRead', listener: (handle: number, data: Buffer) => void): this;
-    on(event: 'handleWrite', listener: (handle: number) => void): this;
-    on(event: 'handleNotify', listener: (valueHandle: number, valueData: Buffer) => void): this;
-    on(event: 'handleConfirmation', listener: (valueHandle: number) => void): this;
-}
-export declare class Gatt extends EventEmitter {
+export declare class Gatt {
     private aclStream;
     private services;
     private characteristics;
@@ -50,7 +34,6 @@ export declare class Gatt extends EventEmitter {
     private writeAtt;
     private errorResponse;
     private queueCommand;
-    private queueCommandAsync;
     private mtuRequest;
     readByGroupRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;
     readByTypeRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;
@@ -64,17 +47,17 @@ export declare class Gatt extends EventEmitter {
     exchangeMtu(mtu: number): Promise<number>;
     discoverServices(uuids: string[]): Promise<GattService[]>;
     private doDiscoverServices;
-    discoverIncludedServices(serviceUUID: string, uuids: string[]): void;
-    discoverCharacteristics(serviceUUID: string, characteristicUUIDs: string[]): Promise<GattCharacteristic[]>;
+    discoverIncludedServices(serviceUUID: string, uuids: string[]): Promise<GattService[]>;
+    private doDiscoverIncludedServices;
+    discoverCharacteristics(serviceUUID: string, uuids: string[]): Promise<GattCharacteristic[]>;
     private doDiscoverCharacteristics;
-    read(serviceUUID: string, characteristicUUID: string): void;
-    write(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean): void;
+    read(serviceUUID: string, characteristicUUID: string): Promise<Buffer>;
+    write(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean): Promise<void>;
     private longWrite;
-    broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): void;
-    notify(serviceUUID: string, characteristicUUID: string, notify: boolean): void;
-    discoverDescriptors(serviceUUID: string, characteristicUUID: string): void;
-    readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): void;
-    writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer): void;
-    readHandle(handle: number): void;
-    writeHandle(handle: number, data: Buffer, withoutResponse: boolean): void;
+    broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): Promise<void>;
+    notify(serviceUUID: string, characteristicUUID: string, notify: boolean): Promise<void>;
+    discoverDescriptors(serviceUUID: string, characteristicUUID: string, uuids: string[]): Promise<GattDescriptor[]>;
+    private doDiscoverDescriptors;
+    readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): Promise<Buffer>;
+    writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer): Promise<void>;
 }

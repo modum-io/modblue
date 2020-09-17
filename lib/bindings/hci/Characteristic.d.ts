@@ -11,9 +11,9 @@ export declare class Characteristic extends BaseCharacteristic<Noble, Service> {
     constructor(noble: Noble, service: Service, uuid: string, properties: string[], gatt: Gatt);
     read(): Promise<Buffer>;
     write(data: Buffer, withoutResponse: boolean): Promise<void>;
-    broadcast(broadcast: boolean): Promise<boolean>;
-    notify(notify: boolean): Promise<boolean>;
+    broadcast(broadcast: boolean): Promise<void>;
+    notify(notify: boolean): Promise<void>;
     subscribe(): Promise<void>;
     unsubscribe(): Promise<void>;
-    discoverDescriptors(): Promise<Descriptor[]>;
+    discoverDescriptors(uuids?: string[]): Promise<Descriptor[]>;
 }

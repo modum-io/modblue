@@ -12,7 +12,7 @@ export declare abstract class BaseCharacteristic<N extends BaseNoble = BaseNoble
     toString(): string;
     abstract read(): Promise<Buffer>;
     abstract write(data: Buffer, withoutResponse: boolean): Promise<void>;
-    abstract broadcast(broadcast: boolean): Promise<boolean>;
+    abstract broadcast(broadcast: boolean): Promise<void>;
     abstract subscribe(): Promise<void>;
     abstract unsubscribe(): Promise<void>;
     abstract getDiscoveredDescriptors(): BaseDescriptor[];
