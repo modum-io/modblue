@@ -20,7 +20,6 @@ export interface GattDescriptor {
 }
 export declare interface Gatt {
     on(event: 'includedServicesDiscovered', listener: (serviceUUID: string, includedServices: GattService[]) => void): this;
-    on(event: 'characteristicsDiscovered', listener: (serviceUUID: string, characteristics: GattCharacteristic[]) => void): this;
     on(event: 'read', listener: (serviceUUID: string, characteristicUUID: string, data: Buffer) => void): this;
     on(event: 'write', listener: (serviceUUID: string, characteristicUUID: string) => void): this;
     on(event: 'broadcast', listener: (serviceUUID: string, characteristicUUID: string, broadcast: boolean) => void): this;
@@ -66,7 +65,8 @@ export declare class Gatt extends EventEmitter {
     discoverServices(uuids: string[]): Promise<GattService[]>;
     private doDiscoverServices;
     discoverIncludedServices(serviceUUID: string, uuids: string[]): void;
-    discoverCharacteristics(serviceUUID: string, characteristicUUIDs: string[]): void;
+    discoverCharacteristics(serviceUUID: string, characteristicUUIDs: string[]): Promise<GattCharacteristic[]>;
+    private doDiscoverCharacteristics;
     read(serviceUUID: string, characteristicUUID: string): void;
     write(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean): void;
     private longWrite;

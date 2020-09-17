@@ -88,10 +88,6 @@ export declare interface Gatt {
 		event: 'includedServicesDiscovered',
 		listener: (serviceUUID: string, includedServices: GattService[]) => void
 	): this;
-	on(
-		event: 'characteristicsDiscovered',
-		listener: (serviceUUID: string, characteristics: GattCharacteristic[]) => void
-	): this;
 	on(event: 'read', listener: (serviceUUID: string, characteristicUUID: string, data: Buffer) => void): this;
 	on(event: 'write', listener: (serviceUUID: string, characteristicUUID: string) => void): this;
 	on(event: 'broadcast', listener: (serviceUUID: string, characteristicUUID: string, broadcast: boolean) => void): this;
@@ -422,12 +418,12 @@ export class Gatt extends EventEmitter {
 
 		const wantedServices: GattService[] = [];
 		for (const service of services) {
+			this.services.set(service.uuid, service);
+
 			const uuid = service.uuid.trim();
 			if (uuids.length === 0 || uuids.indexOf(uuid) !== -1) {
 				wantedServices.push(service);
 			}
-
-			this.services.set(service.uuid, service);
 		}
 
 		return wantedServices;
@@ -536,22 +532,53 @@ export class Gatt extends EventEmitter {
 		this.queueCommand(this.readByTypeRequest(service.startHandle, service.endHandle, GATT_INCLUDE_UUID), callback);
 	}
 
-	public discoverCharacteristics(serviceUUID: string, characteristicUUIDs: string[]) {
+	public async discoverCharacteristics(serviceUUID: string, characteristicUUIDs: string[]) {
+		const service = this.services.get(serviceUUID);
+		const characteristics: GattCharacteristic[] = await this.doDiscoverCharacteristics(serviceUUID);
+
+		const wantedCharacteristics: GattCharacteristic[] = [];
+		for (let i = 0; i < characteristics.length; i++) {
+			const characteristic = characteristics[i];
+
+			if (i !== 0) {
+				characteristics[i - 1].endHandle = characteristics[i].startHandle - 1;
+			}
+
+			if (i === characteristics.length - 1) {
+				characteristic.endHandle = service.endHandle;
+			}
+
+			this.characteristics.get(serviceUUID).set(characteristic.uuid, characteristic);
+
+			if (characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(characteristic.uuid) !== -1) {
+				wantedCharacteristics.push(characteristic);
+			}
+		}
+
+		return wantedCharacteristics;
+	}
+	private async doDiscoverCharacteristics(serviceUUID: string) {
 		const service = this.services.get(serviceUUID);
 		const characteristics: GattCharacteristic[] = [];
 
 		this.characteristics.set(serviceUUID, this.characteristics.get(serviceUUID) || new Map());
 		this.descriptors.set(serviceUUID, this.descriptors.get(serviceUUID) || new Map());
 
-		const callback = (data: Buffer) => {
+		let startHandle = service.startHandle;
+
+		while (true) {
+			const data = await this.queueCommandAsync(
+				this.readByTypeRequest(startHandle, service.endHandle, GATT_CHARAC_UUID),
+				false
+			);
+
 			const opcode = data[0];
-			let i = 0;
 
 			if (opcode === ATT_OP_READ_BY_TYPE_RESP) {
 				const type = data[1];
 				const num = (data.length - 2) / type;
 
-				for (i = 0; i < num; i++) {
+				for (let i = 0; i < num; i++) {
 					const offset = 2 + i * type;
 					const propertiesFlag = data.readUInt8(offset + 2);
 					const properties: string[] = [];
@@ -604,39 +631,13 @@ export class Gatt extends EventEmitter {
 				opcode !== ATT_OP_READ_BY_TYPE_RESP ||
 				characteristics[characteristics.length - 1].valueHandle === service.endHandle
 			) {
-				const wantedCharacteristics: GattCharacteristic[] = [];
-				for (i = 0; i < characteristics.length; i++) {
-					const characteristic = characteristics[i];
-
-					if (i !== 0) {
-						characteristics[i - 1].endHandle = characteristics[i].startHandle - 1;
-					}
-
-					if (i === characteristics.length - 1) {
-						characteristic.endHandle = service.endHandle;
-					}
-
-					this.characteristics.get(serviceUUID).set(characteristic.uuid, characteristic);
-
-					if (characteristicUUIDs.length === 0 || characteristicUUIDs.indexOf(characteristic.uuid) !== -1) {
-						wantedCharacteristics.push(characteristic);
-					}
-				}
-
-				this.emit('characteristicsDiscovered', serviceUUID, wantedCharacteristics);
+				break;
 			} else {
-				this.queueCommand(
-					this.readByTypeRequest(
-						characteristics[characteristics.length - 1].valueHandle + 1,
-						service.endHandle,
-						GATT_CHARAC_UUID
-					),
-					callback
-				);
+				startHandle = characteristics[characteristics.length - 1].valueHandle + 1;
 			}
-		};
+		}
 
-		this.queueCommand(this.readByTypeRequest(service.startHandle, service.endHandle, GATT_CHARAC_UUID), callback);
+		return characteristics;
 	}
 
 	public read(serviceUUID: string, characteristicUUID: string) {
