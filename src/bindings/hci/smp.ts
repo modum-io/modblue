@@ -92,8 +92,8 @@ export class Smp extends EventEmitter {
 	};
 
 	private onAclStreamEnd = () => {
-		this.aclStream.removeListener('data', this.onAclStreamData);
-		this.aclStream.removeListener('end', this.onAclStreamEnd);
+		this.aclStream.off('data', this.onAclStreamData);
+		this.aclStream.off('end', this.onAclStreamEnd);
 
 		this.emit('end');
 	};

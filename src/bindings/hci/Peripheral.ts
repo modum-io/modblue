@@ -37,7 +37,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 
 		this.gatt = new Gatt(this.aclStream);
 
-		this.signaling = new Signaling(handle, this.aclStream);
+		this.signaling = new Signaling(this.aclStream);
 		this.signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 
 		const wantedMtu = this.requestedMTU || 256;
@@ -81,8 +81,11 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this._mtu = undefined;
 
 		this.aclStream.push(null, null);
+		this.aclStream = null;
 		this.gatt.removeAllListeners();
+		this.gatt = null;
 		this.signaling.removeAllListeners();
+		this.signaling = null;
 
 		this.hci.off('encryptChange', this.onEncryptChange);
 		this.hci.off('onAclDataPkt', this.onAclDataPkt);

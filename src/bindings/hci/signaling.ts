@@ -16,13 +16,11 @@ export declare interface Signaling {
 }
 
 export class Signaling extends EventEmitter {
-	private handle: number;
 	private aclStream: AclStream;
 
-	public constructor(handle: number, aclStream: AclStream) {
+	public constructor(aclStream: AclStream) {
 		super();
 
-		this.handle = handle;
 		this.aclStream = aclStream;
 
 		this.aclStream.on('data', this.onAclStreamData);

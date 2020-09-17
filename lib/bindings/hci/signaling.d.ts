@@ -5,9 +5,8 @@ export declare interface Signaling {
     on(event: 'connectionParameterUpdateRequest', listener: (minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number) => void): this;
 }
 export declare class Signaling extends EventEmitter {
-    private handle;
     private aclStream;
-    constructor(handle: number, aclStream: AclStream);
+    constructor(aclStream: AclStream);
     private onAclStreamData;
     private onAclStreamEnd;
     private processConnectionParameterUpdateRequest;

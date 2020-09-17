@@ -52,6 +52,7 @@ export declare class Gatt extends EventEmitter {
     private writeAtt;
     private errorResponse;
     private queueCommand;
+    private queueCommandAsync;
     private mtuRequest;
     readByGroupRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;
     readByTypeRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;

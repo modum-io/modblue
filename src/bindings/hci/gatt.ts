@@ -278,6 +278,34 @@ export class Gatt extends EventEmitter {
 		}
 	}
 
+	private async queueCommandAsync(buffer: Buffer, resolveOnWrite: true): Promise<void>;
+	private async queueCommandAsync(buffer: Buffer, resolveOnWrite: false): Promise<Buffer>;
+	private async queueCommandAsync(buffer: Buffer, resolveOnWrite: boolean) {
+		return new Promise<any>((resolve) => {
+			this.commandQueue.push({
+				buffer: buffer,
+				callback: !resolveOnWrite ? (data) => resolve(data) : undefined,
+				writeCallback: resolveOnWrite ? () => resolve() : undefined
+			});
+
+			if (this.currentCommand === null) {
+				while (this.commandQueue.length) {
+					this.currentCommand = this.commandQueue.shift();
+
+					this.writeAtt(this.currentCommand.buffer);
+
+					if (this.currentCommand.callback) {
+						break;
+					} else if (this.currentCommand.writeCallback) {
+						this.currentCommand.writeCallback();
+
+						this.currentCommand = null;
+					}
+				}
+			}
+		});
+	}
+
 	private mtuRequest(mtu: number) {
 		const buf = Buffer.alloc(3);
 
@@ -383,18 +411,15 @@ export class Gatt extends EventEmitter {
 	}
 
 	public async exchangeMtu(mtu: number) {
-		return new Promise<number>((resolve) => {
-			this.queueCommand(this.mtuRequest(mtu), (data: Buffer) => {
-				const opcode = data[0];
+		const data = await this.queueCommandAsync(this.mtuRequest(mtu), false);
+		const opcode = data[0];
 
-				if (opcode === ATT_OP_MTU_RESP) {
-					const newMtu = data.readUInt16LE(1);
-					this.mtu = newMtu;
-				}
+		if (opcode === ATT_OP_MTU_RESP) {
+			const newMtu = data.readUInt16LE(1);
+			this.mtu = newMtu;
+		}
 
-				resolve(this.mtu);
-			});
-		});
+		return this.mtu;
 	}
 
 	public discoverServices(uuids: string[]) {
