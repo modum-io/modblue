@@ -50,7 +50,7 @@ const main = async () => {
 				);
 			}
 
-			console.log(`Connecting ${i}...`);
+			console.log(`Connecting ${total}...`);
 
 			await peripheral.connect();
 
