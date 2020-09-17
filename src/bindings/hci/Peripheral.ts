@@ -59,6 +59,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.gatt = null;
 
 		this.signaling.off('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
+		this.signaling.dispose();
 		this.signaling = null;
 
 		this.hci = null;

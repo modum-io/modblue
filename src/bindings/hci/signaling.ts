@@ -29,6 +29,8 @@ export class Signaling extends EventEmitter {
 
 	public dispose() {
 		this.hci.off('aclDataPkt', this.onAclStreamData);
+		this.hci = null;
+		this.handle = null;
 	}
 
 	private onAclStreamData = (handle: number, cid: number, data: Buffer) => {
