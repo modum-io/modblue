@@ -161,12 +161,7 @@ export class Gatt extends EventEmitter {
 		if (this.currentCommand && data.toString('hex') === this.currentCommand.buffer.toString('hex')) {
 			// NO-OP
 		} else if (data[0] % 2 === 0) {
-			if (process.env.NOBLE_MULTI_ROLE) {
-				// NO-OP
-			} else {
-				const requestType = data[0];
-				this.writeAtt(this.errorResponse(requestType, 0x0000, ATT_ECODE_REQ_NOT_SUPP));
-			}
+			// NO-OP
 		} else if (data[0] === ATT_OP_HANDLE_NOTIFY || data[0] === ATT_OP_HANDLE_IND) {
 			const valueHandle = data.readUInt16LE(1);
 			const valueData = data.slice(3);
