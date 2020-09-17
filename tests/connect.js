@@ -1,7 +1,7 @@
 const { HCINoble } = require('../lib');
 
 const TOTAL_CONNECTS = 100;
-const PERIPHERAL_UUID = process.argv[2];
+const PERIPHERAL_UUIDS = process.argv[2].split('|');
 const SERVICE_UUID = process.argv[3];
 const CHAR_UUID = process.argv[4];
 
@@ -33,20 +33,23 @@ const main = async () => {
 	console.log('Getting peripherals...');
 
 	const peripherals = await adapter.getScannedPeripherals();
-	const peripheral = peripherals.find((p) => p.uuid === PERIPHERAL_UUID);
-	if (!peripheral) {
-		throw new Error(
-			`Could not find peripheral with UUID ${PERIPHERAL_UUID}.\n${peripherals.map((p) => p.uuid).join(', ')}`
-		);
-	}
 
-	console.log(`Using peripheral ${peripheral.uuid}`);
-
-	const time = console.time('connect');
+	const time = console.time('Connect');
 	let success = 0;
 
 	for (let i = 0; i < TOTAL_CONNECTS; i++) {
+		const targetUUID = PERIPHERAL_UUIDS[i % PERIPHERAL_UUIDS.length];
+
+		console.log(`Using peripheral ${targetUUID}`);
+
 		try {
+			const peripheral = peripherals.find((p) => p.uuid === targetUUID);
+			if (!peripheral) {
+				throw new Error(
+					`Could not find peripheral with UUID ${targetUUID}.\n${peripherals.map((p) => p.uuid).join(', ')}`
+				);
+			}
+
 			console.log(`Connecting ${i}...`);
 
 			await peripheral.connect();
@@ -88,7 +91,7 @@ const main = async () => {
 	}
 
 	console.log(`Finished ${success}/${TOTAL_CONNECTS} connects`);
-	console.timeEnd('connect');
+	console.timeEnd('Connect');
 };
 
 main()
