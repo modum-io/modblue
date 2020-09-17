@@ -91,7 +91,7 @@ const main = async () => {
 
 		total++;
 
-		console.timeEnd('Connect');
+		console.timeLog('Connect');
 		console.log(`Finished ${success}/${total} connects`);
 	}
 };
