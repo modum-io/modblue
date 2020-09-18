@@ -395,7 +395,7 @@ export class Hci extends EventEmitter {
 	}
 
 	public cancelLeConn() {
-		const cmd = Buffer.alloc(29);
+		const cmd = Buffer.alloc(4);
 
 		// header
 		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
