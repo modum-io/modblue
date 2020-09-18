@@ -180,7 +180,7 @@ export class Adapter extends BaseAdapter<Noble> {
 
 			this.hci.cancelLeConn();
 
-			request.reject(new Error(`Connection timeout`));
+			// Don't actively reject the promise, as it will be reject in the le conn create callback
 		};
 		setTimeout(timeout, 10000);
 
