@@ -145,15 +145,8 @@ export class Adapter extends BaseAdapter<Noble> {
 	public async connect(peripheral: Peripheral) {
 		const request: ConnectRequest = { peripheral, isDone: false };
 
-		if (!this.connectionRequest) {
-			this.connectionRequest = request;
-			this.hci.createLeConn(request.peripheral.address, request.peripheral.addressType);
-		} else {
-			this.connectionRequestQueue.push(request);
-		}
-
 		const disconnect = (disconnHandle: number, reason: number) => {
-			// If the device connected then the handle should be there
+			// If the device was connected then the handle should be there
 			const handle = this.uuidToHandle.get(peripheral.uuid);
 
 			if (!handle || disconnHandle !== handle) {
@@ -161,15 +154,17 @@ export class Adapter extends BaseAdapter<Noble> {
 				return;
 			}
 
+			this.hci.off('disconnComplete', disconnect);
+
+			// Always perform the disconnect steps
 			peripheral.onDisconnect();
 
 			this.uuidToHandle.delete(peripheral.uuid);
 			this.handleToUUID.delete(handle);
 
-			this.hci.off('disconnComplete', disconnect);
-
+			// This disconnect handler is also called after we established a connection,
+			// on sudden connection drop. Only reject the connection request if we're not done yet.
 			if (!request.isDone) {
-				request.isDone = true;
 				request.reject(new Error(`Disconnect while connecting: Code ${reason}`));
 			}
 		};
@@ -177,15 +172,37 @@ export class Adapter extends BaseAdapter<Noble> {
 		// Add a disconnect handler in case our peripheral gets disconnect while connecting
 		this.hci.on('disconnComplete', disconnect);
 
+		const timeout = () => {
+			// Don't cancel the connection if we've already established it
+			if (request.isDone) {
+				return;
+			}
+
+			this.hci.cancelLeConn();
+
+			request.reject(new Error(`Connection timeout`));
+		};
+		setTimeout(timeout, 10000);
+
+		if (!this.connectionRequest) {
+			this.connectionRequest = request;
+			this.hci.createLeConn(request.peripheral.address, request.peripheral.addressType);
+		} else {
+			this.connectionRequestQueue.push(request);
+		}
+
 		// Create a promise to resolve once the connection request is done
 		// (we may have to wait in queue for other connections to complete first)
 		// tslint:disable-next-line: promise-must-complete
 		return new Promise<void>((res, rej) => {
 			request.resolve = () => {
-				this.hci.off('disconnComplete', disconnect);
+				request.isDone = true;
 				res();
 			};
-			request.reject = rej;
+			request.reject = (error?: any) => {
+				request.isDone = true;
+				rej(error);
+			};
 		});
 	}
 
@@ -227,13 +244,11 @@ export class Adapter extends BaseAdapter<Noble> {
 			await peripheral.onConnect(this.hci, handle);
 
 			if (!request.isDone) {
-				request.isDone = true;
 				request.resolve();
 			}
 		} else {
 			const statusMessage = (Hci.STATUS_MAPPER[status] || 'HCI Error: Unknown') + ` (0x${status.toString(16)})`;
 			if (!request.isDone) {
-				request.isDone = true;
 				request.reject(new Error(statusMessage));
 			}
 		}
@@ -256,10 +271,7 @@ export class Adapter extends BaseAdapter<Noble> {
 					return;
 				}
 
-				peripheral.onDisconnect();
-
-				this.uuidToHandle.delete(peripheral.uuid);
-				this.handleToUUID.delete(handle);
+				// Any other disconnect handling is done in the handler that we attached during connect
 
 				this.hci.off('disconnComplete', done);
 

@@ -46,6 +46,7 @@ export declare class Hci extends EventEmitter {
     setScanParameters(): void;
     setScanEnabled(enabled: boolean, filterDuplicates: boolean): void;
     createLeConn(address: string, addressType: AddressType): void;
+    cancelLeConn(): void;
     connUpdateLe(handle: number, minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number): void;
     startLeEncryption(handle: number, random: any, diversifier: Buffer, key: Buffer): void;
     disconnect(handle: number, reason?: number): void;
