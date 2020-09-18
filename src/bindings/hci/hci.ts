@@ -387,7 +387,7 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(0x0006, 17); // min interval
 		cmd.writeUInt16LE(0x000c, 19); // max interval
 		cmd.writeUInt16LE(0x0000, 21); // latency
-		cmd.writeUInt16LE(0x0001, 23); // supervision timeout
+		cmd.writeUInt16LE(0x00c8, 23); // supervision timeout
 		cmd.writeUInt16LE(0x0004, 25); // min ce length
 		cmd.writeUInt16LE(0x0006, 27); // max ce length
 
