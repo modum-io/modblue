@@ -1,5 +1,6 @@
-import { MessageBus } from 'dbus-next';
+import { MessageBus, systemBus } from 'dbus-next';
 
+import { BaseAdapter } from '../../Adapter';
 import { BaseNoble } from '../../Noble';
 
 import { Adapter } from './Adapter';
@@ -11,10 +12,10 @@ export class Noble extends BaseNoble {
 
 	private adapters: Map<string, Adapter> = new Map();
 
-	public constructor(dbus: MessageBus) {
+	public constructor() {
 		super();
 
-		this.dbus = dbus;
+		this.dbus = systemBus();
 	}
 
 	public async init() {
@@ -25,7 +26,7 @@ export class Noble extends BaseNoble {
 		this.adapters = new Map();
 	}
 
-	public async getAdapters() {
+	public async getAdapters(): Promise<BaseAdapter[]> {
 		const adapterIds = await this.bluezObject.getChildrenNames();
 		for (const adapterId of adapterIds) {
 			let adapter = this.adapters.get(adapterId);

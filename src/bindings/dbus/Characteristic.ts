@@ -49,11 +49,11 @@ export class Characteristic extends BaseCharacteristic<Noble, Service> {
 		throw new Error('Method not implemented.');
 	}
 
-	public getDiscoveredDescriptors(): BaseDescriptor<Noble, Characteristic>[] {
+	public getDiscoveredDescriptors(): BaseDescriptor[] {
 		throw new Error('Method not implemented.');
 	}
 
-	public discoverDescriptors(): Promise<BaseDescriptor<Noble, Characteristic>[]> {
+	public discoverDescriptors(): Promise<BaseDescriptor[]> {
 		throw new Error('Method not implemented.');
 	}
 }

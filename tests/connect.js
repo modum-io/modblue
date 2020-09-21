@@ -1,13 +1,36 @@
-const { HCINoble } = require('../lib');
+const { HCINoble, DBUSNoble } = require('../lib');
+const { BasePeripheral } = require('../lib/Peripheral');
 
-const PERIPHERAL_UUIDS = process.argv[2].split('|');
-const SERVICE_UUID = process.argv[3];
-const CHAR_UUID = process.argv[4];
+const USAGE = `
+Usage:
+	node ./tests/connect.js <bindings> <loggers> <service> <characteristic>
+Arguments:
+	bindings:        Bindings to use: "hci" or "dbus"
+	loggers:         Logger MAC addresses seperated by pipe. Eg. "AA:AA:AA:AA:AA:AA|BB:BB:BB:BB:BB:BB"
+	service:         Service UUID without dashes
+	characteristic:  Characteristic UUID without dashes
+`;
+
+const BINDINGS = process.argv[2];
+const PERIPHERAL_ADDRESSES = (process.argv[3] || '').split('|');
+const SERVICE_UUID = process.argv[4];
+const CHAR_UUID = process.argv[5];
+
+const printUsage = () => console.log(USAGE);
 
 const main = async () => {
+	if (!BINDINGS || !PERIPHERAL_ADDRESSES || PERIPHERAL_ADDRESSES.length === 0 || !SERVICE_UUID || !CHAR_UUID) {
+		throw new Error(printUsage());
+	}
+
 	console.log('Initializing noble...');
 
-	const noble = new HCINoble();
+	const noble = BINDINGS === 'hci' ? new HCINoble() : BINDINGS === 'dbus' ? new DBUSNoble() : null;
+
+	if (!noble) {
+		throw new Error(`Could not find requested bindings ${BINDINGS}`);
+	}
+
 	await noble.init();
 
 	console.log('Getting adapters...');
@@ -26,8 +49,8 @@ const main = async () => {
 
 	console.log('Waiting to scan a bit...');
 
-	// Scan for 10 seconds
-	await new Promise((resolve) => setTimeout(resolve, 2000));
+	// Scan for 3 seconds
+	await new Promise((resolve) => setTimeout(resolve, 5000));
 
 	await adapter.stopScanning();
 
@@ -35,20 +58,26 @@ const main = async () => {
 
 	const peripherals = await adapter.getScannedPeripherals();
 
+	if (PERIPHERAL_ADDRESSES.some((address) => !peripherals.some((p) => p.address === address))) {
+		throw new Error(
+			`Could not find all requested test peripherals after scanning.\n${peripherals.map((p) => p.address)}`
+		);
+	}
+
 	console.time('Connect');
 	let total = 0;
 	let success = 0;
 
 	while (true) {
-		const targetUUID = PERIPHERAL_UUIDS[total % PERIPHERAL_UUIDS.length];
+		const targetAddress = PERIPHERAL_ADDRESSES[total % PERIPHERAL_ADDRESSES.length];
 
-		console.log(`Using peripheral ${targetUUID}`);
+		console.log(`Using peripheral ${targetAddress}`);
 
 		try {
-			const peripheral = peripherals.find((p) => p.uuid === targetUUID);
+			const peripheral = peripherals.find((p) => p.address === targetAddress);
 			if (!peripheral) {
 				throw new Error(
-					`Could not find peripheral with UUID ${targetUUID}.\n${peripherals.map((p) => p.uuid).join(', ')}`
+					`Could not find peripheral with address ${targetAddress}.\n${peripherals.map((p) => p.address).join(', ')}`
 				);
 			}
 

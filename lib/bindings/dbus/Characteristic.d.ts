@@ -14,6 +14,6 @@ export declare class Characteristic extends BaseCharacteristic<Noble, Service> {
     broadcast(broadcast: boolean): Promise<void>;
     subscribe(): Promise<void>;
     unsubscribe(): Promise<void>;
-    getDiscoveredDescriptors(): BaseDescriptor<Noble, Characteristic>[];
-    discoverDescriptors(): Promise<BaseDescriptor<Noble, Characteristic>[]>;
+    getDiscoveredDescriptors(): BaseDescriptor[];
+    discoverDescriptors(): Promise<BaseDescriptor[]>;
 }

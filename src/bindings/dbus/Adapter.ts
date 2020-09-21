@@ -1,4 +1,5 @@
 import { BaseAdapter } from '../../Adapter';
+import { BasePeripheral } from '../../Peripheral';
 import { AddressType } from '../../types';
 
 import { BusObject, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE } from './BusObject';
@@ -6,10 +7,13 @@ import { Noble } from './Noble';
 import { Peripheral } from './Peripheral';
 import { buildTypedValue } from './TypeValue';
 
+const UPDATE_INTERVAL = 1; // in seconds
+
 export class Adapter extends BaseAdapter<Noble> {
 	private readonly object: BusObject;
 
 	private peripherals: Map<string, Peripheral> = new Map();
+	private updateTimer: NodeJS.Timer;
 
 	public constructor(noble: Noble, id: string, name: string, address: string, object: BusObject) {
 		super(noble, id);
@@ -26,8 +30,7 @@ export class Adapter extends BaseAdapter<Noble> {
 		return this.object.callMethod<T>(I_BLUEZ_ADAPTER, methodName, ...args);
 	}
 
-	public async getScannedPeripherals() {
-		await this.updatePeripherals();
+	public async getScannedPeripherals(): Promise<BasePeripheral[]> {
 		return [...this.peripherals.values()];
 	}
 
@@ -36,6 +39,10 @@ export class Adapter extends BaseAdapter<Noble> {
 	}
 
 	public async startScanning() {
+		if (!this.updateTimer) {
+			this.updateTimer = setInterval(() => this.updatePeripherals(), UPDATE_INTERVAL * 1000);
+		}
+
 		if (await this.isScanning()) {
 			return;
 		}
@@ -48,6 +55,11 @@ export class Adapter extends BaseAdapter<Noble> {
 	}
 
 	public async stopScanning() {
+		if (this.updateTimer) {
+			clearInterval(this.updateTimer);
+			this.updateTimer = null;
+		}
+
 		if (!(await this.isScanning())) {
 			return;
 		}

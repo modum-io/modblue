@@ -1,4 +1,5 @@
 import { BasePeripheral } from '../../Peripheral';
+import { BaseService } from '../../Service';
 
 import { Adapter } from './Adapter';
 import { Gatt } from './gatt';
@@ -15,9 +16,6 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	private requestedMTU: number;
 
 	private services: Map<string, Service> = new Map();
-	public getDiscoveredServices() {
-		return [...this.services.values()];
-	}
 
 	public async connect(requestMtu?: number): Promise<void> {
 		this._state = 'connecting';
@@ -71,7 +69,11 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.services = new Map();
 	}
 
-	public async discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
+	public getDiscoveredServices(): BaseService[] {
+		return [...this.services.values()];
+	}
+
+	public async discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]> {
 		const services = await this.gatt.discoverServices(serviceUUIDs || []);
 		for (const rawService of services) {
 			let service = this.services.get(rawService.uuid);
@@ -83,7 +85,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		return [...this.services.values()];
 	}
 
-	public async discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]) {
+	public async discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]): Promise<BaseService[]> {
 		const services = await this.gatt.discoverIncludedServices(baseService.uuid, serviceUUIDs);
 		for (const rawService of services) {
 			let service = this.services.get(rawService.uuid);

@@ -1,9 +1,9 @@
 import { BasePeripheral } from '../../Peripheral';
+import { BaseService } from '../../Service';
 import { AddressType } from '../../types';
 import { Adapter } from './Adapter';
 import { BusObject } from './BusObject';
 import { Noble } from './Noble';
-import { Service } from './Service';
 export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     private readonly object;
     private services;
@@ -21,6 +21,6 @@ export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     disconnect(): Promise<number>;
     private doneConnecting;
     private doneDisconnecting;
-    getDiscoveredServices(): Service[];
-    discoverServices(serviceUUIDs?: string[]): Promise<Service[]>;
+    getDiscoveredServices(): BaseService[];
+    discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]>;
 }

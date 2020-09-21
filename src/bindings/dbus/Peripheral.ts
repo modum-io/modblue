@@ -1,4 +1,5 @@
 import { BasePeripheral } from '../../Peripheral';
+import { BaseService } from '../../Service';
 import { AddressType } from '../../types';
 
 import { Adapter } from './Adapter';
@@ -185,11 +186,11 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.disconnecting = [];
 	}
 
-	public getDiscoveredServices(): Service[] {
+	public getDiscoveredServices(): BaseService[] {
 		return [...this.services.values()];
 	}
 
-	public discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
+	public discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]> {
 		return new Promise<Service[]>(async (resolve, reject) => {
 			let cancelled = false;
 			const onTimeout = () => {
@@ -228,7 +229,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 				let service = this.services.get(serviceId);
 				if (!service) {
 					const object = this.object.getChild(serviceId);
-					const uuid = await object.prop<string>(I_BLUEZ_SERVICE, 'UUID');
+					const uuid = (await object.prop<string>(I_BLUEZ_SERVICE, 'UUID')).replace(/\-/g, '');
 					service = new Service(this.noble, this, uuid, object);
 					this.services.set(uuid, service);
 				}

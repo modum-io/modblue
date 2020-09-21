@@ -1,3 +1,4 @@
+import { BaseAdapter } from '../../Adapter';
 import { BaseNoble } from '../../Noble';
 
 import { Adapter } from './Adapter';
@@ -17,7 +18,7 @@ export class Noble extends BaseNoble {
 		this.adapters = new Map();
 	}
 
-	public async getAdapters() {
+	public async getAdapters(): Promise<BaseAdapter[]> {
 		const adapters = Hci.getDeviceList();
 		for (const rawAdapter of adapters) {
 			let adapter = this.adapters.get(rawAdapter.devId);

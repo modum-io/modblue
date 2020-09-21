@@ -1,4 +1,5 @@
 import { BaseAdapter } from '../../Adapter';
+import { BasePeripheral } from '../../Peripheral';
 import { Noble } from './Noble';
 import { Peripheral } from './Peripheral';
 export declare class Adapter extends BaseAdapter<Noble> {
@@ -12,7 +13,7 @@ export declare class Adapter extends BaseAdapter<Noble> {
     private handleToUUID;
     private connectionRequest;
     private connectionRequestQueue;
-    getScannedPeripherals(): Promise<Peripheral[]>;
+    getScannedPeripherals(): Promise<BasePeripheral[]>;
     isScanning(): Promise<boolean>;
     private init;
     dispose(): void;

@@ -1,4 +1,5 @@
 import { BaseCharacteristic } from '../../Characteristic';
+import { BaseDescriptor } from '../../Descriptor';
 
 import { Descriptor } from './Descriptor';
 import { Gatt } from './gatt';
@@ -9,9 +10,6 @@ export class Characteristic extends BaseCharacteristic<Noble, Service> {
 	private gatt: Gatt;
 
 	private descriptors: Map<string, Descriptor> = new Map();
-	public getDiscoveredDescriptors() {
-		return [...this.descriptors.values()];
-	}
 
 	public constructor(noble: Noble, service: Service, uuid: string, properties: string[], gatt: Gatt) {
 		super(noble, service, uuid, properties);
@@ -42,7 +40,11 @@ export class Characteristic extends BaseCharacteristic<Noble, Service> {
 		await this.notify(false);
 	}
 
-	public async discoverDescriptors(uuids?: string[]): Promise<Descriptor[]> {
+	public getDiscoveredDescriptors(): BaseDescriptor[] {
+		return [...this.descriptors.values()];
+	}
+
+	public async discoverDescriptors(uuids?: string[]): Promise<BaseDescriptor[]> {
 		const descriptors = await this.gatt.discoverDescriptors(this.service.uuid, this.uuid, uuids || []);
 		for (const rawDescriptor of descriptors) {
 			let descriptor = this.descriptors.get(rawDescriptor.uuid);

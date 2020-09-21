@@ -1,4 +1,5 @@
 import { BaseAdapter } from '../../Adapter';
+import { BasePeripheral } from '../../Peripheral';
 import { AddressType } from '../../types';
 
 import { Gap } from './gap';
@@ -28,7 +29,7 @@ export class Adapter extends BaseAdapter<Noble> {
 	private connectionRequest: ConnectRequest;
 	private connectionRequestQueue: ConnectRequest[] = [];
 
-	public async getScannedPeripherals(): Promise<Peripheral[]> {
+	public async getScannedPeripherals(): Promise<BasePeripheral[]> {
 		return [...this.peripherals.values()];
 	}
 
