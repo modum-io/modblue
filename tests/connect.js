@@ -29,6 +29,8 @@ const main = async () => {
 	// Scan for 10 seconds
 	await new Promise((resolve) => setTimeout(resolve, 2000));
 
+	await adapter.stopScanning();
+
 	console.log('Getting peripherals...');
 
 	const peripherals = await adapter.getScannedPeripherals();
