@@ -26,6 +26,7 @@ const EVT_LE_META_EVENT = 0x3e;
 const EVT_LE_CONN_COMPLETE = 0x01;
 const EVT_LE_ADVERTISING_REPORT = 0x02;
 const EVT_LE_CONN_UPDATE_COMPLETE = 0x03;
+const EVT_LE_READ_REMOTE_FEATURES_COMPLETE = 0x04;
 
 const OGF_LINK_CTL = 0x01;
 const OCF_DISCONNECT = 0x0006;
@@ -652,6 +653,9 @@ export class Hci extends EventEmitter {
 			this.processLeAdvertisingReport(status, data);
 		} else if (eventType === EVT_LE_CONN_UPDATE_COMPLETE) {
 			this.processLeConnUpdateComplete(status, data);
+		} else if (eventType === EVT_LE_READ_REMOTE_FEATURES_COMPLETE) {
+			const handle = data.readUInt16LE(0);
+			console.log('read remote features', handle, status);
 		}
 	}
 

@@ -166,6 +166,7 @@ export class Adapter extends BaseAdapter<Noble> {
 			// on sudden connection drop. Only reject the connection request if we're not done yet.
 			if (!request.isDone) {
 				request.reject(new Error(`Disconnect while connecting: Code ${reason}`));
+				this.processConnectionRequests();
 			}
 		};
 
@@ -184,12 +185,8 @@ export class Adapter extends BaseAdapter<Noble> {
 		};
 		setTimeout(timeout, 10000);
 
-		if (!this.connectionRequest) {
-			this.connectionRequest = request;
-			this.hci.createLeConn(request.peripheral.address, request.peripheral.addressType);
-		} else {
-			this.connectionRequestQueue.push(request);
-		}
+		this.connectionRequestQueue.push(request);
+		this.processConnectionRequests();
 
 		// Create a promise to resolve once the connection request is done
 		// (we may have to wait in queue for other connections to complete first)
@@ -254,12 +251,20 @@ export class Adapter extends BaseAdapter<Noble> {
 		}
 
 		this.connectionRequest = null;
+		this.processConnectionRequests();
+	};
+
+	private processConnectionRequests() {
+		if (this.connectionRequest) {
+			return;
+		}
+
 		if (this.connectionRequestQueue.length > 0) {
 			const newRequest = this.connectionRequestQueue.shift();
 			this.connectionRequest = newRequest;
 			this.hci.createLeConn(newRequest.peripheral.address, newRequest.peripheral.addressType);
 		}
-	};
+	}
 
 	public async disconnect(peripheral: Peripheral) {
 		const handle = this.uuidToHandle.get(peripheral.uuid);
