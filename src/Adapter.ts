@@ -13,19 +13,21 @@ export abstract class BaseAdapter<N extends BaseNoble = BaseNoble> extends Event
 	protected readonly noble: N;
 
 	public readonly id: string;
-	public readonly name: string;
+	protected _name: string;
+	public get name() {
+		return this._name;
+	}
 	protected _address: string;
 	public get address() {
 		return this._address;
 	}
 
-	public constructor(noble: N, id: string, name: string, address: string) {
+	public constructor(noble: N, id: string, name?: string, address?: string) {
 		super();
 
 		this.noble = noble;
-
 		this.id = id;
-		this.name = name;
+		this._name = name || `hci${id.replace('hci', '')}`;
 		this._address = address;
 	}
 

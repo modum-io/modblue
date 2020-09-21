@@ -15,7 +15,7 @@ export declare abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A 
     get state(): PeripheralState;
     protected _mtu: number;
     get mtu(): number;
-    constructor(noble: N, adapter: A, uuid: string, address: string, addressType: AddressType, connectable: boolean, advertisement: any, rssi: number);
+    constructor(noble: N, adapter: A, uuid: string, address: string, addressType: AddressType, connectable?: boolean, advertisement?: any, rssi?: number);
     toString(): string;
     abstract connect(requestMtu?: number): Promise<void>;
     abstract disconnect(): Promise<number>;

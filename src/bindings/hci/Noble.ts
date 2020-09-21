@@ -22,7 +22,7 @@ export class Noble extends BaseNoble {
 		for (const rawAdapter of adapters) {
 			let adapter = this.adapters.get(rawAdapter.devId);
 			if (!adapter) {
-				adapter = new Adapter(this, `${rawAdapter.devId}`, `hci${rawAdapter.devId}`, 'unkown');
+				adapter = new Adapter(this, `${rawAdapter.devId}`);
 				this.adapters.set(rawAdapter.devId, adapter);
 			}
 		}

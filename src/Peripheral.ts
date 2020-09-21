@@ -31,9 +31,9 @@ export abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends 
 		uuid: string,
 		address: string,
 		addressType: AddressType,
-		connectable: boolean,
-		advertisement: any,
-		rssi: number
+		connectable?: boolean,
+		advertisement?: any,
+		rssi?: number
 	) {
 		this.noble = noble;
 
