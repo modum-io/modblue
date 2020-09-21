@@ -128,7 +128,8 @@ export class Adapter extends BaseAdapter<Noble> {
 		advertisement: any,
 		rssi: number
 	) => {
-		const uuid = address.toUpperCase();
+		address = address.toUpperCase();
+		const uuid = address;
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
