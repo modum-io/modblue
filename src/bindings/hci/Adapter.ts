@@ -166,6 +166,7 @@ export class Adapter extends BaseAdapter<Noble> {
 			// on sudden connection drop. Only reject the connection request if we're not done yet.
 			if (!request.isDone) {
 				request.reject(new Error(`Disconnect while connecting: Code ${reason}`));
+				this.connectionRequest = null;
 				this.processConnectionRequests();
 			}
 		};
