@@ -1,5 +1,4 @@
 const { HCINoble, DBUSNoble } = require('../lib');
-const { BasePeripheral } = require('../lib/Peripheral');
 
 const USAGE = `
 Usage:
