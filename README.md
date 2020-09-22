@@ -7,7 +7,7 @@ Trying to make the world better place by improving the bluetooth experience one 
 ### Connect test
 
 This test will connect, discover services and characteristics, read a single characteristic value and disconnect.
-The test runs indefinatly and rotates between all specified devices.
+The test runs indefinitely and rotates between all specified devices.
 
 1. Run tests using
 
