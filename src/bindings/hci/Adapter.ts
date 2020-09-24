@@ -74,6 +74,10 @@ export class Adapter extends BaseAdapter<Noble> {
 	public async startScanning(): Promise<void> {
 		await this.init();
 
+		if (this.scanning) {
+			return;
+		}
+
 		return new Promise<void>((resolve) => {
 			const done = () => {
 				this.gap.off('scanStart', done);
@@ -92,6 +96,10 @@ export class Adapter extends BaseAdapter<Noble> {
 	};
 
 	public async stopScanning(): Promise<void> {
+		if (!this.scanning) {
+			return;
+		}
+
 		return new Promise<void>((resolve) => {
 			const done = () => {
 				this.gap.off('scanStop', done);

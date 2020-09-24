@@ -11,6 +11,9 @@ const UPDATE_INTERVAL = 1; // in seconds
 
 export class Adapter extends BaseAdapter<Noble> {
 	private readonly object: BusObject;
+	private initialized: boolean = false;
+	private scanning: boolean = false;
+	private requestScanStop: boolean = false;
 
 	private peripherals: Map<string, Peripheral> = new Map();
 	private updateTimer: NodeJS.Timer;
@@ -21,6 +24,30 @@ export class Adapter extends BaseAdapter<Noble> {
 		this._name = name;
 		this._address = address;
 		this.object = object;
+	}
+
+	private async init() {
+		if (this.initialized) {
+			return;
+		}
+
+		this.initialized = true;
+
+		const propertiesIface = await this.object.getPropertiesInterface();
+		const onPropertiesChanged = (iface: string, changedProps: any) => {
+			if (iface !== I_BLUEZ_ADAPTER) {
+				return;
+			}
+
+			if ('Discovering' in changedProps) {
+				if (this.scanning && !changedProps.Discovering.value) {
+					this.onScanStop();
+				} else if (!this.scanning && changedProps.Discovering.value) {
+					this.onScanStart();
+				}
+			}
+		};
+		propertiesIface.on('PropertiesChanged', onPropertiesChanged);
 	}
 
 	private prop<T>(propName: string) {
@@ -35,17 +62,17 @@ export class Adapter extends BaseAdapter<Noble> {
 	}
 
 	public async isScanning() {
-		return this.prop<boolean>('Discovering');
+		return this.scanning;
 	}
 
 	public async startScanning() {
-		if (!this.updateTimer) {
-			this.updateTimer = setInterval(() => this.updatePeripherals(), UPDATE_INTERVAL * 1000);
-		}
+		await this.init();
 
-		if (await this.isScanning()) {
+		if (this.scanning) {
 			return;
 		}
+
+		this.updateTimer = setInterval(() => this.updatePeripherals(), UPDATE_INTERVAL * 1000);
 
 		await this.callMethod('SetDiscoveryFilter', {
 			Transport: buildTypedValue('string', 'le'),
@@ -54,17 +81,34 @@ export class Adapter extends BaseAdapter<Noble> {
 		await this.callMethod('StartDiscovery');
 	}
 
-	public async stopScanning() {
-		if (this.updateTimer) {
-			clearInterval(this.updateTimer);
-			this.updateTimer = null;
-		}
+	private onScanStart() {
+		this.scanning = true;
+	}
 
-		if (!(await this.isScanning())) {
+	public async stopScanning() {
+		if (!this.scanning) {
 			return;
 		}
 
+		clearInterval(this.updateTimer);
+		this.updateTimer = null;
+
+		this.requestScanStop = true;
 		await this.callMethod('StopDiscovery');
+	}
+
+	private onScanStop() {
+		this.scanning = false;
+
+		if (this.requestScanStop) {
+			this.requestScanStop = false;
+			return;
+		}
+
+		// Some adapters stop scanning when connecting. We want to automatically start scanning again.
+		this.startScanning().catch(() => {
+			// NO-OP
+		});
 	}
 
 	private async updatePeripherals() {
@@ -78,8 +122,11 @@ export class Adapter extends BaseAdapter<Noble> {
 				peripheral = new Peripheral(this.noble, this, peripheralId, address, addressType, object);
 				this.peripherals.set(peripheralId, peripheral);
 			}
-			// TODO: Devices are not removed from the list when they aren't detected anymore
-			this.emit('discover', peripheral);
+
+			if (this.scanning) {
+				// TODO: Devices are not removed from the list when they aren't detected anymore
+				this.emit('discover', peripheral);
+			}
 		}
 	}
 }
