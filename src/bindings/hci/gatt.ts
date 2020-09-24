@@ -325,7 +325,9 @@ export class Gatt {
 
 		if (opcode === ATT_OP_MTU_RESP) {
 			const newMtu = data.readUInt16LE(1);
-			this.mtu = newMtu;
+			this.mtu = Math.min(mtu, newMtu);
+		} else {
+			throw new Error('Exchanging mtu failed');
 		}
 
 		return this.mtu;
