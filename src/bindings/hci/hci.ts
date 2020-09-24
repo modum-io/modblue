@@ -654,8 +654,8 @@ export class Hci extends EventEmitter {
 		} else if (eventType === EVT_LE_CONN_UPDATE_COMPLETE) {
 			this.processLeConnUpdateComplete(status, data);
 		} else if (eventType === EVT_LE_READ_REMOTE_FEATURES_COMPLETE) {
-			const handle = data.readUInt16LE(0);
-			console.log('read remote features', handle, status);
+			// const handle = data.readUInt16LE(0);
+			// TODO: Handle errors while connecting
 		}
 	}
 

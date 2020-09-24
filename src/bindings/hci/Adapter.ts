@@ -240,6 +240,10 @@ export class Adapter extends BaseAdapter<Noble> {
 		}
 
 		const request = this.connectionRequest;
+		if (!request) {
+			console.log(`Peripheral ${address} connected, but we have no pending connection request`);
+			return;
+		}
 		if (request.peripheral !== peripheral) {
 			console.log(`Peripheral ${address} connected, but we requested ${request.peripheral.address}`);
 			return;
