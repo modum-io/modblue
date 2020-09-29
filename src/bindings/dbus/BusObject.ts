@@ -69,6 +69,9 @@ export class BusObject {
 
 	public async callMethod<T = void>(interfaceName: string, methodName: string, ...args: any[]): Promise<T> {
 		const object = await this.getObject();
+		if (typeof object.getInterface(interfaceName)[methodName] !== 'function') {
+			throw new Error(`Method ${methodName} on ${interfaceName} for ${object.name} doesn't exist`);
+		}
 		return object.getInterface(interfaceName)[methodName](...args);
 	}
 

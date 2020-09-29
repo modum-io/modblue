@@ -74,7 +74,7 @@ export class Adapter extends BaseAdapter<Noble> {
 
 		this.updateTimer = setInterval(() => this.updatePeripherals(), UPDATE_INTERVAL * 1000);
 
-		const scanning = this.prop<boolean>('Discovering');
+		const scanning = await this.prop<boolean>('Discovering');
 		if (scanning) {
 			this.onScanStart();
 			return;
