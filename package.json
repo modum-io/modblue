@@ -1,6 +1,6 @@
 {
 	"name": "noble2",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Better noble",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
