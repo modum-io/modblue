@@ -1,6 +1,6 @@
 {
 	"name": "@modum/noble2",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "Better noble",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
