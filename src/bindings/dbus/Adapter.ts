@@ -135,4 +135,11 @@ export class Adapter extends BaseAdapter<Noble> {
 			}
 		}
 	}
+
+	public async startAdvertising(): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	public async stopAdvertising(): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
 }

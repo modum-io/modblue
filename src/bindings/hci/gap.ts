@@ -6,6 +6,9 @@ import { AddressType } from '../../types';
 import { Hci } from './hci';
 
 const IS_NTC_CHIP = os.platform() === 'linux' && os.release().indexOf('-ntc') !== -1;
+const IS_LINUX = os.platform() === 'linux';
+const IS_INTEL_EDISON = IS_LINUX && os.release().indexOf('edison') !== -1;
+const IS_YOCTO = IS_LINUX && os.release().indexOf('yocto') !== -1;
 
 interface Discovery {
 	address: string;
@@ -31,11 +34,15 @@ export declare interface Gap {
 			rssi: number
 		) => void
 	): this;
+
+	on(event: 'advertisingStart', listener: () => void): this;
+	on(event: 'advertisingStop', listener: () => void): this;
 }
 
 export class Gap extends EventEmitter {
 	private hci: Hci;
 	private scanState: string;
+	private advertiseState: string;
 	private scanFilterDuplicates: boolean;
 	private discoveries: Map<string, Discovery>;
 
@@ -51,8 +58,12 @@ export class Gap extends EventEmitter {
 		this.hci.on('leScanParametersSet', this.onHciLeScanParametersSet);
 		this.hci.on('leScanEnableSet', this.onHciLeScanEnableSet);
 		this.hci.on('leAdvertisingReport', this.onHciLeAdvertisingReport);
-
 		this.hci.on('leScanEnableSetCmd', this.onLeScanEnableSetCmd);
+
+		this.hci.on('leAdvertisingParametersSet', this.onHciLeAdvertisingParametersSet);
+		this.hci.on('leAdvertisingDataSet', this.onHciLeAdvertisingDataSet);
+		this.hci.on('leScanResponseDataSet', this.onHciLeScanResponseDataSet);
+		this.hci.on('leAdvertiseEnableSet', this.onHciLeAdvertiseEnableSet);
 	}
 
 	public startScanning(allowDuplicates: boolean) {
@@ -76,6 +87,127 @@ export class Gap extends EventEmitter {
 	public stopScanning() {
 		this.scanState = 'stopping';
 		this.hci.setScanEnabled(false, true);
+	}
+
+	public startAdvertising(name: string, serviceUuids: string[]) {
+		let advertisementDataLength = 3;
+		let scanDataLength = 0;
+
+		const serviceUuids16bit = [];
+		const serviceUuids128bit = [];
+		let i = 0;
+
+		if (name && name.length) {
+			scanDataLength += 2 + name.length;
+		}
+
+		if (serviceUuids && serviceUuids.length) {
+			for (i = 0; i < serviceUuids.length; i++) {
+				const serviceUuid = new Buffer(
+					serviceUuids[i]
+						.match(/.{1,2}/g)
+						.reverse()
+						.join(''),
+					'hex'
+				);
+
+				if (serviceUuid.length === 2) {
+					serviceUuids16bit.push(serviceUuid);
+				} else if (serviceUuid.length === 16) {
+					serviceUuids128bit.push(serviceUuid);
+				}
+			}
+		}
+
+		if (serviceUuids16bit.length) {
+			advertisementDataLength += 2 + 2 * serviceUuids16bit.length;
+		}
+
+		if (serviceUuids128bit.length) {
+			advertisementDataLength += 2 + 16 * serviceUuids128bit.length;
+		}
+
+		const advertisementData = new Buffer(advertisementDataLength);
+		const scanData = new Buffer(scanDataLength);
+
+		// flags
+		advertisementData.writeUInt8(2, 0);
+		advertisementData.writeUInt8(0x01, 1);
+		advertisementData.writeUInt8(0x06, 2);
+
+		var advertisementDataOffset = 3;
+
+		if (serviceUuids16bit.length) {
+			advertisementData.writeUInt8(1 + 2 * serviceUuids16bit.length, advertisementDataOffset);
+			advertisementDataOffset++;
+
+			advertisementData.writeUInt8(0x03, advertisementDataOffset);
+			advertisementDataOffset++;
+
+			for (i = 0; i < serviceUuids16bit.length; i++) {
+				serviceUuids16bit[i].copy(advertisementData, advertisementDataOffset);
+				advertisementDataOffset += serviceUuids16bit[i].length;
+			}
+		}
+
+		if (serviceUuids128bit.length) {
+			advertisementData.writeUInt8(1 + 16 * serviceUuids128bit.length, advertisementDataOffset);
+			advertisementDataOffset++;
+
+			advertisementData.writeUInt8(0x06, advertisementDataOffset);
+			advertisementDataOffset++;
+
+			for (i = 0; i < serviceUuids128bit.length; i++) {
+				serviceUuids128bit[i].copy(advertisementData, advertisementDataOffset);
+				advertisementDataOffset += serviceUuids128bit[i].length;
+			}
+		}
+
+		// name
+		if (name && name.length) {
+			const nameBuffer = new Buffer(name);
+
+			scanData.writeUInt8(1 + nameBuffer.length, 0);
+			scanData.writeUInt8(0x08, 1);
+			nameBuffer.copy(scanData, 2);
+		}
+
+		this.startAdvertisingWithEIRData(advertisementData, scanData);
+	}
+
+	public startAdvertisingWithEIRData(advertisementData: Buffer, scanData: Buffer) {
+		advertisementData = advertisementData || Buffer.alloc(0);
+		scanData = scanData || Buffer.alloc(0);
+
+		let error = null;
+
+		if (advertisementData.length > 31) {
+			error = new Error('Advertisement data is over maximum limit of 31 bytes');
+		} else if (scanData.length > 31) {
+			error = new Error('Scan data is over maximum limit of 31 bytes');
+		}
+
+		if (error) {
+			this.emit('advertisingStart', error);
+		} else {
+			this.advertiseState = 'starting';
+
+			if (IS_INTEL_EDISON || IS_YOCTO) {
+				// work around for Intel Edison
+			} else {
+				this.hci.setScanResponseData(scanData);
+				this.hci.setAdvertisingData(advertisementData);
+			}
+			this.hci.setAdvertiseEnable(true);
+			this.hci.setScanResponseData(scanData);
+			this.hci.setAdvertisingData(advertisementData);
+		}
+	}
+
+	public stopAdvertising() {
+		this.advertiseState = 'stopping';
+
+		this.hci.setAdvertiseEnable(false);
 	}
 
 	private onHciLeScanParametersSet = () => {
@@ -308,6 +440,36 @@ export class Gap extends EventEmitter {
 			process.env.NOBLE_REPORT_ALL_HCI_EVENTS
 		) {
 			this.emit('discover', status, address, addressType, connectable, advertisement, rssi);
+		}
+	};
+
+	private onHciLeAdvertisingParametersSet = (status: number) => {
+		// NO-OP
+	};
+
+	private onHciLeAdvertisingDataSet = (status: number) => {
+		// NO-OP
+	};
+
+	public onHciLeScanResponseDataSet = (status: number) => {
+		// NO-OP
+	};
+
+	public onHciLeAdvertiseEnableSet = (status: number) => {
+		if (this.advertiseState === 'starting') {
+			this.advertiseState = 'started';
+
+			var error = null;
+
+			if (status) {
+				error = new Error(Hci.STATUS_MAPPER[status] || `Unknown (${status})`);
+			}
+
+			this.emit('advertisingStart', error);
+		} else if (this.advertiseState === 'stopping') {
+			this.advertiseState = 'stopped';
+
+			this.emit('advertisingStop');
 		}
 	};
 }

@@ -45,4 +45,7 @@ export abstract class BaseAdapter<N extends BaseNoble = BaseNoble> extends Event
 	public abstract async stopScanning(): Promise<void>;
 
 	public abstract async getScannedPeripherals(): Promise<BasePeripheral[]>;
+
+	public abstract async startAdvertising(name: string, serviceUUIDs?: string[]): Promise<void>;
+	public abstract async stopAdvertising(): Promise<void>;
 }

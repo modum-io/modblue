@@ -21,6 +21,7 @@ const EVT_DISCONN_COMPLETE = 0x05;
 const EVT_ENCRYPT_CHANGE = 0x08;
 const EVT_CMD_COMPLETE = 0x0e;
 const EVT_CMD_STATUS = 0x0f;
+const EVT_NUMBER_OF_COMPLETED_PACKETS = 0x13;
 const EVT_LE_META_EVENT = 0x3e;
 
 const EVT_LE_CONN_COMPLETE = 0x01;
@@ -46,12 +47,18 @@ const OCF_READ_RSSI = 0x0005;
 
 const OGF_LE_CTL = 0x08;
 const OCF_LE_SET_EVENT_MASK = 0x0001;
+const OCF_LE_READ_BUFFER_SIZE = 0x0002;
+const OCF_LE_SET_ADVERTISING_PARAMETERS = 0x0006;
+const OCF_LE_SET_ADVERTISING_DATA = 0x0008;
+const OCF_LE_SET_SCAN_RESPONSE_DATA = 0x0009;
+const OCF_LE_SET_ADVERTISE_ENABLE = 0x000a;
 const OCF_LE_SET_SCAN_PARAMETERS = 0x000b;
 const OCF_LE_SET_SCAN_ENABLE = 0x000c;
 const OCF_LE_CREATE_CONN = 0x000d;
 const OCF_LE_CANCEL_CONN = 0x000e;
 const OCF_LE_CONN_UPDATE = 0x0013;
 const OCF_LE_START_ENCRYPTION = 0x0019;
+const OCF_LE_LTK_NEG_REPLY = 0x001b;
 
 const DISCONNECT_CMD = OCF_DISCONNECT | (OGF_LINK_CTL << 10);
 
@@ -72,6 +79,12 @@ const LE_CREATE_CONN_CMD = OCF_LE_CREATE_CONN | (OGF_LE_CTL << 10);
 const LE_CANCEL_CONN_CMD = OCF_LE_CANCEL_CONN | (OGF_LE_CTL << 10);
 const LE_CONN_UPDATE_CMD = OCF_LE_CONN_UPDATE | (OGF_LE_CTL << 10);
 const LE_START_ENCRYPTION_CMD = OCF_LE_START_ENCRYPTION | (OGF_LE_CTL << 10);
+const LE_READ_BUFFER_SIZE_CMD = OCF_LE_READ_BUFFER_SIZE | (OGF_LE_CTL << 10);
+const LE_SET_ADVERTISING_PARAMETERS_CMD = OCF_LE_SET_ADVERTISING_PARAMETERS | (OGF_LE_CTL << 10);
+const LE_SET_ADVERTISING_DATA_CMD = OCF_LE_SET_ADVERTISING_DATA | (OGF_LE_CTL << 10);
+const LE_SET_SCAN_RESPONSE_DATA_CMD = OCF_LE_SET_SCAN_RESPONSE_DATA | (OGF_LE_CTL << 10);
+const LE_SET_ADVERTISE_ENABLE_CMD = OCF_LE_SET_ADVERTISE_ENABLE | (OGF_LE_CTL << 10);
+const LE_LTK_NEG_REPLY_CMD = OCF_LE_LTK_NEG_REPLY | (OGF_LE_CTL << 10);
 
 const HCI_OE_USER_ENDED_CONNECTION = 0x13;
 
@@ -122,6 +135,11 @@ export declare interface Hci {
 		event: 'leConnUpdateComplete',
 		listener: (status: number, handle: number, interval: number, latency: number, supervisionTimeout: number) => void
 	): this;
+
+	on(event: 'leAdvertisingParametersSet', listener: (status: number) => void): this;
+	on(event: 'leAdvertisingDataSet', listener: (status: number) => void): this;
+	on(event: 'leScanResponseDataSet', listener: (status: number) => void): this;
+	on(event: 'leAdvertiseEnableSet', listener: (status: number) => void): this;
 }
 
 export class Hci extends EventEmitter {
@@ -198,6 +216,7 @@ export class Hci extends EventEmitter {
 				this.writeLeHostSupported();
 				this.readLeHostSupported();
 				this.readBdAddr();
+				this.readLeBufferSize();
 			} else {
 				this.socket.stop();
 				this.socket.removeAllListeners();
@@ -215,7 +234,11 @@ export class Hci extends EventEmitter {
 		const filter = Buffer.alloc(14);
 		const typeMask = (1 << HCI_COMMAND_PKT) | (1 << HCI_EVENT_PKT) | (1 << HCI_ACLDATA_PKT);
 		const eventMask1 =
-			(1 << EVT_DISCONN_COMPLETE) | (1 << EVT_ENCRYPT_CHANGE) | (1 << EVT_CMD_COMPLETE) | (1 << EVT_CMD_STATUS);
+			(1 << EVT_DISCONN_COMPLETE) |
+			(1 << EVT_ENCRYPT_CHANGE) |
+			(1 << EVT_CMD_COMPLETE) |
+			(1 << EVT_CMD_STATUS) |
+			(1 << EVT_NUMBER_OF_COMPLETED_PACKETS);
 		const eventMask2 = 1 << (EVT_LE_META_EVENT - 32);
 		const opcode = 0;
 
@@ -505,13 +528,80 @@ export class Hci extends EventEmitter {
 		this.socket.write(pkt);
 	}
 
+	public readLeBufferSize() {
+		const cmd = Buffer.alloc(4);
+
+		// header
+		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(LE_READ_BUFFER_SIZE_CMD, 1);
+
+		// length
+		cmd.writeUInt8(0x0, 3);
+
+		this.socket.write(cmd);
+	}
+
+	public setScanResponseData(data: Buffer) {
+		const cmd = Buffer.alloc(36);
+
+		cmd.fill(0x00);
+
+		// header
+		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(LE_SET_SCAN_RESPONSE_DATA_CMD, 1);
+
+		// length
+		cmd.writeUInt8(32, 3);
+
+		// data
+		cmd.writeUInt8(data.length, 4);
+		data.copy(cmd, 5);
+
+		this.socket.write(cmd);
+	}
+
+	public setAdvertisingData(data: Buffer) {
+		const cmd = Buffer.alloc(36);
+
+		cmd.fill(0x00);
+
+		// header
+		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(LE_SET_ADVERTISING_DATA_CMD, 1);
+
+		// length
+		cmd.writeUInt8(32, 3);
+
+		// data
+		cmd.writeUInt8(data.length, 4);
+		data.copy(cmd, 5);
+
+		this.socket.write(cmd);
+	}
+
+	public setAdvertiseEnable(enabled: boolean) {
+		const cmd = Buffer.alloc(5);
+
+		// header
+		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(LE_SET_ADVERTISE_ENABLE_CMD, 1);
+
+		// length
+		cmd.writeUInt8(0x01, 3);
+
+		// data
+		cmd.writeUInt8(enabled ? 0x01 : 0x00, 4); // enable: 0 -> disabled, 1 -> enabled
+
+		this.socket.write(cmd);
+	}
+
 	private onSocketData = (data: Buffer) => {
 		const eventType = data.readUInt8(0);
 		let handle;
 		let cmd;
 		let status;
 
-		if (HCI_EVENT_PKT === eventType) {
+		if (eventType === HCI_EVENT_PKT) {
 			const subEventType = data.readUInt8(1);
 
 			if (subEventType === EVT_DISCONN_COMPLETE) {
@@ -542,11 +632,11 @@ export class Hci extends EventEmitter {
 
 				this.processLeMetaEvent(leMetaEventType, leMetaEventStatus, leMetaEventData);
 			}
-		} else if (HCI_ACLDATA_PKT === eventType) {
+		} else if (eventType === HCI_ACLDATA_PKT) {
 			const flags = data.readUInt16LE(1) >> 12;
 			handle = data.readUInt16LE(1) & 0x0fff;
 
-			if (ACL_START === flags) {
+			if (flags === ACL_START) {
 				const cid = data.readUInt16LE(7);
 
 				const length = data.readUInt16LE(5);
@@ -561,7 +651,7 @@ export class Hci extends EventEmitter {
 						data: pktData
 					});
 				}
-			} else if (ACL_CONT === flags) {
+			} else if (flags === ACL_CONT) {
 				const buff = this.handleBuffers.get(handle);
 
 				if (!buff || !buff.data) {
@@ -576,7 +666,7 @@ export class Hci extends EventEmitter {
 					this.handleBuffers.delete(handle);
 				}
 			}
-		} else if (HCI_COMMAND_PKT === eventType) {
+		} else if (eventType === HCI_COMMAND_PKT) {
 			cmd = data.readUInt16LE(1);
 			const len = data.readUInt8(3);
 
@@ -598,6 +688,9 @@ export class Hci extends EventEmitter {
 	};
 
 	private processCmdCompleteEvent(cmd: number, status: number, result: Buffer) {
+		console.log('cmd complete', cmd, status, result);
+		console.log('could be', LE_SET_ADVERTISING_PARAMETERS_CMD);
+
 		if (cmd === RESET_CMD) {
 			this.setEventMask();
 			this.setLeEventMask();
@@ -643,6 +736,16 @@ export class Hci extends EventEmitter {
 			const rssi = result.readInt8(2);
 
 			this.emit('rssiRead', handle, rssi);
+		} else if (cmd === LE_SET_ADVERTISING_PARAMETERS_CMD) {
+			this.emit('stateChange', 'poweredOn');
+
+			this.emit('leAdvertisingParametersSet', status);
+		} else if (cmd === LE_SET_ADVERTISING_DATA_CMD) {
+			this.emit('leAdvertisingDataSet', status);
+		} else if (cmd === LE_SET_SCAN_RESPONSE_DATA_CMD) {
+			this.emit('leScanResponseDataSet', status);
+		} else if (cmd === LE_SET_ADVERTISE_ENABLE_CMD) {
+			this.emit('leAdvertiseEnableSet', status);
 		}
 	}
 

@@ -17,6 +17,7 @@ interface ConnectRequest {
 export class Adapter extends BaseAdapter<Noble> {
 	private initialized: boolean = false;
 	private scanning: boolean = false;
+	private advertising: boolean = false;
 	private requestScanStop: boolean = false;
 
 	private hci: Hci;
@@ -52,6 +53,8 @@ export class Adapter extends BaseAdapter<Noble> {
 		this.gap.on('scanStart', this.onScanStart);
 		this.gap.on('scanStop', this.onScanStop);
 		this.gap.on('discover', this.onDiscover);
+		this.gap.on('advertisingStart', this.onAdvertisingStart);
+		this.gap.on('advertisingStop', this.onAdvertisingStop);
 
 		await this.hci.init();
 	}
@@ -303,4 +306,48 @@ export class Adapter extends BaseAdapter<Noble> {
 			this.hci.disconnect(handle);
 		});
 	}
+
+	public async startAdvertising(name: string, serviceUUIDs?: string[]): Promise<void> {
+		await this.init();
+
+		if (this.advertising) {
+			return;
+		}
+
+		return new Promise<void>((resolve) => {
+			const done = () => {
+				this.gap.off('advertisingStart', done);
+
+				resolve();
+			};
+
+			this.gap.on('advertisingStart', done);
+
+			this.gap.startAdvertising(name, serviceUUIDs || []);
+		});
+	}
+	private onAdvertisingStart = () => {
+		this.advertising = true;
+	};
+
+	public async stopAdvertising(): Promise<void> {
+		if (!this.advertising) {
+			return;
+		}
+
+		return new Promise<void>((resolve) => {
+			const done = () => {
+				this.gap.off('advertisingStop', done);
+
+				resolve();
+			};
+
+			this.gap.on('advertisingStop', done);
+
+			this.gap.stopAdvertising();
+		});
+	}
+	private onAdvertisingStop = () => {
+		this.advertising = false;
+	};
 }
