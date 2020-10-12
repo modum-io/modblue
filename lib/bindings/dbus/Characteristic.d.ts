@@ -1,10 +1,10 @@
 /// <reference types="node" />
-import { BaseCharacteristic } from '../../Characteristic';
-import { BaseDescriptor } from '../../Descriptor';
+import { GattCharacteristic } from '../../GattCharacteristic';
+import { GattDescriptor } from '../../models/gatt/Descriptor';
 import { BusObject } from './BusObject';
 import { Noble } from './Noble';
 import { Service } from './Service';
-export declare class Characteristic extends BaseCharacteristic<Noble, Service> {
+export declare class Characteristic extends GattCharacteristic<Noble, Service> {
     private readonly object;
     constructor(noble: Noble, service: Service, uuid: string, properties: string[], object: BusObject);
     private prop;
@@ -14,6 +14,6 @@ export declare class Characteristic extends BaseCharacteristic<Noble, Service> {
     broadcast(broadcast: boolean): Promise<void>;
     subscribe(): Promise<void>;
     unsubscribe(): Promise<void>;
-    getDiscoveredDescriptors(): BaseDescriptor[];
-    discoverDescriptors(): Promise<BaseDescriptor[]>;
+    getDiscoveredDescriptors(): GattDescriptor[];
+    discoverDescriptors(): Promise<GattDescriptor[]>;
 }

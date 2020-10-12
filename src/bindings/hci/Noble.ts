@@ -1,11 +1,10 @@
-import { BaseAdapter } from '../../Adapter';
-import { BaseNoble } from '../../Noble';
+import { Noble } from '../../models';
 
-import { Adapter } from './Adapter';
-import { Hci } from './hci';
+import { HciAdapter } from './Adapter';
+import { Hci } from './misc';
 
-export class Noble extends BaseNoble {
-	private adapters: Map<number, Adapter> = new Map();
+export class HciNoble extends Noble {
+	private adapters: Map<number, HciAdapter> = new Map();
 
 	public async init() {
 		// NO-OP
@@ -18,12 +17,12 @@ export class Noble extends BaseNoble {
 		this.adapters = new Map();
 	}
 
-	public async getAdapters(): Promise<BaseAdapter[]> {
+	public async getAdapters(): Promise<HciAdapter[]> {
 		const adapters = Hci.getDeviceList();
 		for (const rawAdapter of adapters) {
 			let adapter = this.adapters.get(rawAdapter.devId);
 			if (!adapter) {
-				adapter = new Adapter(this, `${rawAdapter.devId}`);
+				adapter = new HciAdapter(this, `${rawAdapter.devId}`);
 				this.adapters.set(rawAdapter.devId, adapter);
 			}
 		}

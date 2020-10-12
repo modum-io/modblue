@@ -1,4 +1,4 @@
-const { HCINoble, DBUSNoble } = require('../lib');
+const { HciNoble, DbusNoble } = require('../lib');
 
 const USAGE = `
 Usage:
@@ -24,7 +24,7 @@ const main = async () => {
 
 	console.log('Initializing noble...');
 
-	const noble = BINDINGS === 'hci' ? new HCINoble() : BINDINGS === 'dbus' ? new DBUSNoble() : null;
+	const noble = BINDINGS === 'hci' ? new HciNoble() : BINDINGS === 'dbus' ? new DbusNoble() : null;
 
 	if (!noble) {
 		throw new Error(`Could not find requested bindings ${BINDINGS}`);

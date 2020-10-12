@@ -1,25 +1,19 @@
-import { BasePeripheral } from '../../Peripheral';
-import { BaseService } from '../../Service';
+import { Peripheral } from '../../models';
 
-import { Adapter } from './Adapter';
-import { Gatt } from './gatt';
-import { Hci } from './hci';
-import { Noble } from './Noble';
-import { Service } from './Service';
-import { Signaling } from './signaling';
+import { HciAdapter } from './Adapter';
+import { HciGattRemote } from './gatt';
+import { Hci, Signaling } from './misc';
 
-export class Peripheral extends BasePeripheral<Noble, Adapter> {
+export class HciPeripheral extends Peripheral {
+	public adapter: HciAdapter;
+
 	private hci: Hci;
+	private gatt: HciGattRemote;
 	private handle: number;
-	private gatt: Gatt;
 	private signaling: Signaling;
-	private requestedMTU: number;
 
-	private services: Map<string, Service> = new Map();
-
-	public async connect(requestMtu?: number): Promise<void> {
+	public async connect(): Promise<void> {
 		this._state = 'connecting';
-		this.requestedMTU = requestMtu;
 		await this.adapter.connect(this);
 	}
 	public async onConnect(hci: Hci, handle: number) {
@@ -27,16 +21,10 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 
 		this.hci = hci;
 
-		this.gatt = new Gatt(this.hci, this.handle);
-
 		this.signaling = new Signaling(this.hci, this.handle);
 		this.signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 
-		const wantedMtu = this.requestedMTU || 256;
-		const mtu = await this.gatt.exchangeMtu(wantedMtu);
-
 		this._state = 'connected';
-		this._mtu = mtu;
 	}
 
 	private onConnectionParameterUpdateRequest = (
@@ -53,47 +41,26 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		return this.adapter.disconnect(this);
 	}
 	public onDisconnect() {
-		this.gatt.dispose();
-		this.gatt = null;
-
 		this.signaling.off('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 		this.signaling.dispose();
 		this.signaling = null;
 
 		this.hci = null;
+		this.gatt = null;
 
 		this.handle = null;
 		this._state = 'disconnected';
-		this._mtu = undefined;
-
-		this.services = new Map();
 	}
 
-	public getDiscoveredServices(): BaseService[] {
-		return [...this.services.values()];
-	}
-
-	public async discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]> {
-		const services = await this.gatt.discoverServices(serviceUUIDs || []);
-		for (const rawService of services) {
-			let service = this.services.get(rawService.uuid);
-			if (!service) {
-				service = new Service(this.noble, this, rawService.uuid, this.gatt);
-				this.services.set(rawService.uuid, service);
-			}
+	public async setupGatt(requestMtu?: number): Promise<HciGattRemote> {
+		if (this.gatt) {
+			return this.gatt;
 		}
-		return [...this.services.values()];
-	}
 
-	public async discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]): Promise<BaseService[]> {
-		const services = await this.gatt.discoverIncludedServices(baseService.uuid, serviceUUIDs);
-		for (const rawService of services) {
-			let service = this.services.get(rawService.uuid);
-			if (!service) {
-				service = new Service(this.noble, this, rawService.uuid, this.gatt);
-				this.services.set(rawService.uuid, service);
-			}
-		}
-		return [...this.services.values()];
+		this.gatt = new HciGattRemote(this, this.hci);
+
+		await this.gatt.exchangeMtu(requestMtu || 256);
+
+		return this.gatt;
 	}
 }

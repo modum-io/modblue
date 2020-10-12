@@ -1,0 +1,1 @@
+{"version":3,"file":"Descriptor.js","sourceRoot":"src/","sources":["bindings/hci/gatt/remote/Descriptor.ts"],"names":[],"mappings":";;;AAAA,+CAA0D;AAI1D,MAAa,uBAAwB,SAAQ,6BAAoB;IAKhE,YAAmB,cAA2C,EAAE,IAAY,EAAE,MAAc;QAC3F,KAAK,CAAC,cAAc,EAAE,IAAI,CAAC,CAAC;QAE5B,IAAI,CAAC,MAAM,GAAG,MAAM,CAAC;IACtB,CAAC;CACD;AAVD,0DAUC"}

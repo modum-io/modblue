@@ -1,0 +1,1 @@
+{"version":3,"file":"Characteristic.js","sourceRoot":"src/","sources":["bindings/dbus/gatt/remote/Characteristic.ts"],"names":[],"mappings":";;;AAAA,+CAA0F;AAK1F,MAAa,4BAA6B,SAAQ,iCAAwB;IAGzE,YACC,OAA8B,EAC9B,IAAY,EACZ,UAAwC,EACxC,SAAoB;QAEpB,KAAK,CAAC,OAAO,EAAE,IAAI,EAAE,UAAU,CAAC,CAAC;QAEjC,IAAI,CAAC,SAAS,GAAG,SAAS,CAAC;IAC5B,CAAC;CACD;AAbD,oEAaC"}

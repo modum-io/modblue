@@ -1,20 +1,17 @@
-import { BaseAdapter } from '../../Adapter';
-import { BasePeripheral } from '../../Peripheral';
+import { Adapter } from '../../models';
 import { AddressType } from '../../types';
 
-import { Gap } from './gap';
-import { Hci } from './hci';
-import { Noble } from './Noble';
-import { Peripheral } from './Peripheral';
+import { Gap, Hci } from './misc';
+import { HciPeripheral } from './Peripheral';
 
 interface ConnectRequest {
-	peripheral: Peripheral;
+	peripheral: HciPeripheral;
 	resolve?: () => void;
 	reject?: (error: any) => void;
 	isDone?: boolean;
 }
 
-export class Adapter extends BaseAdapter<Noble> {
+export class HciAdapter extends Adapter {
 	private initialized: boolean = false;
 	private scanning: boolean = false;
 	private advertising: boolean = false;
@@ -23,14 +20,14 @@ export class Adapter extends BaseAdapter<Noble> {
 	private hci: Hci;
 	private gap: Gap;
 
-	private peripherals: Map<string, Peripheral> = new Map();
+	private peripherals: Map<string, HciPeripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
 
 	private connectionRequest: ConnectRequest;
 	private connectionRequestQueue: ConnectRequest[] = [];
 
-	public async getScannedPeripherals(): Promise<BasePeripheral[]> {
+	public async getScannedPeripherals(): Promise<HciPeripheral[]> {
 		return [...this.peripherals.values()];
 	}
 
@@ -144,7 +141,7 @@ export class Adapter extends BaseAdapter<Noble> {
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new Peripheral(this.noble, this, uuid, address, addressType, connectable, advertisement, rssi);
+			peripheral = new HciPeripheral(this, uuid, address, addressType, connectable, advertisement, rssi);
 			this.peripherals.set(uuid, peripheral);
 		} else {
 			peripheral.connectable = connectable;
@@ -155,7 +152,7 @@ export class Adapter extends BaseAdapter<Noble> {
 		this.emit('discover', peripheral);
 	};
 
-	public async connect(peripheral: Peripheral) {
+	public async connect(peripheral: HciPeripheral) {
 		const request: ConnectRequest = { peripheral, isDone: false };
 
 		const disconnect = (disconnHandle: number, reason: number) => {
@@ -284,7 +281,7 @@ export class Adapter extends BaseAdapter<Noble> {
 		}
 	}
 
-	public async disconnect(peripheral: Peripheral) {
+	public async disconnect(peripheral: HciPeripheral) {
 		const handle = this.uuidToHandle.get(peripheral.uuid);
 
 		return new Promise<number>((resolve) => {

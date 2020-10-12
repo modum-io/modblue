@@ -1,9 +1,20 @@
-export { BaseAdapter as Adapter } from './Adapter';
-export { BaseCharacteristic as Characteristic } from './Characteristic';
-export { BaseDescriptor as Descriptor } from './Descriptor';
-export { BaseNoble as Noble } from './Noble';
-export { BasePeripheral as Peripheral } from './Peripheral';
-export { BaseService as Service } from './Service';
+export {
+	Adapter,
+	Noble,
+	Peripheral,
+	Gatt,
+	GattLocal,
+	GattRemote,
+	GattCharacteristic,
+	GattCharacteristicLocal,
+	GattCharacteristicRemote,
+	GattDescriptor,
+	GattDescriptorLocal,
+	GattDescriptorRemote,
+	GattService,
+	GattServiceLocal,
+	GattServiceRemote
+} from './models';
 
-export { Noble as HCINoble } from './bindings/hci';
-export { Noble as DBUSNoble } from './bindings/dbus';
+export { HciNoble } from './bindings/hci';
+export { DbusNoble } from './bindings/dbus';

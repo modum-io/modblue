@@ -1,5 +1,4 @@
-export { Adapter } from './Adapter';
-export { Characteristic } from './Characteristic';
-export { Noble } from './Noble';
-export { Peripheral } from './Peripheral';
-export { Service } from './Service';
+export { DbusAdapter } from './Adapter';
+export { DbusNoble } from './Noble';
+export { DbusPeripheral } from './Peripheral';
+export { DbusGattCharacteristicRemote, DbusGattRemote, DbusGattServiceRemote } from './gatt';

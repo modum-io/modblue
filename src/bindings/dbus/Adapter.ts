@@ -1,16 +1,14 @@
-import { BaseAdapter } from '../../Adapter';
-import { BasePeripheral } from '../../Peripheral';
+import { Adapter, Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
-import { BusObject, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE } from './BusObject';
-import { Noble } from './Noble';
-import { Peripheral } from './Peripheral';
-import { buildTypedValue } from './TypeValue';
+import { buildTypedValue, BusObject, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE } from './misc';
+import { DbusNoble } from './Noble';
+import { DbusPeripheral } from './Peripheral';
 
 const UPDATE_INTERVAL = 1; // in seconds
 
-export class Adapter extends BaseAdapter<Noble> {
-	private readonly object: BusObject;
+export class DbusAdapter extends Adapter {
+	private readonly busObject: BusObject;
 	private initialized: boolean = false;
 	private scanning: boolean = false;
 	private requestScanStop: boolean = false;
@@ -18,12 +16,12 @@ export class Adapter extends BaseAdapter<Noble> {
 	private peripherals: Map<string, Peripheral> = new Map();
 	private updateTimer: NodeJS.Timer;
 
-	public constructor(noble: Noble, id: string, name: string, address: string, object: BusObject) {
+	public constructor(noble: DbusNoble, id: string, name: string, address: string, busObject: BusObject) {
 		super(noble, id);
 
 		this._name = name;
 		this._address = address;
-		this.object = object;
+		this.busObject = busObject;
 	}
 
 	private async init() {
@@ -33,7 +31,7 @@ export class Adapter extends BaseAdapter<Noble> {
 
 		this.initialized = true;
 
-		const propertiesIface = await this.object.getPropertiesInterface();
+		const propertiesIface = await this.busObject.getPropertiesInterface();
 		const onPropertiesChanged = (iface: string, changedProps: any) => {
 			if (iface !== I_BLUEZ_ADAPTER) {
 				return;
@@ -51,13 +49,13 @@ export class Adapter extends BaseAdapter<Noble> {
 	}
 
 	private prop<T>(propName: string) {
-		return this.object.prop<T>(I_BLUEZ_ADAPTER, propName);
+		return this.busObject.prop<T>(I_BLUEZ_ADAPTER, propName);
 	}
 	private callMethod<T>(methodName: string, ...args: any[]) {
-		return this.object.callMethod<T>(I_BLUEZ_ADAPTER, methodName, ...args);
+		return this.busObject.callMethod<T>(I_BLUEZ_ADAPTER, methodName, ...args);
 	}
 
-	public async getScannedPeripherals(): Promise<BasePeripheral[]> {
+	public async getScannedPeripherals(): Promise<Peripheral[]> {
 		return [...this.peripherals.values()];
 	}
 
@@ -118,14 +116,14 @@ export class Adapter extends BaseAdapter<Noble> {
 	}
 
 	private async updatePeripherals() {
-		const peripheralIds = await this.object.getChildrenNames();
+		const peripheralIds = await this.busObject.getChildrenNames();
 		for (const peripheralId of peripheralIds) {
 			let peripheral = this.peripherals.get(peripheralId);
 			if (!peripheral) {
-				const object = this.object.getChild(peripheralId);
-				const address = await object.prop<string>(I_BLUEZ_DEVICE, 'Address');
-				const addressType = await object.prop<AddressType>(I_BLUEZ_DEVICE, 'AddressType');
-				peripheral = new Peripheral(this.noble, this, peripheralId, address, addressType, object);
+				const busObject = this.busObject.getChild(peripheralId);
+				const address = await busObject.prop<string>(I_BLUEZ_DEVICE, 'Address');
+				const addressType = await busObject.prop<AddressType>(I_BLUEZ_DEVICE, 'AddressType');
+				peripheral = new DbusPeripheral(this, peripheralId, address, addressType, busObject);
 				this.peripherals.set(peripheralId, peripheral);
 			}
 

@@ -1,0 +1,1 @@
+{"version":3,"file":"Characteristic.js","sourceRoot":"src/","sources":["models/gatt/local/Characteristic.ts"],"names":[],"mappings":";;;AAAA,sDAAmF;AAKnF,MAAa,uBAAwB,SAAQ,mCAAkB;IAK9D,YACC,OAAyB,EACzB,IAAY,EACZ,UAAwC,EACxC,WAAkC;QAElC,KAAK,CAAC,OAAO,EAAE,IAAI,EAAE,UAAU,CAAC,CAAC;QAEjC,IAAI,CAAC,WAAW,GAAG,WAAW,CAAC;IAChC,CAAC;CACD;AAfD,0DAeC"}

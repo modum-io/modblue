@@ -1,19 +1,19 @@
-import { BasePeripheral } from '../../Peripheral';
-import { BaseService } from '../../Service';
+import { Peripheral } from '../../models';
 import { AddressType } from '../../types';
-import { Adapter } from './Adapter';
-import { BusObject } from './BusObject';
-import { Noble } from './Noble';
-export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
-    private readonly object;
-    private services;
+import { DbusAdapter } from './Adapter';
+import { DbusGattRemote, DbusGattServiceRemote } from './gatt';
+import { BusObject } from './misc';
+export declare class DbusPeripheral extends Peripheral {
+    private readonly busObject;
+    private gatt;
+    services: Map<string, DbusGattServiceRemote>;
     private isConnecting;
     private connecting;
     private connectTimeout;
     private isDisconnecting;
     private disconnecting;
     private disconnectTimeout;
-    constructor(noble: Noble, adapter: Adapter, id: string, address: string, addressType: AddressType, object: BusObject);
+    constructor(adapter: DbusAdapter, id: string, address: string, addressType: AddressType, busObject: BusObject);
     private prop;
     private callMethod;
     private isConnected;
@@ -21,6 +21,5 @@ export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     disconnect(): Promise<number>;
     private doneConnecting;
     private doneDisconnecting;
-    getDiscoveredServices(): BaseService[];
-    discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]>;
+    setupGatt(requestMtu?: number): Promise<DbusGattRemote>;
 }

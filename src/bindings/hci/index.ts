@@ -1,6 +1,5 @@
-export { Adapter } from './Adapter';
-export { Characteristic } from './Characteristic';
-export { Descriptor } from './Descriptor';
-export { Noble } from './Noble';
-export { Peripheral } from './Peripheral';
-export { Service } from './Service';
+export { HciAdapter } from './Adapter';
+export { HciNoble } from './Noble';
+export { HciPeripheral } from './Peripheral';
+
+export { HciGattCharacteristicRemote, HciGattDescriptorRemote, HciGattRemote, HciGattServiceRemote } from './gatt';

@@ -1,16 +1,15 @@
 import { MessageBus, systemBus } from 'dbus-next';
 
-import { BaseAdapter } from '../../Adapter';
-import { BaseNoble } from '../../Noble';
+import { Noble } from '../../models';
 
-import { Adapter } from './Adapter';
-import { BusObject, I_BLUEZ_ADAPTER } from './BusObject';
+import { DbusAdapter } from './Adapter';
+import { BusObject, I_BLUEZ_ADAPTER } from './misc';
 
-export class Noble extends BaseNoble {
+export class DbusNoble extends Noble {
 	private readonly dbus: MessageBus;
 	private bluezObject: BusObject;
 
-	private adapters: Map<string, Adapter> = new Map();
+	private adapters: Map<string, DbusAdapter> = new Map();
 
 	public constructor() {
 		super();
@@ -26,15 +25,15 @@ export class Noble extends BaseNoble {
 		this.adapters = new Map();
 	}
 
-	public async getAdapters(): Promise<BaseAdapter[]> {
+	public async getAdapters(): Promise<DbusAdapter[]> {
 		const adapterIds = await this.bluezObject.getChildrenNames();
 		for (const adapterId of adapterIds) {
 			let adapter = this.adapters.get(adapterId);
 			if (!adapter) {
-				const object = this.bluezObject.getChild(adapterId);
-				const name = await object.prop<string>(I_BLUEZ_ADAPTER, 'Name');
-				const address = await object.prop<string>(I_BLUEZ_ADAPTER, 'Address');
-				adapter = new Adapter(this, adapterId, name, address, object);
+				const busObject = this.bluezObject.getChild(adapterId);
+				const name = await busObject.prop<string>(I_BLUEZ_ADAPTER, 'Name');
+				const address = await busObject.prop<string>(I_BLUEZ_ADAPTER, 'Address');
+				adapter = new DbusAdapter(this, adapterId, name, address, busObject);
 				this.adapters.set(adapterId, adapter);
 			}
 		}

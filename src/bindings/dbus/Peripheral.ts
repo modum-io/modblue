@@ -1,20 +1,19 @@
-import { BasePeripheral } from '../../Peripheral';
-import { BaseService } from '../../Service';
+import { Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
-import { Adapter } from './Adapter';
-import { BusObject, I_BLUEZ_DEVICE, I_BLUEZ_SERVICE } from './BusObject';
-import { Noble } from './Noble';
-import { Service } from './Service';
+import { DbusAdapter } from './Adapter';
+import { DbusGattRemote, DbusGattServiceRemote } from './gatt';
+import { BusObject, I_BLUEZ_DEVICE } from './misc';
 
 // tslint:disable: promise-must-complete
 
 const CONNECT_TIMEOUT = 10; // in seconds
 
-export class Peripheral extends BasePeripheral<Noble, Adapter> {
-	private readonly object: BusObject;
+export class DbusPeripheral extends Peripheral {
+	private readonly busObject: BusObject;
+	private gatt: DbusGattRemote;
 
-	private services: Map<string, Service> = new Map();
+	public services: Map<string, DbusGattServiceRemote> = new Map();
 
 	private isConnecting: boolean = false;
 	private connecting: [() => void, (error?: any) => void][] = [];
@@ -24,23 +23,22 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	private disconnectTimeout: NodeJS.Timer;
 
 	public constructor(
-		noble: Noble,
-		adapter: Adapter,
+		adapter: DbusAdapter,
 		id: string,
 		address: string,
 		addressType: AddressType,
-		object: BusObject
+		busObject: BusObject
 	) {
-		super(noble, adapter, id, address, addressType);
+		super(adapter, id, address, addressType);
 
-		this.object = object;
+		this.busObject = busObject;
 	}
 
 	private prop<T>(propName: string) {
-		return this.object.prop<T>(I_BLUEZ_DEVICE, propName);
+		return this.busObject.prop<T>(I_BLUEZ_DEVICE, propName);
 	}
 	private callMethod<T>(methodName: string, ...args: any[]) {
-		return this.object.callMethod<T>(I_BLUEZ_DEVICE, methodName, ...args);
+		return this.busObject.callMethod<T>(I_BLUEZ_DEVICE, methodName, ...args);
 	}
 
 	private async isConnected() {
@@ -68,7 +66,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 
 			const done = () => this.doneConnecting();
 
-			const propertiesIface = await this.object.getPropertiesInterface();
+			const propertiesIface = await this.busObject.getPropertiesInterface();
 			const onPropertiesChanged = (iface: string, changedProps: any) => {
 				if (iface !== I_BLUEZ_DEVICE) {
 					return;
@@ -126,7 +124,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 
 			const done = () => this.doneDisconnecting();
 
-			const propertiesIface = await this.object.getPropertiesInterface();
+			const propertiesIface = await this.busObject.getPropertiesInterface();
 			const onPropertiesChanged = (iface: string, changedProps: any) => {
 				if (iface !== I_BLUEZ_DEVICE) {
 					return;
@@ -186,56 +184,16 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.disconnecting = [];
 	}
 
-	public getDiscoveredServices(): BaseService[] {
-		return [...this.services.values()];
-	}
+	public async setupGatt(requestMtu?: number): Promise<DbusGattRemote> {
+		if (this.gatt) {
+			return this.gatt;
+		}
 
-	public discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]> {
-		return new Promise<Service[]>(async (resolve, reject) => {
-			let cancelled = false;
-			const onTimeout = () => {
-				cancelled = true;
-				reject(new Error('Discovering timed out'));
-			};
-			const timeout = setTimeout(onTimeout, CONNECT_TIMEOUT * 1000);
+		if (requestMtu) {
+			throw new Error(`MTU requests are not accepted for dbus`);
+		}
 
-			const servicesResolved = await this.prop<boolean>('ServicesResolved');
-			if (!servicesResolved) {
-				await new Promise(async (res) => {
-					const propertiesIface = await this.object.getPropertiesInterface();
-					const onPropertiesChanged = (iface: string, changedProps: any) => {
-						if (iface !== I_BLUEZ_DEVICE) {
-							return;
-						}
-
-						if ('ServicesResolved' in changedProps && changedProps.ServicesResolved.value) {
-							propertiesIface.off('PropertiesChanged', onPropertiesChanged);
-							res();
-						}
-					};
-					propertiesIface.on('PropertiesChanged', onPropertiesChanged);
-				});
-			}
-
-			if (cancelled) {
-				// If we canceled by timeout then all the promises have already been rejected, so just return.
-				return;
-			} else {
-				clearTimeout(timeout);
-			}
-
-			const serviceIds = await this.object.getChildrenNames();
-			for (const serviceId of serviceIds) {
-				let service = this.services.get(serviceId);
-				if (!service) {
-					const object = this.object.getChild(serviceId);
-					const uuid = (await object.prop<string>(I_BLUEZ_SERVICE, 'UUID')).replace(/\-/g, '');
-					service = new Service(this.noble, this, uuid, object);
-					this.services.set(uuid, service);
-				}
-			}
-
-			resolve([...this.services.values()]);
-		});
+		this.gatt = new DbusGattRemote(this, this.busObject);
+		return this.gatt;
 	}
 }
