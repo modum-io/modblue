@@ -1,19 +1,25 @@
+import { ClientInterface } from 'dbus-next';
+
 import { Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
 import { DbusAdapter } from './Adapter';
-import { DbusGattRemote, DbusGattServiceRemote } from './gatt';
-import { BusObject, I_BLUEZ_DEVICE } from './misc';
+import { DbusGattRemote } from './gatt';
+import { I_BLUEZ_DEVICE, I_PROPERTIES } from './misc';
 
 // tslint:disable: promise-must-complete
 
 const CONNECT_TIMEOUT = 10; // in seconds
 
 export class DbusPeripheral extends Peripheral {
-	private readonly busObject: BusObject;
-	private gatt: DbusGattRemote;
+	public adapter: DbusAdapter;
+	public readonly path: string;
 
-	public services: Map<string, DbusGattServiceRemote> = new Map();
+	private deviceIface: ClientInterface;
+	private propsIface: ClientInterface;
+	private _init: boolean = false;
+
+	private gatt: DbusGattRemote;
 
 	private isConnecting: boolean = false;
 	private connecting: [() => void, (error?: any) => void][] = [];
@@ -24,28 +30,41 @@ export class DbusPeripheral extends Peripheral {
 
 	public constructor(
 		adapter: DbusAdapter,
+		path: string,
 		id: string,
 		address: string,
 		addressType: AddressType,
-		busObject: BusObject
+		advertisement: any,
+		rssi: number
 	) {
-		super(adapter, id, address, addressType);
+		super(adapter, id, address, addressType, advertisement, rssi);
 
-		this.busObject = busObject;
+		this.path = path;
 	}
 
-	private prop<T>(propName: string) {
-		return this.busObject.prop<T>(I_BLUEZ_DEVICE, propName);
+	private async init() {
+		if (this._init) {
+			return;
+		}
+
+		const obj = await this.adapter.noble.dbus.getProxyObject('org.bluez', this.path);
+		this.propsIface = obj.getInterface(I_PROPERTIES);
+		this.deviceIface = obj.getInterface(I_BLUEZ_DEVICE);
+
+		this._init = true;
 	}
-	private callMethod<T>(methodName: string, ...args: any[]) {
-		return this.busObject.callMethod<T>(I_BLUEZ_DEVICE, methodName, ...args);
+
+	private async prop<T>(iface: string, name: string): Promise<T> {
+		await this.init();
+		const rawProp = await this.propsIface.Get(iface, name);
+		return rawProp.value;
 	}
 
 	private async isConnected() {
-		return this.prop<boolean>('Connected');
+		return this.prop<boolean>(I_BLUEZ_DEVICE, 'Connected');
 	}
 
-	public async connect(requestMtu?: number): Promise<void> {
+	public async connect(): Promise<void> {
 		if (await this.isConnected()) {
 			return;
 		}
@@ -66,26 +85,27 @@ export class DbusPeripheral extends Peripheral {
 
 			const done = () => this.doneConnecting();
 
-			const propertiesIface = await this.busObject.getPropertiesInterface();
+			await this.init();
+
 			const onPropertiesChanged = (iface: string, changedProps: any) => {
 				if (iface !== I_BLUEZ_DEVICE) {
 					return;
 				}
 
 				if ('Connected' in changedProps && changedProps.Connected.value) {
-					propertiesIface.off('PropertiesChanged', onPropertiesChanged);
+					this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 					done();
 				}
 			};
-			propertiesIface.on('PropertiesChanged', onPropertiesChanged);
+			this.propsIface.on('PropertiesChanged', onPropertiesChanged);
 
 			const timeout = async () => {
 				this.doneConnecting('Connecting timed out');
-				propertiesIface.off('PropertiesChanged', onPropertiesChanged);
+				this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 
 				try {
 					// Disconnect can be used to cancel pending connects
-					await this.callMethod('Disconnect');
+					await this.deviceIface.Disconnect();
 				} catch {
 					// NO-OP
 				}
@@ -93,7 +113,7 @@ export class DbusPeripheral extends Peripheral {
 			this.connectTimeout = setTimeout(timeout, CONNECT_TIMEOUT * 1000);
 
 			try {
-				await this.callMethod('Connect');
+				await this.deviceIface.Connect();
 			} catch (err) {
 				this.doneConnecting(err);
 			}
@@ -113,9 +133,6 @@ export class DbusPeripheral extends Peripheral {
 			return new Promise<number>((resolve, reject) => this.disconnecting.push([resolve, reject]));
 		}
 
-		// Currently disabled the cache after disconnect because it seems to throw errors
-		// this.gattServer = null;
-
 		this.disconnecting = [];
 		this.isDisconnecting = true;
 
@@ -124,27 +141,28 @@ export class DbusPeripheral extends Peripheral {
 
 			const done = () => this.doneDisconnecting();
 
-			const propertiesIface = await this.busObject.getPropertiesInterface();
+			await this.init();
+
 			const onPropertiesChanged = (iface: string, changedProps: any) => {
 				if (iface !== I_BLUEZ_DEVICE) {
 					return;
 				}
 
 				if ('Connected' in changedProps && !changedProps.Connected.value) {
-					propertiesIface.off('PropertiesChanged', onPropertiesChanged);
+					this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 					done();
 				}
 			};
-			propertiesIface.on('PropertiesChanged', onPropertiesChanged);
+			this.propsIface.on('PropertiesChanged', onPropertiesChanged);
 
 			const timeout = () => {
 				this.doneDisconnecting('Disconnecting timed out');
-				propertiesIface.off('PropertiesChanged', onPropertiesChanged);
+				this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 			};
 			this.disconnectTimeout = setTimeout(timeout, CONNECT_TIMEOUT * 1000);
 
 			try {
-				await this.callMethod('Disconnect');
+				await this.deviceIface.Disconnect();
 			} catch (err) {
 				this.doneDisconnecting(err);
 			}
@@ -193,7 +211,7 @@ export class DbusPeripheral extends Peripheral {
 			throw new Error(`MTU requests are not accepted for dbus`);
 		}
 
-		this.gatt = new DbusGattRemote(this, this.busObject);
+		this.gatt = new DbusGattRemote(this);
 		return this.gatt;
 	}
 }

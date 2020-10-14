@@ -1,4 +1,4 @@
-import { Adapter } from '../../models';
+import { Adapter, Peripheral } from '../../models';
 import { HciPeripheral } from './Peripheral';
 export declare class HciAdapter extends Adapter {
     private initialized;
@@ -7,12 +7,13 @@ export declare class HciAdapter extends Adapter {
     private requestScanStop;
     private hci;
     private gap;
+    private gatt;
     private peripherals;
     private uuidToHandle;
     private handleToUUID;
     private connectionRequest;
     private connectionRequestQueue;
-    getScannedPeripherals(): Promise<HciPeripheral[]>;
+    getScannedPeripherals(): Promise<Peripheral[]>;
     isScanning(): Promise<boolean>;
     private init;
     dispose(): void;
@@ -25,7 +26,7 @@ export declare class HciAdapter extends Adapter {
     private onLeConnComplete;
     private processConnectionRequests;
     disconnect(peripheral: HciPeripheral): Promise<number>;
-    startAdvertising(name: string, serviceUUIDs?: string[]): Promise<void>;
+    startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
     private onAdvertisingStart;
     stopAdvertising(): Promise<void>;
     private onAdvertisingStop;

@@ -19,6 +19,6 @@ export declare abstract class Adapter extends EventEmitter {
     abstract startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;
     abstract stopScanning(): Promise<void>;
     abstract getScannedPeripherals(): Promise<Peripheral[]>;
-    abstract startAdvertising(name: string, serviceUUIDs?: string[]): Promise<void>;
+    abstract startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
     abstract stopAdvertising(): Promise<void>;
 }

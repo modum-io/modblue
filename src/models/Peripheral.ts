@@ -12,7 +12,6 @@ export abstract class Peripheral {
 	public readonly addressType: AddressType;
 	public readonly address: string;
 
-	public connectable: boolean;
 	public advertisement: any;
 	public rssi: number;
 
@@ -26,7 +25,6 @@ export abstract class Peripheral {
 		uuid: string,
 		address: string,
 		addressType: AddressType,
-		connectable?: boolean,
 		advertisement?: any,
 		rssi?: number
 	) {
@@ -35,7 +33,6 @@ export abstract class Peripheral {
 		this.addressType = addressType;
 		this.address = address;
 
-		this.connectable = connectable;
 		this.advertisement = advertisement;
 		this.rssi = rssi;
 
@@ -47,7 +44,6 @@ export abstract class Peripheral {
 			uuid: this.uuid,
 			address: this.address,
 			addressType: this.addressType,
-			connectable: this.connectable,
 			advertisement: this.advertisement,
 			rssi: this.rssi,
 			state: this._state

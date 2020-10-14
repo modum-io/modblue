@@ -1,11 +1,13 @@
+import { GattCharacteristicRemote, GattDescriptorRemote, GattRemote } from '../../../../models';
 import {
-	GattCharacteristicProperty,
-	GattCharacteristicRemote,
-	GattDescriptorRemote,
-	GattRemote,
-	Peripheral
-} from '../../../../models';
-import { buildTypedValue, BusObject, I_BLUEZ_CHARACTERISTIC, I_BLUEZ_DEVICE, I_BLUEZ_SERVICE } from '../../misc';
+	buildTypedValue,
+	I_BLUEZ_CHARACTERISTIC,
+	I_BLUEZ_DEVICE,
+	I_BLUEZ_SERVICE,
+	I_OBJECT_MANAGER,
+	I_PROPERTIES
+} from '../../misc';
+import { DbusPeripheral } from '../../Peripheral';
 
 import { DbusGattCharacteristicRemote } from './Characteristic';
 import { DbusGattServiceRemote } from './Service';
@@ -15,21 +17,18 @@ import { DbusGattServiceRemote } from './Service';
 const DISCOVER_TIMEOUT = 10; // in seconds
 
 export class DbusGattRemote extends GattRemote {
-	public busObject: BusObject;
+	public peripheral: DbusPeripheral;
 
 	public services: Map<string, DbusGattServiceRemote> = new Map();
 
-	public constructor(peripheral: Peripheral, busObject: BusObject) {
+	public constructor(peripheral: DbusPeripheral) {
 		super(peripheral);
-
-		this.busObject = busObject;
-	}
-
-	private prop<T>(propName: string) {
-		return this.busObject.prop<T>(I_BLUEZ_DEVICE, propName);
 	}
 
 	protected async doDiscoverServices(): Promise<DbusGattServiceRemote[]> {
+		const path = this.peripheral.path;
+		const dbus = this.peripheral.adapter.noble.dbus;
+
 		return new Promise<DbusGattServiceRemote[]>(async (resolve, reject) => {
 			let cancelled = false;
 			const onTimeout = () => {
@@ -38,21 +37,23 @@ export class DbusGattRemote extends GattRemote {
 			};
 			const timeout = setTimeout(onTimeout, DISCOVER_TIMEOUT * 1000);
 
-			const servicesResolved = await this.prop<boolean>('ServicesResolved');
+			const obj = await dbus.getProxyObject('org.bluez', path);
+			const propsIface = obj.getInterface(I_PROPERTIES);
+
+			const servicesResolved = (await propsIface.Get(I_BLUEZ_DEVICE, 'ServicesResolved')).value;
 			if (!servicesResolved) {
 				await new Promise(async (res) => {
-					const propertiesIface = await this.busObject.getPropertiesInterface();
 					const onPropertiesChanged = (iface: string, changedProps: any) => {
 						if (iface !== I_BLUEZ_DEVICE) {
 							return;
 						}
 
 						if ('ServicesResolved' in changedProps && changedProps.ServicesResolved.value) {
-							propertiesIface.off('PropertiesChanged', onPropertiesChanged);
+							propsIface.off('PropertiesChanged', onPropertiesChanged);
 							res();
 						}
 					};
-					propertiesIface.on('PropertiesChanged', onPropertiesChanged);
+					propsIface.on('PropertiesChanged', onPropertiesChanged);
 				});
 			}
 
@@ -63,13 +64,26 @@ export class DbusGattRemote extends GattRemote {
 				clearTimeout(timeout);
 			}
 
-			const serviceIds = await this.busObject.getChildrenNames();
-			for (const serviceId of serviceIds) {
-				let service = this.services.get(serviceId);
+			const objManager = await dbus.getProxyObject(`org.bluez`, '/');
+			const objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
+
+			const objs = await objManagerIface.GetManagedObjects();
+			const keys = Object.keys(objs);
+
+			for (const srvPath of keys) {
+				if (!srvPath.startsWith(path)) {
+					continue;
+				}
+
+				const srvObj = objs[srvPath][I_BLUEZ_SERVICE];
+				if (!srvObj) {
+					continue;
+				}
+
+				let service = this.services.get(srvPath);
 				if (!service) {
-					const busObject = this.busObject.getChild(serviceId);
-					const uuid = (await busObject.prop<string>(I_BLUEZ_SERVICE, 'UUID')).replace(/\-/g, '');
-					service = new DbusGattServiceRemote(this, uuid, busObject);
+					const uuid = srvObj.UUID.value.replace(/\-/g, '');
+					service = new DbusGattServiceRemote(this, srvPath, uuid);
 					this.services.set(uuid, service);
 				}
 			}
@@ -84,14 +98,27 @@ export class DbusGattRemote extends GattRemote {
 			throw new Error(`Service ${serviceUUID} not found`);
 		}
 
-		const characteristicNames = await service.busObject.getChildrenNames();
+		const objManager = await this.peripheral.adapter.noble.dbus.getProxyObject(`org.bluez`, '/');
+		const objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
+
+		const objs = await objManagerIface.GetManagedObjects();
+		const keys = Object.keys(objs);
+
 		const characteristics: DbusGattCharacteristicRemote[] = [];
 
-		for (const characteristicId of characteristicNames) {
-			const busObject = service.busObject.getChild(characteristicId);
-			const uuid = (await busObject.prop<string>(I_BLUEZ_CHARACTERISTIC, 'UUID')).replace(/\-/g, '');
-			const properties = await busObject.prop<GattCharacteristicProperty[]>(I_BLUEZ_CHARACTERISTIC, 'Flags');
-			const characteristic = new DbusGattCharacteristicRemote(service, uuid, properties, busObject);
+		for (const charPath of keys) {
+			if (!charPath.startsWith(service.path)) {
+				continue;
+			}
+
+			const charObj = objs[charPath][I_BLUEZ_CHARACTERISTIC];
+			if (!charObj) {
+				continue;
+			}
+
+			const uuid = charObj.UUID.value.replace(/\-/g, '');
+			const properties = charObj.Flags.value;
+			const characteristic = new DbusGattCharacteristicRemote(service, charPath, uuid, properties);
 			characteristics.push(characteristic);
 		}
 
@@ -109,10 +136,13 @@ export class DbusGattRemote extends GattRemote {
 			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
-		const options = {
+		const obj = await this.peripheral.adapter.noble.dbus.getProxyObject('org.bluez', characteristic.path);
+		const iface = obj.getInterface(I_BLUEZ_CHARACTERISTIC);
+
+		const payload = await iface.ReadValue({
 			offset: buildTypedValue('uint16', 0)
-		};
-		const payload = await characteristic.busObject.callMethod<any>(I_BLUEZ_CHARACTERISTIC, 'ReadValue', options);
+		});
+		console.log(payload);
 		return Buffer.from(payload);
 	}
 	public async write(
@@ -131,11 +161,13 @@ export class DbusGattRemote extends GattRemote {
 			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
-		const options = {
+		const obj = await this.peripheral.adapter.noble.dbus.getProxyObject('org.bluez', characteristic.path);
+		const iface = obj.getInterface(I_BLUEZ_CHARACTERISTIC);
+
+		await iface.WriteValue([...data], {
 			offset: buildTypedValue('uint16', 0),
 			type: buildTypedValue('string', withoutResponse ? 'command' : 'request')
-		};
-		await characteristic.busObject.callMethod(I_BLUEZ_CHARACTERISTIC, 'WriteValue', [...data], options);
+		});
 	}
 	public async broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): Promise<void> {
 		throw new Error('Method not implemented.');

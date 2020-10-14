@@ -39,6 +39,8 @@ export interface GattDescriptorInput {
 export declare abstract class GattLocal extends Gatt {
     readonly adapter: Adapter;
     protected handles: Map<number, Handle>;
+    protected _deviceName: string;
+    get deviceName(): string;
     constructor(adapter: Adapter);
     toString(): string;
     setData(deviceName: string, services: GattServiceInput[]): void;

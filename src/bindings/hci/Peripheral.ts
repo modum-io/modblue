@@ -17,11 +17,12 @@ export class HciPeripheral extends Peripheral {
 		await this.adapter.connect(this);
 	}
 	public async onConnect(hci: Hci, handle: number) {
+		this.hci = hci;
 		this.handle = handle;
 
-		this.hci = hci;
+		// this.gatt = new HciGattRemote(this, hci, handle);
 
-		this.signaling = new Signaling(this.hci, this.handle);
+		this.signaling = new Signaling(hci, handle);
 		this.signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 
 		this._state = 'connected';
@@ -56,8 +57,6 @@ export class HciPeripheral extends Peripheral {
 		if (this.gatt) {
 			return this.gatt;
 		}
-
-		this.gatt = new HciGattRemote(this, this.hci);
 
 		await this.gatt.exchangeMtu(requestMtu || 256);
 

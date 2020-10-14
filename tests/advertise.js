@@ -21,12 +21,9 @@ const main = async () => {
 	console.log('Initializing noble...');
 
 	const noble = BINDINGS === 'hci' ? new HciNoble() : BINDINGS === 'dbus' ? new DbusNoble() : null;
-
 	if (!noble) {
 		throw new Error(`Could not find requested bindings ${BINDINGS}`);
 	}
-
-	await noble.init();
 
 	console.log('Getting adapters...');
 

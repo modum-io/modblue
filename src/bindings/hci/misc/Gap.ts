@@ -103,7 +103,7 @@ export class Gap extends EventEmitter {
 
 		if (serviceUuids && serviceUuids.length) {
 			for (i = 0; i < serviceUuids.length; i++) {
-				const serviceUuid = new Buffer(
+				const serviceUuid = Buffer.from(
 					serviceUuids[i]
 						.match(/.{1,2}/g)
 						.reverse()
@@ -165,7 +165,7 @@ export class Gap extends EventEmitter {
 
 		// name
 		if (name && name.length) {
-			const nameBuffer = new Buffer(name);
+			const nameBuffer = Buffer.from(name);
 
 			scanData.writeUInt8(1 + nameBuffer.length, 0);
 			scanData.writeUInt8(0x08, 1);

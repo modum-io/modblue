@@ -47,6 +47,11 @@ export abstract class GattLocal extends Gatt {
 
 	protected handles: Map<number, Handle>;
 
+	protected _deviceName: string;
+	public get deviceName() {
+		return this._deviceName;
+	}
+
 	public constructor(adapter: Adapter) {
 		super();
 
@@ -64,6 +69,8 @@ export abstract class GattLocal extends Gatt {
 
 	public setData(deviceName: string, services: GattServiceInput[]): void {
 		const handles: Map<number, Handle> = new Map();
+
+		this._deviceName = deviceName;
 
 		const baseServices: GattServiceInput[] = [
 			{

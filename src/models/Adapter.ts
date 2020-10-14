@@ -48,6 +48,6 @@ export abstract class Adapter extends EventEmitter {
 
 	public abstract async getScannedPeripherals(): Promise<Peripheral[]>;
 
-	public abstract async startAdvertising(name: string, serviceUUIDs?: string[]): Promise<void>;
+	public abstract async startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
 	public abstract async stopAdvertising(): Promise<void>;
 }

@@ -72,15 +72,17 @@ export class HciGattRemote extends GattRemote {
 	private security: string;
 
 	private currentCommand: GattCommand;
-	private commandQueue: GattCommand[];
+	private commandQueue: GattCommand[] = [];
 
 	public services: Map<string, HciGattServiceRemote> = new Map();
 
-	public constructor(peripheral: Peripheral, hci: Hci) {
+	public constructor(peripheral: Peripheral, hci: Hci, handle: number) {
 		super(peripheral);
 
 		this.hci = hci;
 		this.hci.on('aclDataPkt', this.onAclStreamData);
+
+		this.handle = handle;
 	}
 
 	private processCommands() {
@@ -106,6 +108,8 @@ export class HciGattRemote extends GattRemote {
 	}
 
 	private onAclStreamData = async (handle: number, cid: number, data: Buffer) => {
+		console.log('acl', handle, cid, data);
+
 		if (handle !== this.handle || cid !== ATT_CID) {
 			return;
 		}

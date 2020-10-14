@@ -1,19 +1,18 @@
 import { GattCharacteristicProperty, GattCharacteristicRemote } from '../../../../models';
-import { BusObject } from '../../misc';
 
 import { DbusGattServiceRemote } from './Service';
 
 export class DbusGattCharacteristicRemote extends GattCharacteristicRemote {
-	public readonly busObject: BusObject;
+	public readonly path: string;
 
 	public constructor(
 		service: DbusGattServiceRemote,
+		path: string,
 		uuid: string,
-		properties: GattCharacteristicProperty[],
-		busObject: BusObject
+		properties: GattCharacteristicProperty[]
 	) {
 		super(service, uuid, properties);
 
-		this.busObject = busObject;
+		this.path = path;
 	}
 }

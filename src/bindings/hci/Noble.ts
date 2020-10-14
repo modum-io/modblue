@@ -6,10 +6,6 @@ import { Hci } from './misc';
 export class HciNoble extends Noble {
 	private adapters: Map<number, HciAdapter> = new Map();
 
-	public async init() {
-		// NO-OP
-	}
-
 	public async dispose() {
 		for (const adapter of this.adapters.values()) {
 			adapter.dispose();

@@ -1,17 +1,16 @@
 import { GattServiceRemote } from '../../../../models';
-import { BusObject } from '../../misc';
 
 import { DbusGattCharacteristicRemote } from './Characteristic';
 import { DbusGattRemote } from './Gatt';
 
 export class DbusGattServiceRemote extends GattServiceRemote {
-	public readonly busObject: BusObject;
+	public readonly path: string;
 
 	public characteristics: Map<string, DbusGattCharacteristicRemote> = new Map();
 
-	public constructor(gatt: DbusGattRemote, uuid: string, busObject: BusObject) {
+	public constructor(gatt: DbusGattRemote, path: string, uuid: string) {
 		super(gatt, uuid);
 
-		this.busObject = busObject;
+		this.path = path;
 	}
 }

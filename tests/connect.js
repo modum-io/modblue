@@ -25,12 +25,9 @@ const main = async () => {
 	console.log('Initializing noble...');
 
 	const noble = BINDINGS === 'hci' ? new HciNoble() : BINDINGS === 'dbus' ? new DbusNoble() : null;
-
 	if (!noble) {
 		throw new Error(`Could not find requested bindings ${BINDINGS}`);
 	}
-
-	await noble.init();
 
 	console.log('Getting adapters...');
 
@@ -84,9 +81,13 @@ const main = async () => {
 
 			await peripheral.connect();
 
-			console.log(`Connected (mtu: ${peripheral.mtu}), discovering services...`);
+			console.log(`Connected, setting up gatt...`);
 
-			const services = await peripheral.discoverServices();
+			const gatt = await peripheral.setupGatt();
+
+			console.log(`Setup (mtu: ${gatt.mtu}), discovering services...`);
+
+			const services = await gatt.discoverServices();
 			const service = services.find((s) => s.uuid === SERVICE_UUID);
 			if (!service) {
 				throw new Error(`Could not find service with UUID ${SERVICE_UUID}.\n${services.map((s) => s.uuid).join(', ')}`);

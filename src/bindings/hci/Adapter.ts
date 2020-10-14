@@ -1,6 +1,7 @@
-import { Adapter } from '../../models';
+import { Adapter, Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
+import { HciGattLocal } from './gatt';
 import { Gap, Hci } from './misc';
 import { HciPeripheral } from './Peripheral';
 
@@ -19,6 +20,7 @@ export class HciAdapter extends Adapter {
 
 	private hci: Hci;
 	private gap: Gap;
+	private gatt: HciGattLocal;
 
 	private peripherals: Map<string, HciPeripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
@@ -27,7 +29,7 @@ export class HciAdapter extends Adapter {
 	private connectionRequest: ConnectRequest;
 	private connectionRequestQueue: ConnectRequest[] = [];
 
-	public async getScannedPeripherals(): Promise<HciPeripheral[]> {
+	public async getScannedPeripherals(): Promise<Peripheral[]> {
 		return [...this.peripherals.values()];
 	}
 
@@ -52,6 +54,8 @@ export class HciAdapter extends Adapter {
 		this.gap.on('discover', this.onDiscover);
 		this.gap.on('advertisingStart', this.onAdvertisingStart);
 		this.gap.on('advertisingStop', this.onAdvertisingStop);
+
+		this.gatt = new HciGattLocal(this);
 
 		await this.hci.init();
 	}
@@ -141,10 +145,9 @@ export class HciAdapter extends Adapter {
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new HciPeripheral(this, uuid, address, addressType, connectable, advertisement, rssi);
+			peripheral = new HciPeripheral(this, uuid, address, addressType, advertisement, rssi);
 			this.peripherals.set(uuid, peripheral);
 		} else {
-			peripheral.connectable = connectable;
 			peripheral.advertisement = advertisement;
 			peripheral.rssi = rssi;
 		}
@@ -304,7 +307,7 @@ export class HciAdapter extends Adapter {
 		});
 	}
 
-	public async startAdvertising(name: string, serviceUUIDs?: string[]): Promise<void> {
+	public async startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void> {
 		await this.init();
 
 		if (this.advertising) {
@@ -320,7 +323,7 @@ export class HciAdapter extends Adapter {
 
 			this.gap.on('advertisingStart', done);
 
-			this.gap.startAdvertising(name, serviceUUIDs || []);
+			this.gap.startAdvertising(this.gatt.deviceName, serviceUUIDs || []);
 		});
 	}
 	private onAdvertisingStart = () => {

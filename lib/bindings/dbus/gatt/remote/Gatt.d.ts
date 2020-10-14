@@ -1,12 +1,11 @@
 /// <reference types="node" />
-import { GattCharacteristicRemote, GattDescriptorRemote, GattRemote, Peripheral } from '../../../../models';
-import { BusObject } from '../../misc';
+import { GattCharacteristicRemote, GattDescriptorRemote, GattRemote } from '../../../../models';
+import { DbusPeripheral } from '../../Peripheral';
 import { DbusGattServiceRemote } from './Service';
 export declare class DbusGattRemote extends GattRemote {
-    busObject: BusObject;
+    peripheral: DbusPeripheral;
     services: Map<string, DbusGattServiceRemote>;
-    constructor(peripheral: Peripheral, busObject: BusObject);
-    private prop;
+    constructor(peripheral: DbusPeripheral);
     protected doDiscoverServices(): Promise<DbusGattServiceRemote[]>;
     discoverCharacteristics(serviceUUID: string): Promise<GattCharacteristicRemote[]>;
     read(serviceUUID: string, characteristicUUID: string): Promise<Buffer>;
