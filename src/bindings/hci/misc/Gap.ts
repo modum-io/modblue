@@ -127,8 +127,8 @@ export class Gap extends EventEmitter {
 			advertisementDataLength += 2 + 16 * serviceUuids128bit.length;
 		}
 
-		const advertisementData = new Buffer(advertisementDataLength);
-		const scanData = new Buffer(scanDataLength);
+		const advertisementData = Buffer.alloc(advertisementDataLength);
+		const scanData = Buffer.alloc(scanDataLength);
 
 		// flags
 		advertisementData.writeUInt8(2, 0);
@@ -166,6 +166,8 @@ export class Gap extends EventEmitter {
 		// name
 		if (name && name.length) {
 			const nameBuffer = Buffer.from(name);
+
+			console.log(name);
 
 			scanData.writeUInt8(1 + nameBuffer.length, 0);
 			scanData.writeUInt8(0x08, 1);
