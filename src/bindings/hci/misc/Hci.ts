@@ -183,11 +183,14 @@ export class Hci extends EventEmitter {
 
 		this.pollTimer = setInterval(() => this.pollIsDevUp(), 1000);
 
-		return new Promise<void>((resolve) => {
+		return new Promise<void>((resolve, reject) => {
 			const onReady = (state: string) => {
+				this.off('stateChange', onReady);
+
 				if (state === 'poweredOn') {
-					this.off('stateChange', onReady);
 					resolve();
+				} else {
+					reject(new Error(`Invalid hci state: ${state}`));
 				}
 			};
 
