@@ -228,48 +228,48 @@ export class HciAdapter extends Adapter {
 		supervisionTimeout: number,
 		masterClockAccuracy: number
 	) => {
-		if (role !== 0) {
-			// not master, ignore
-			console.log(`Ignoring connection to ${address} because we're not master`);
-			return;
-		}
+		if (role === 0) {
+			// Master - we scanned & initiated the connection
+			const uuid = address.toUpperCase();
 
-		const uuid = address.toUpperCase();
-
-		const peripheral = this.peripherals.get(uuid);
-		if (!peripheral) {
-			console.log(`Unknown peripheral ${address} connected`);
-			return;
-		}
-
-		const request = this.connectionRequest;
-		if (!request) {
-			console.log(`Peripheral ${address} connected, but we have no pending connection request`);
-			return;
-		}
-		if (request.peripheral !== peripheral) {
-			console.log(`Peripheral ${address} connected, but we requested ${request.peripheral.address}`);
-			return;
-		}
-
-		if (status === 0) {
-			this.uuidToHandle.set(uuid, handle);
-			this.handleToUUID.set(handle, uuid);
-
-			await peripheral.onConnect(this.hci, handle);
-
-			if (!request.isDone) {
-				request.resolve();
+			const peripheral = this.peripherals.get(uuid);
+			if (!peripheral) {
+				console.log(`Unknown peripheral ${address} connected`);
+				return;
 			}
-		} else {
-			const statusMessage = (Hci.STATUS_MAPPER[status] || 'HCI Error: Unknown') + ` (0x${status.toString(16)})`;
-			if (!request.isDone) {
-				request.reject(new Error(statusMessage));
-			}
-		}
 
-		this.connectionRequest = null;
-		this.processConnectionRequests();
+			const request = this.connectionRequest;
+			if (!request) {
+				console.log(`Peripheral ${address} connected, but we have no pending connection request`);
+				return;
+			}
+			if (request.peripheral !== peripheral) {
+				console.log(`Peripheral ${address} connected, but we requested ${request.peripheral.address}`);
+				return;
+			}
+
+			if (status === 0) {
+				this.uuidToHandle.set(uuid, handle);
+				this.handleToUUID.set(handle, uuid);
+
+				await peripheral.onConnect(this.hci, handle);
+
+				if (!request.isDone) {
+					request.resolve();
+				}
+			} else {
+				const statusMessage = (Hci.STATUS_MAPPER[status] || 'HCI Error: Unknown') + ` (0x${status.toString(16)})`;
+				if (!request.isDone) {
+					request.reject(new Error(statusMessage));
+				}
+			}
+
+			this.connectionRequest = null;
+			this.processConnectionRequests();
+		} else if (role === 1) {
+			// Slave - we're accepting an incoming connection
+			console.log(`Incoming connection from ${address}`);
+		}
 	};
 
 	private processConnectionRequests() {
@@ -313,6 +313,8 @@ export class HciAdapter extends Adapter {
 		if (this.advertising) {
 			return;
 		}
+
+		this.gatt.setData(deviceName, []);
 
 		return new Promise<void>((resolve) => {
 			const done = () => {
