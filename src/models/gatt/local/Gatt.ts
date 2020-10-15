@@ -108,6 +108,13 @@ export abstract class GattLocal extends Gatt {
 			const newService = new GattServiceLocal(this, service.uuid, newChars);
 
 			const serviceStartHandle = handle++;
+			const serviceHandle: ServiceHandle = {
+				type: 'service',
+				start: serviceStartHandle,
+				end: 0, // Determined below
+				object: newService
+			};
+			handles.set(serviceStartHandle, serviceHandle);
 
 			for (const char of service.characteristics) {
 				const newDescriptors: GattDescriptorLocal[] = [];
@@ -143,13 +150,8 @@ export abstract class GattLocal extends Gatt {
 				newChars.push(newChar);
 			}
 
-			const serviceEndHandle = handle;
-			handles.set(serviceStartHandle, {
-				type: 'service',
-				start: serviceStartHandle,
-				end: serviceEndHandle,
-				object: newService
-			});
+			// Set end handle
+			serviceHandle.end = handle;
 		}
 
 		console.log(handles);
