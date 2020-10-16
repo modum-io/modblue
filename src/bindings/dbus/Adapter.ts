@@ -1,6 +1,6 @@
 import { ClientInterface } from 'dbus-next';
 
-import { Adapter, Peripheral } from '../../models';
+import { Adapter, GattLocal, Peripheral } from '../../models';
 
 import { buildTypedValue, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE, I_OBJECT_MANAGER, I_PROPERTIES } from './misc';
 import { DbusNoble } from './Noble';
@@ -180,6 +180,10 @@ export class DbusAdapter extends Adapter {
 		throw new Error('Method not implemented.');
 	}
 	public async stopAdvertising(): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+
+	public setupGatt(maxMtu?: number): Promise<GattLocal> {
 		throw new Error('Method not implemented.');
 	}
 }

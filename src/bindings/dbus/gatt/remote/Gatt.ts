@@ -1,4 +1,9 @@
-import { GattCharacteristicRemote, GattDescriptorRemote, GattRemote } from '../../../../models';
+import {
+	GattCharacteristicProperty,
+	GattCharacteristicRemote,
+	GattDescriptorRemote,
+	GattRemote
+} from '../../../../models';
 import {
 	buildTypedValue,
 	I_BLUEZ_CHARACTERISTIC,
@@ -117,8 +122,15 @@ export class DbusGattRemote extends GattRemote {
 			}
 
 			const uuid = charObj.UUID.value.replace(/\-/g, '');
-			const properties = charObj.Flags.value;
-			const characteristic = new DbusGattCharacteristicRemote(service, charPath, uuid, properties);
+			const properties = (charObj.Flags.value as string[]).filter((p) => !p.startsWith('secure-'));
+			const secure = properties.filter((p) => p.startsWith('encrypt')).map((p) => p.replace('encrypt-', ''));
+			const characteristic = new DbusGattCharacteristicRemote(
+				service,
+				charPath,
+				uuid,
+				properties as GattCharacteristicProperty[],
+				secure as GattCharacteristicProperty[]
+			);
 			characteristics.push(characteristic);
 		}
 

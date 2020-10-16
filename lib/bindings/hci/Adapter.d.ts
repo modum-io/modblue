@@ -1,4 +1,4 @@
-import { Adapter, Peripheral } from '../../models';
+import { Adapter, GattLocal, Peripheral } from '../../models';
 import { HciPeripheral } from './Peripheral';
 export declare class HciAdapter extends Adapter {
     private initialized;
@@ -8,6 +8,7 @@ export declare class HciAdapter extends Adapter {
     private hci;
     private gap;
     private gatt;
+    private deviceName;
     private peripherals;
     private uuidToHandle;
     private handleToUUID;
@@ -30,4 +31,5 @@ export declare class HciAdapter extends Adapter {
     private onAdvertisingStart;
     stopAdvertising(): Promise<void>;
     private onAdvertisingStop;
+    setupGatt(maxMtu?: number): Promise<GattLocal>;
 }

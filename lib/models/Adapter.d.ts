@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
+import { GattLocal } from './gatt';
 import { Noble } from './Noble';
 import { Peripheral } from './Peripheral';
 export declare interface Adapter {
@@ -21,4 +22,5 @@ export declare abstract class Adapter extends EventEmitter {
     abstract getScannedPeripherals(): Promise<Peripheral[]>;
     abstract startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
     abstract stopAdvertising(): Promise<void>;
+    abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
 }

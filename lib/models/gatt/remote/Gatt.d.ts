@@ -6,7 +6,9 @@ import { GattDescriptorRemote } from './Descriptor';
 import { GattServiceRemote } from './Service';
 export declare abstract class GattRemote extends Gatt {
     readonly peripheral: Peripheral;
-    services: Map<string, GattServiceRemote>;
+    readonly services: Map<string, GattServiceRemote>;
+    protected _mtu: number;
+    get mtu(): number;
     constructor(peripheral: Peripheral);
     toString(): string;
     discoverServices(): Promise<GattServiceRemote[]>;

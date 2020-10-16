@@ -2,7 +2,7 @@
 import { Adapter } from '../../Adapter';
 import { GattCharacteristicProperty } from '../Characteristic';
 import { Gatt } from '../Gatt';
-import { GattCharacteristicLocal } from './Characteristic';
+import { GattCharacteristicLocal, ReadFunction, WriteFunction } from './Characteristic';
 import { GattDescriptorLocal } from './Descriptor';
 import { GattServiceLocal } from './Service';
 interface ServiceHandle {
@@ -14,6 +14,7 @@ interface ServiceHandle {
 interface CharacteristicHandle {
     type: 'characteristic' | 'characteristicValue';
     start: number;
+    value: number;
     object: GattCharacteristicLocal;
 }
 interface DescriptorHandle {
@@ -29,7 +30,10 @@ export interface GattServiceInput {
 export interface GattCharacteristicInput {
     uuid: string;
     properties: GattCharacteristicProperty[];
+    secure: GattCharacteristicProperty[];
     value?: Buffer;
+    onRead?: ReadFunction;
+    onWrite?: WriteFunction;
     descriptors?: GattDescriptorInput[];
 }
 export interface GattDescriptorInput {
@@ -38,10 +42,14 @@ export interface GattDescriptorInput {
 }
 export declare abstract class GattLocal extends Gatt {
     readonly adapter: Adapter;
-    protected handles: Map<number, Handle>;
+    protected handles: Handle[];
+    protected _maxMtu: number;
+    get maxMtu(): number;
     protected _deviceName: string;
     get deviceName(): string;
-    constructor(adapter: Adapter);
+    _serviceInputs: GattServiceInput[];
+    get serviceInputs(): GattServiceInput[];
+    constructor(adapter: Adapter, maxMtu?: number);
     toString(): string;
     setData(deviceName: string, services: GattServiceInput[]): void;
 }

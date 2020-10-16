@@ -18,7 +18,7 @@ export class HciNoble extends Noble {
 		for (const rawAdapter of adapters) {
 			let adapter = this.adapters.get(rawAdapter.devId);
 			if (!adapter) {
-				adapter = new HciAdapter(this, `${rawAdapter.devId}`);
+				adapter = new HciAdapter(this, `hci${rawAdapter.devId}`, rawAdapter.name, rawAdapter.address?.toUpperCase());
 				this.adapters.set(rawAdapter.devId, adapter);
 			}
 		}

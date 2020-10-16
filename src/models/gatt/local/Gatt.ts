@@ -2,7 +2,7 @@ import { Adapter } from '../../Adapter';
 import { GattCharacteristicProperty } from '../Characteristic';
 import { Gatt } from '../Gatt';
 
-import { GattCharacteristicLocal } from './Characteristic';
+import { GattCharacteristicLocal, ReadFunction, WriteFunction } from './Characteristic';
 import { GattDescriptorLocal } from './Descriptor';
 import { GattServiceLocal } from './Service';
 
@@ -15,6 +15,7 @@ interface ServiceHandle {
 interface CharacteristicHandle {
 	type: 'characteristic' | 'characteristicValue';
 	start: number;
+	value: number;
 	object: GattCharacteristicLocal;
 }
 interface DescriptorHandle {
@@ -33,7 +34,10 @@ export interface GattServiceInput {
 export interface GattCharacteristicInput {
 	uuid: string;
 	properties: GattCharacteristicProperty[];
+	secure: GattCharacteristicProperty[];
 	value?: Buffer;
+	onRead?: ReadFunction;
+	onWrite?: WriteFunction;
 	descriptors?: GattDescriptorInput[];
 }
 
@@ -45,32 +49,43 @@ export interface GattDescriptorInput {
 export abstract class GattLocal extends Gatt {
 	public readonly adapter: Adapter;
 
-	protected handles: Map<number, Handle>;
+	protected handles: Handle[];
+
+	protected _maxMtu: number;
+	public get maxMtu() {
+		return this._maxMtu;
+	}
 
 	protected _deviceName: string;
 	public get deviceName() {
 		return this._deviceName;
 	}
 
-	public constructor(adapter: Adapter) {
+	public _serviceInputs: GattServiceInput[];
+	public get serviceInputs() {
+		return this._serviceInputs;
+	}
+
+	public constructor(adapter: Adapter, maxMtu: number = 256) {
 		super();
 
 		this.adapter = adapter;
-
-		this.handles = new Map();
+		this._maxMtu = maxMtu;
+		this.handles = [];
 	}
 
 	public toString() {
 		return JSON.stringify({
-			mtu: this.mtu,
+			mtu: this.maxMtu,
 			adapterId: this.adapter.id
 		});
 	}
 
 	public setData(deviceName: string, services: GattServiceInput[]): void {
-		const handles: Map<number, Handle> = new Map();
+		const handles: Handle[] = [];
 
 		this._deviceName = deviceName;
+		this._serviceInputs = services;
 
 		const baseServices: GattServiceInput[] = [
 			{
@@ -79,11 +94,13 @@ export abstract class GattLocal extends Gatt {
 					{
 						uuid: '2a00',
 						properties: ['read'],
+						secure: [],
 						value: Buffer.from(deviceName)
 					},
 					{
 						uuid: '2a01',
 						properties: ['read'],
+						secure: [],
 						value: Buffer.from([0x80, 0x00])
 					}
 				]
@@ -94,6 +111,7 @@ export abstract class GattLocal extends Gatt {
 					{
 						uuid: '2a05',
 						properties: ['indicate'],
+						secure: [],
 						value: Buffer.from([0x00, 0x00, 0x00, 0x00])
 					}
 				]
@@ -114,34 +132,64 @@ export abstract class GattLocal extends Gatt {
 				end: 0, // Determined below
 				object: newService
 			};
-			handles.set(serviceStartHandle, serviceHandle);
+			handles[serviceStartHandle] = serviceHandle;
 
 			for (const char of service.characteristics) {
 				const newDescriptors: GattDescriptorLocal[] = [];
-				const newChar = new GattCharacteristicLocal(newService, char.uuid, char.properties, newDescriptors);
+
+				if (char.properties.includes('read') && !char.value && !char.onRead) {
+					throw new Error(
+						`Characteristic ${char.uuid} has the 'read' property and needs either a value or an 'onRead' function`
+					);
+				}
+
+				const onRead: ReadFunction = char.onRead
+					? char.onRead
+					: async (offset: number) => [0, char.value.slice(offset)];
+
+				if (
+					(char.properties.includes('write') || char.properties.includes('write-without-response')) &&
+					!char.onWrite
+				) {
+					throw new Error(
+						`Characteristic ${char.uuid} has the 'write' or 'write-without-response' property and needs an 'onWrite' function`
+					);
+				}
+
+				const onWrite: WriteFunction = char.onWrite;
+
+				const newChar = new GattCharacteristicLocal(
+					newService,
+					char.uuid,
+					char.properties,
+					char.secure,
+					onRead,
+					onWrite,
+					newDescriptors
+				);
 
 				const charStartHandle = handle++;
-				handles.set(charStartHandle, {
+				const charValueHandle = handle++;
+
+				handles[charStartHandle] = {
 					type: 'characteristic',
 					start: charStartHandle,
+					value: charValueHandle,
 					object: newChar
-				});
-
-				if (char.value) {
-					const charValueHandle = handle++;
-					handles.set(charValueHandle, {
-						type: 'characteristicValue',
-						start: charValueHandle,
-						object: newChar
-					});
-				}
+				};
+				handles[charValueHandle] = {
+					type: 'characteristicValue',
+					start: charStartHandle,
+					value: charValueHandle,
+					object: newChar
+				};
 
 				if (char.descriptors) {
 					for (const descr of char.descriptors) {
 						const newDescr = new GattDescriptorLocal(newChar, descr.uuid, descr.value);
 
 						const descrHandle = handle++;
-						handles.set(descrHandle, { type: 'descriptor', value: descrHandle, object: newDescr });
+						handles[descrHandle] = { type: 'descriptor', value: descrHandle, object: newDescr };
 
 						newDescriptors.push(newDescr);
 					}
@@ -151,10 +199,8 @@ export abstract class GattLocal extends Gatt {
 			}
 
 			// Set end handle
-			serviceHandle.end = handle;
+			serviceHandle.end = handle - 1;
 		}
-
-		console.log(handles);
 
 		this.handles = handles;
 	}

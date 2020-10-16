@@ -1,4 +1,4 @@
-import { GattCharacteristicProperty, GattCharacteristicRemote } from '../../../../models';
+import { GattCharacteristicRemote } from '../../../../models';
 import { HciGattDescriptorRemote } from './Descriptor';
 import { HciGattServiceRemote } from './Service';
 export declare class HciGattCharacteristicRemote extends GattCharacteristicRemote {
@@ -7,5 +7,5 @@ export declare class HciGattCharacteristicRemote extends GattCharacteristicRemot
     readonly valueHandle: number;
     endHandle: number;
     descriptors: Map<string, HciGattDescriptorRemote>;
-    constructor(service: HciGattServiceRemote, uuid: string, properties: GattCharacteristicProperty[], startHandle: number, valueHandle: number);
+    constructor(service: HciGattServiceRemote, uuid: string, propertiesFlag: number, secureFlag: number, startHandle: number, valueHandle: number);
 }

@@ -1,4 +1,4 @@
-import { Adapter, Peripheral } from '../../models';
+import { Adapter, GattLocal, Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
 import { HciGattLocal } from './gatt';
@@ -22,6 +22,7 @@ export class HciAdapter extends Adapter {
 	private gap: Gap;
 	private gatt: HciGattLocal;
 
+	private deviceName: string = this.id;
 	private peripherals: Map<string, HciPeripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
@@ -44,7 +45,12 @@ export class HciAdapter extends Adapter {
 
 		this.initialized = true;
 
-		this.hci = new Hci(Number(this.id));
+		const id = Number(this.id.replace('hci', ''));
+		if (!isFinite(id)) {
+			throw new Error(`Invalid adapter id ${this.id}`);
+		}
+
+		this.hci = new Hci(Number(id));
 		this.hci.on('addressChange', (addr) => (this._address = addr));
 		this.hci.on('leConnComplete', this.onLeConnComplete);
 
@@ -54,8 +60,6 @@ export class HciAdapter extends Adapter {
 		this.gap.on('discover', this.onDiscover);
 		this.gap.on('advertisingStart', this.onAdvertisingStart);
 		this.gap.on('advertisingStop', this.onAdvertisingStop);
-
-		this.gatt = new HciGattLocal(this);
 
 		await this.hci.init();
 	}
@@ -314,7 +318,10 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		this.gatt.setData(deviceName, []);
+		this.deviceName = deviceName;
+		if (this.gatt) {
+			this.gatt.setData(this.deviceName, this.gatt.serviceInputs);
+		}
 
 		return new Promise<void>((resolve) => {
 			const done = () => {
@@ -325,7 +332,7 @@ export class HciAdapter extends Adapter {
 
 			this.gap.on('advertisingStart', done);
 
-			this.gap.startAdvertising(this.gatt.deviceName, serviceUUIDs || []);
+			this.gap.startAdvertising(this.deviceName, serviceUUIDs || []);
 		});
 	}
 	private onAdvertisingStart = () => {
@@ -352,4 +359,12 @@ export class HciAdapter extends Adapter {
 	private onAdvertisingStop = () => {
 		this.advertising = false;
 	};
+
+	public async setupGatt(maxMtu?: number): Promise<GattLocal> {
+		await this.init();
+
+		this.gatt = new HciGattLocal(this, this.hci, maxMtu);
+		this.gatt.setData(this.deviceName, []);
+		return this.gatt;
+	}
 }

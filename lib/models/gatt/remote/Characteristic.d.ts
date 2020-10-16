@@ -5,7 +5,7 @@ import { GattServiceRemote } from './Service';
 export declare class GattCharacteristicRemote extends GattCharacteristic {
     readonly service: GattServiceRemote;
     protected get gatt(): import("./Gatt").GattRemote;
-    descriptors: Map<string, GattDescriptorRemote>;
+    readonly descriptors: Map<string, GattDescriptorRemote>;
     read(): Promise<Buffer>;
     write(data: Buffer, withoutResponse: boolean): Promise<void>;
     broadcast(broadcast: boolean): Promise<void>;

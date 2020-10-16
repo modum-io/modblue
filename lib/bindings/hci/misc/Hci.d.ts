@@ -4,6 +4,11 @@ import { AddressType } from '../../../types';
 interface HciDevice {
     devId: number;
     devUp: boolean;
+    idVendor: null;
+    idProduct: null;
+    busNumber: null;
+    name: string;
+    address: string;
 }
 export declare interface Hci {
     on(event: 'stateChange', listener: (state: string) => void): this;

@@ -9,7 +9,7 @@ export class GattCharacteristicRemote extends GattCharacteristic {
 		return this.service.gatt;
 	}
 
-	public descriptors: Map<string, GattDescriptorRemote> = new Map();
+	public readonly descriptors: Map<string, GattDescriptorRemote> = new Map();
 
 	public async read(): Promise<Buffer> {
 		return this.gatt.read(this.service.uuid, this.uuid);

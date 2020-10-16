@@ -91,6 +91,11 @@ const HCI_OE_USER_ENDED_CONNECTION = 0x13;
 interface HciDevice {
 	devId: number;
 	devUp: boolean;
+	idVendor: null;
+	idProduct: null;
+	busNumber: null;
+	name: string;
+	address: string;
 }
 
 interface HandleBuffer {

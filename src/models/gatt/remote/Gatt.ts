@@ -8,7 +8,12 @@ import { GattServiceRemote } from './Service';
 export abstract class GattRemote extends Gatt {
 	public readonly peripheral: Peripheral;
 
-	public services: Map<string, GattServiceRemote> = new Map();
+	public readonly services: Map<string, GattServiceRemote> = new Map();
+
+	protected _mtu: number;
+	public get mtu() {
+		return this._mtu;
+	}
 
 	public constructor(peripheral: Peripheral) {
 		super();

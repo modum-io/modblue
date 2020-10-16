@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 
+import { GattLocal } from './gatt';
 import { Noble } from './Noble';
 import { Peripheral } from './Peripheral';
 
@@ -50,4 +51,6 @@ export abstract class Adapter extends EventEmitter {
 
 	public abstract async startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
 	public abstract async stopAdvertising(): Promise<void>;
+
+	public abstract async setupGatt(maxMtu?: number): Promise<GattLocal>;
 }

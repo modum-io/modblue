@@ -35,6 +35,23 @@ const main = async () => {
 	const adapter = adapters[0];
 	console.log(`Using adapter ${adapter.id}`);
 
+	const gatt = await adapter.setupGatt();
+	gatt.setData(NAME, [
+		{
+			uuid: '48ee0000bf49460ca3d77ec7a512a4cd',
+			characteristics: [
+				{
+					uuid: '48ee0001bf49460ca3d77ec7a512a4cd',
+					properties: ['read', 'write', 'write-without-response'],
+					secure: [],
+					descriptors: [],
+					value: Buffer.from('1337'),
+					onWrite: (offset, data, withoutResponse) => console.log('writing', offset, data, withoutResponse)
+				}
+			]
+		}
+	]);
+
 	console.log('Starting advertisement...');
 
 	await adapter.startAdvertising(NAME);

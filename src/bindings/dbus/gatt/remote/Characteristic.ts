@@ -9,9 +9,10 @@ export class DbusGattCharacteristicRemote extends GattCharacteristicRemote {
 		service: DbusGattServiceRemote,
 		path: string,
 		uuid: string,
-		properties: GattCharacteristicProperty[]
+		properties: GattCharacteristicProperty[],
+		secure: GattCharacteristicProperty[]
 	) {
-		super(service, uuid, properties);
+		super(service, uuid, properties, secure);
 
 		this.path = path;
 	}

@@ -15,11 +15,12 @@ export class HciGattCharacteristicRemote extends GattCharacteristicRemote {
 	public constructor(
 		service: HciGattServiceRemote,
 		uuid: string,
-		properties: GattCharacteristicProperty[],
+		propertiesFlag: number,
+		secureFlag: number,
 		startHandle: number,
 		valueHandle: number
 	) {
-		super(service, uuid, properties);
+		super(service, uuid, propertiesFlag, secureFlag);
 
 		this.startHandle = startHandle;
 		this.valueHandle = valueHandle;

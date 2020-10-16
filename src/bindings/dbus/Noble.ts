@@ -38,7 +38,7 @@ export class DbusNoble extends Noble {
 
 			let adapter = this.adapters.get(adapterPath);
 			if (!adapter) {
-				adapter = new DbusAdapter(this, adapterPath, adapterObj.Name, adapterObj.Address);
+				adapter = new DbusAdapter(this, adapterPath, adapterObj.Name.value, adapterObj.Address.value);
 				this.adapters.set(adapterPath, adapter);
 			}
 		}

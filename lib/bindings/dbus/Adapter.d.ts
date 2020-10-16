@@ -1,4 +1,4 @@
-import { Adapter, Peripheral } from '../../models';
+import { Adapter, GattLocal, Peripheral } from '../../models';
 import { DbusNoble } from './Noble';
 export declare class DbusAdapter extends Adapter {
     noble: DbusNoble;
@@ -24,4 +24,5 @@ export declare class DbusAdapter extends Adapter {
     private updatePeripherals;
     startAdvertising(): Promise<void>;
     stopAdvertising(): Promise<void>;
+    setupGatt(maxMtu?: number): Promise<GattLocal>;
 }
