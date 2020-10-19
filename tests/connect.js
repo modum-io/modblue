@@ -11,7 +11,7 @@ Arguments:
 `;
 
 const BINDINGS = process.argv[2];
-const PERIPHERAL_ADDRESSES = (process.argv[3] || '').split('|');
+const PERIPHERAL_ADDRESSES = (process.argv[3] || '').split(/[,|;]/g);
 const SERVICE_UUID = process.argv[4];
 const CHAR_UUID = process.argv[5];
 
@@ -54,10 +54,9 @@ const main = async () => {
 
 	const peripherals = await adapter.getScannedPeripherals();
 
-	if (PERIPHERAL_ADDRESSES.some((address) => !peripherals.some((p) => p.address === address))) {
-		throw new Error(
-			`Could not find all requested test peripherals after scanning.\n${peripherals.map((p) => p.address)}`
-		);
+	const missing = PERIPHERAL_ADDRESSES.filter((address) => !peripherals.some((p) => p.address === address));
+	if (missing.length > 0) {
+		throw new Error(`Could not find all requested test peripherals after scanning.\nMissing: ${missing}`);
 	}
 
 	console.time('Connect');
@@ -107,7 +106,7 @@ const main = async () => {
 
 			const data = await char.read();
 
-			console.log(data);
+			console.log(`Data: ${data.toString(`hex`)}`);
 
 			console.log('Disconnecting...');
 

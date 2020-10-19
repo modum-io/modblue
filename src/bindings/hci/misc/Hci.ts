@@ -641,8 +641,9 @@ export class Hci extends EventEmitter {
 				this.processLeMetaEvent(leMetaEventType, leMetaEventStatus, leMetaEventData);
 			}
 		} else if (eventType === HCI_ACLDATA_PKT) {
-			const flags = data.readUInt16LE(1) >> 12;
-			handle = data.readUInt16LE(1) & 0x0fff;
+			const flagsAndHandle = data.readUInt16LE(1);
+			const flags = flagsAndHandle >> 12;
+			handle = flagsAndHandle & 0x0fff;
 
 			if (flags === ACL_START) {
 				const cid = data.readUInt16LE(7);

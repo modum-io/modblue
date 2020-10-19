@@ -151,11 +151,9 @@ export class DbusGattRemote extends GattRemote {
 		const obj = await this.peripheral.adapter.noble.dbus.getProxyObject('org.bluez', characteristic.path);
 		const iface = obj.getInterface(I_BLUEZ_CHARACTERISTIC);
 
-		const payload = await iface.ReadValue({
+		return iface.ReadValue({
 			offset: buildTypedValue('uint16', 0)
 		});
-		console.log(payload);
-		return Buffer.from(payload);
 	}
 	public async write(
 		serviceUUID: string,

@@ -40,6 +40,20 @@ export class DbusAdapter extends Adapter {
 
 		const objManager = await this.noble.dbus.getProxyObject(`org.bluez`, '/');
 		this.objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
+		this.objManagerIface.on('InterfacesAdded', (path: string, data: any) => {
+			if (!path.startsWith(`${this.path}/`)) {
+				return;
+			}
+
+			const deviceObj = data[I_BLUEZ_DEVICE];
+			if (!deviceObj) {
+				return;
+			}
+
+			if (this.scanning) {
+				this.onDeviceFound(path, deviceObj);
+			}
+		});
 
 		const obj = await this.noble.dbus.getProxyObject(`org.bluez`, this.path);
 		this.adapterIface = obj.getInterface(I_BLUEZ_ADAPTER);
@@ -80,19 +94,6 @@ export class DbusAdapter extends Adapter {
 		if (this.scanning) {
 			return;
 		}
-
-		this.objManagerIface.on('InterfacesAdded', (path: string, data: any) => {
-			if (!path.startsWith(`${this.path}/`)) {
-				return;
-			}
-
-			const deviceObj = data[I_BLUEZ_DEVICE];
-			if (!deviceObj) {
-				return;
-			}
-
-			this.onDeviceFound(path, deviceObj);
-		});
 
 		const scanning = await this.prop<boolean>(I_BLUEZ_ADAPTER, 'Discovering');
 		if (!scanning) {

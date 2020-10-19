@@ -6,6 +6,7 @@ export declare class HciPeripheral extends Peripheral {
     adapter: HciAdapter;
     private hci;
     private gatt;
+    private mtuExchanged;
     private handle;
     private signaling;
     connect(): Promise<void>;
