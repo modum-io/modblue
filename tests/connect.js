@@ -56,7 +56,9 @@ const main = async () => {
 
 	const missing = PERIPHERAL_ADDRESSES.filter((address) => !peripherals.some((p) => p.address === address));
 	if (missing.length > 0) {
-		throw new Error(`Could not find all requested test peripherals after scanning.\nMissing: ${missing}`);
+		throw new Error(
+			`Could not find peripherals.\nAvailable: ${peripherals.map((p) => p.address)}\nMissing: ${missing}`
+		);
 	}
 
 	console.time('Connect');
@@ -71,9 +73,7 @@ const main = async () => {
 		try {
 			const peripheral = peripherals.find((p) => p.address === targetAddress);
 			if (!peripheral) {
-				throw new Error(
-					`Could not find peripheral with address ${targetAddress}.\n${peripherals.map((p) => p.address).join(', ')}`
-				);
+				throw new Error(`Could not find peripheral with address ${targetAddress}`);
 			}
 
 			console.log(`Connecting ${total}...`);

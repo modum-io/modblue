@@ -232,6 +232,18 @@ export class HciAdapter extends Adapter {
 		supervisionTimeout: number,
 		masterClockAccuracy: number
 	) => {
+		console.log(
+			'<- connection complete',
+			status,
+			handle,
+			role,
+			address,
+			interval,
+			latency,
+			supervisionTimeout,
+			masterClockAccuracy
+		);
+
 		if (role === 0) {
 			// Master - we scanned & initiated the connection
 			const uuid = address.toUpperCase();
