@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 import os from 'os';
 
 import { Hci } from './hci';
@@ -8,20 +7,11 @@ const CONNECTION_PARAMETER_UPDATE_RESPONSE = 0x13;
 
 const SIGNALING_CID = 0x0005;
 
-export declare interface Signaling {
-	on(
-		event: 'connectionParameterUpdateRequest',
-		listener: (minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number) => void
-	): this;
-}
-
-export class Signaling extends EventEmitter {
+export class Signaling {
 	private hci: Hci;
 	private handle: number;
 
 	public constructor(hci: Hci, handle: number) {
-		super();
-
 		this.handle = handle;
 		this.hci = hci;
 		this.hci.on('aclDataPkt', this.onAclStreamData);
@@ -64,7 +54,7 @@ export class Signaling extends EventEmitter {
 
 			this.hci.writeAclDataPkt(this.handle, SIGNALING_CID, response);
 
-			this.emit('connectionParameterUpdateRequest', minInterval, maxInterval, latency, supervisionTimeout);
+			this.hci.connUpdateLe(this.handle, minInterval, maxInterval, latency, supervisionTimeout);
 		}
 	}
 }

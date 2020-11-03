@@ -18,8 +18,6 @@ interface Discovery {
 }
 
 export declare interface Gap {
-	on(event: 'scanStart', listener: (filterDuplicates: boolean) => void): this;
-	on(event: 'scanStop', listener: () => void): this;
 	on(
 		event: 'discover',
 		listener: (
@@ -48,79 +46,38 @@ export class Gap extends EventEmitter {
 		this.scanFilterDuplicates = null;
 		this.discoveries = new Map();
 
-		this.hci.on('leScanParametersSet', this.onHciLeScanParametersSet);
-		this.hci.on('leScanEnableSet', this.onHciLeScanEnableSet);
 		this.hci.on('leAdvertisingReport', this.onHciLeAdvertisingReport);
-
-		this.hci.on('leScanEnableSetCmd', this.onLeScanEnableSetCmd);
 	}
 
-	public startScanning(allowDuplicates: boolean) {
+	public async startScanning(allowDuplicates: boolean) {
 		this.scanState = 'starting';
 		this.scanFilterDuplicates = !allowDuplicates;
 
 		// Always set scan parameters before scanning
 		// https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=229737
 		// p106 - p107
-		this.hci.setScanEnabled(false, true);
-		this.hci.setScanParameters();
+		try {
+			await this.hci.setScanEnabled(false, true);
+		} catch {
+			// NO-OP
+		}
+		await this.hci.setScanParameters();
 
 		if (IS_NTC_CHIP) {
 			// work around for Next Thing Co. C.H.I.P, always allow duplicates, to get scan response
 			this.scanFilterDuplicates = false;
 		}
 
-		this.hci.setScanEnabled(true, this.scanFilterDuplicates);
+		await this.hci.setScanEnabled(true, this.scanFilterDuplicates);
+
+		this.scanState = 'started';
 	}
 
-	public stopScanning() {
+	public async stopScanning() {
 		this.scanState = 'stopping';
-		this.hci.setScanEnabled(false, true);
+		await this.hci.setScanEnabled(false, true);
+		this.scanState = 'stopped';
 	}
-
-	private onHciLeScanParametersSet = () => {
-		// NO-OP
-	};
-
-	// Called when receive an event "Command Complete" for "LE Set Scan Enable"
-	private onHciLeScanEnableSet = (status: number) => {
-		// Check the status we got from the command complete function.
-		if (status !== 0) {
-			// If it is non-zero there was an error, and we should not change
-			// our status as a result.
-			return;
-		}
-
-		if (this.scanState === 'starting') {
-			this.scanState = 'started';
-
-			this.emit('scanStart', this.scanFilterDuplicates);
-		} else if (this.scanState === 'stopping') {
-			this.scanState = 'stopped';
-
-			this.emit('scanStop');
-		}
-	};
-
-	// Called when we see the actual command "LE Set Scan Enable"
-	private onLeScanEnableSetCmd = (enable: boolean, filterDuplicates: boolean) => {
-		// Check to see if the new settings differ from what we expect.
-		// If we are scanning, then a change happens if the new command stops
-		// scanning or if duplicate filtering changes.
-		// If we are not scanning, then a change happens if scanning was enabled.
-		if (this.scanState === 'starting' || this.scanState === 'started') {
-			if (!enable) {
-				this.emit('scanStop');
-			} else if (this.scanFilterDuplicates !== filterDuplicates) {
-				this.scanFilterDuplicates = filterDuplicates;
-
-				this.emit('scanStart', this.scanFilterDuplicates);
-			}
-		} else if ((this.scanState === 'stopping' || this.scanState === 'stopped') && enable) {
-			// Someone started scanning on us.
-			this.emit('scanStart', this.scanFilterDuplicates);
-		}
-	};
 
 	private onHciLeAdvertisingReport = (
 		status: number,

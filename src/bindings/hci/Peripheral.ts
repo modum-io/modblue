@@ -26,11 +26,8 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.handle = handle;
 
 		this.hci = hci;
-
 		this.gatt = new Gatt(this.hci, this.handle);
-
 		this.signaling = new Signaling(this.hci, this.handle);
-		this.signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
 
 		const wantedMtu = this.requestedMTU || 256;
 		const mtu = await this.gatt.exchangeMtu(wantedMtu);
@@ -39,26 +36,20 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this._mtu = mtu;
 	}
 
-	private onConnectionParameterUpdateRequest = (
-		minInterval: number,
-		maxInterval: number,
-		latency: number,
-		supervisionTimeout: number
-	) => {
-		this.hci.connUpdateLe(this.handle, minInterval, maxInterval, latency, supervisionTimeout);
-	};
-
-	public async disconnect(): Promise<number> {
+	public async disconnect(): Promise<void> {
 		this._state = 'disconnecting';
-		return this.adapter.disconnect(this);
+		await this.adapter.disconnect(this);
 	}
-	public onDisconnect() {
-		this.gatt.dispose();
-		this.gatt = null;
+	public async onDisconnect() {
+		if (this.gatt) {
+			this.gatt.dispose();
+			this.gatt = null;
+		}
 
-		this.signaling.off('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
-		this.signaling.dispose();
-		this.signaling = null;
+		if (this.signaling) {
+			this.signaling.dispose();
+			this.signaling = null;
+		}
 
 		this.hci = null;
 

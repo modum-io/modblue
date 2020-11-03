@@ -65,7 +65,7 @@ export abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends 
 
 	public abstract async connect(requestMtu?: number): Promise<void>;
 
-	public abstract async disconnect(): Promise<number>;
+	public abstract async disconnect(): Promise<void>;
 
 	public abstract getDiscoveredServices(): BaseService[];
 

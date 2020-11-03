@@ -56,10 +56,10 @@ const main = async () => {
 	console.log('Getting peripherals...');
 
 	const peripherals = await adapter.getScannedPeripherals();
-
-	if (PERIPHERAL_ADDRESSES.some((address) => !peripherals.some((p) => p.address === address))) {
+	const missing = PERIPHERAL_ADDRESSES.filter((address) => !peripherals.some((p) => p.address === address));
+	if (missing.length > 0) {
 		throw new Error(
-			`Could not find all requested test peripherals after scanning.\n${peripherals.map((p) => p.address)}`
+			`Could not find peripherals.\nAvailable: ${peripherals.map((p) => p.address)}\nMissing: ${missing}`
 		);
 	}
 
@@ -74,12 +74,6 @@ const main = async () => {
 
 		try {
 			const peripheral = peripherals.find((p) => p.address === targetAddress);
-			if (!peripheral) {
-				throw new Error(
-					`Could not find peripheral with address ${targetAddress}.\n${peripherals.map((p) => p.address).join(', ')}`
-				);
-			}
-
 			console.log(`Connecting ${total}...`);
 
 			await peripheral.connect();
@@ -89,7 +83,7 @@ const main = async () => {
 			const services = await peripheral.discoverServices();
 			const service = services.find((s) => s.uuid === SERVICE_UUID);
 			if (!service) {
-				throw new Error(`Could not find service with UUID ${SERVICE_UUID}.\n${services.map((s) => s.uuid).join(', ')}`);
+				throw new Error(`Missing service ${SERVICE_UUID}.\nAvailable: ${services.map((s) => s.uuid).join(', ')}`);
 			}
 
 			console.log('Discovering characteristics...');
@@ -97,9 +91,7 @@ const main = async () => {
 			const chars = await service.discoverCharacteristics();
 			const char = chars.find((c) => c.uuid === CHAR_UUID);
 			if (!char) {
-				throw new Error(
-					`Could not find characteristic with UUID ${CHAR_UUID}.\n${chars.map((c) => c.uuid).join(', ')}`
-				);
+				throw new Error(`Missing characteristic ${CHAR_UUID}.\nAvailable: ${chars.map((c) => c.uuid).join(', ')}`);
 			}
 
 			console.log('Reading...');

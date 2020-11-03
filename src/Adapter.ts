@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 
 import { BaseNoble } from './Noble';
 import { BasePeripheral } from './Peripheral';
+import { AddressType } from './types';
 
 export declare interface BaseAdapter<N extends BaseNoble = BaseNoble> {
 	on(event: 'discover', listener: (peripheral: BasePeripheral) => void): this;
@@ -16,6 +17,10 @@ export abstract class BaseAdapter<N extends BaseNoble = BaseNoble> extends Event
 	protected _name: string;
 	public get name() {
 		return this._name;
+	}
+	protected _addressType: AddressType;
+	public get addressType() {
+		return this._addressType;
 	}
 	protected _address: string;
 	public get address() {

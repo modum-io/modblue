@@ -102,7 +102,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		});
 	}
 
-	public async disconnect(): Promise<number> {
+	public async disconnect(): Promise<void> {
 		if (!(await this.isConnected())) {
 			return;
 		}
@@ -112,7 +112,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		}
 
 		if (this.isDisconnecting) {
-			return new Promise<number>((resolve, reject) => this.disconnecting.push([resolve, reject]));
+			return new Promise<void>((resolve, reject) => this.disconnecting.push([resolve, reject]));
 		}
 
 		// Currently disabled the cache after disconnect because it seems to throw errors
@@ -121,7 +121,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.disconnecting = [];
 		this.isDisconnecting = true;
 
-		return new Promise(async (resolve, reject) => {
+		return new Promise<void>(async (resolve, reject) => {
 			this.disconnecting.push([resolve, reject]);
 
 			const done = () => this.doneDisconnecting();
