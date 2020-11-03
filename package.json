@@ -2,14 +2,22 @@
 	"name": "@modum/modblue",
 	"version": "0.1.0",
 	"description": "BLE module using dbus or hci.",
+	"homepage": "https://github.com/modum-io/modblue#modblue",
+	"bugs": {
+		"url": "https://github.com/modum-io/modblue/issues"
+	},
+	"license": "UNLICENSED",
+	"author": "modum.io AG",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/modum-io/modblue.git"
+	},
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
 		"release": "standard-version -a",
 		"build": "tsc"
 	},
-	"author": "modum.io AG",
-	"license": "UNLICENSED",
 	"dependencies": {
 		"@abandonware/bluetooth-hci-socket": "0.5.3-6",
 		"dbus-next": "0.9.1"
