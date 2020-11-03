@@ -21,8 +21,6 @@ interface Discovery {
 }
 
 export declare interface Gap {
-	on(event: 'scanStart', listener: (filterDuplicates: boolean) => void): this;
-	on(event: 'scanStop', listener: () => void): this;
 	on(
 		event: 'discover',
 		listener: (
@@ -34,9 +32,6 @@ export declare interface Gap {
 			rssi: number
 		) => void
 	): this;
-
-	on(event: 'advertisingStart', listener: () => void): this;
-	on(event: 'advertisingStop', listener: () => void): this;
 }
 
 export class Gap extends EventEmitter {
@@ -55,41 +50,35 @@ export class Gap extends EventEmitter {
 		this.scanFilterDuplicates = null;
 		this.discoveries = new Map();
 
-		this.hci.on('leScanParametersSet', this.onHciLeScanParametersSet);
-		this.hci.on('leScanEnableSet', this.onHciLeScanEnableSet);
 		this.hci.on('leAdvertisingReport', this.onHciLeAdvertisingReport);
-		this.hci.on('leScanEnableSetCmd', this.onLeScanEnableSetCmd);
-
-		this.hci.on('leAdvertisingParametersSet', this.onHciLeAdvertisingParametersSet);
-		this.hci.on('leAdvertisingDataSet', this.onHciLeAdvertisingDataSet);
-		this.hci.on('leScanResponseDataSet', this.onHciLeScanResponseDataSet);
-		this.hci.on('leAdvertiseEnableSet', this.onHciLeAdvertiseEnableSet);
 	}
 
-	public startScanning(allowDuplicates: boolean) {
+	public async startScanning(allowDuplicates: boolean) {
 		this.scanState = 'starting';
 		this.scanFilterDuplicates = !allowDuplicates;
 
 		// Always set scan parameters before scanning
 		// https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=229737
 		// p106 - p107
-		this.hci.setScanEnabled(false, true);
-		this.hci.setScanParameters();
+		await this.hci.setScanEnabled(false, true);
+		await this.hci.setScanParameters();
 
 		if (IS_NTC_CHIP) {
 			// work around for Next Thing Co. C.H.I.P, always allow duplicates, to get scan response
 			this.scanFilterDuplicates = false;
 		}
 
-		this.hci.setScanEnabled(true, this.scanFilterDuplicates);
+		await this.hci.setScanEnabled(true, this.scanFilterDuplicates);
+		this.scanState = 'started';
 	}
 
-	public stopScanning() {
+	public async stopScanning() {
 		this.scanState = 'stopping';
-		this.hci.setScanEnabled(false, true);
+		await this.hci.setScanEnabled(false, true);
+		this.scanState = 'stopped';
 	}
 
-	public startAdvertising(name: string, serviceUuids: string[]) {
+	public async startAdvertising(name: string, serviceUuids: string[]) {
 		let advertisementDataLength = 3;
 		let scanDataLength = 0;
 
@@ -174,87 +163,41 @@ export class Gap extends EventEmitter {
 			nameBuffer.copy(scanData, 2);
 		}
 
-		this.startAdvertisingWithEIRData(advertisementData, scanData);
+		await this.startAdvertisingWithEIRData(advertisementData, scanData);
 	}
 
-	public startAdvertisingWithEIRData(advertisementData: Buffer, scanData: Buffer) {
+	public async startAdvertisingWithEIRData(advertisementData: Buffer, scanData: Buffer) {
 		advertisementData = advertisementData || Buffer.alloc(0);
 		scanData = scanData || Buffer.alloc(0);
 
-		let error = null;
-
 		if (advertisementData.length > 31) {
-			error = new Error('Advertisement data is over maximum limit of 31 bytes');
+			throw new Error('Advertisement data is over maximum limit of 31 bytes');
 		} else if (scanData.length > 31) {
-			error = new Error('Scan data is over maximum limit of 31 bytes');
+			throw new Error('Scan data is over maximum limit of 31 bytes');
 		}
 
-		if (error) {
-			this.emit('advertisingStart', error);
+		this.advertiseState = 'starting';
+
+		if (IS_INTEL_EDISON || IS_YOCTO) {
+			// work around for Intel Edison
 		} else {
-			this.advertiseState = 'starting';
-
-			if (IS_INTEL_EDISON || IS_YOCTO) {
-				// work around for Intel Edison
-			} else {
-				this.hci.setScanResponseData(scanData);
-				this.hci.setAdvertisingData(advertisementData);
-			}
-			this.hci.setAdvertiseEnable(true);
-			this.hci.setScanResponseData(scanData);
-			this.hci.setAdvertisingData(advertisementData);
+			await this.hci.setScanResponseData(scanData);
+			await this.hci.setAdvertisingData(advertisementData);
 		}
+		await this.hci.setAdvertiseEnable(true);
+		await this.hci.setScanResponseData(scanData);
+		await this.hci.setAdvertisingData(advertisementData);
+
+		this.advertiseState = 'started';
 	}
 
-	public stopAdvertising() {
+	public async stopAdvertising() {
 		this.advertiseState = 'stopping';
 
-		this.hci.setAdvertiseEnable(false);
+		await this.hci.setAdvertiseEnable(false);
+
+		this.advertiseState = 'stopped';
 	}
-
-	private onHciLeScanParametersSet = () => {
-		// NO-OP
-	};
-
-	// Called when receive an event "Command Complete" for "LE Set Scan Enable"
-	private onHciLeScanEnableSet = (status: number) => {
-		// Check the status we got from the command complete function.
-		if (status !== 0) {
-			// If it is non-zero there was an error, and we should not change
-			// our status as a result.
-			return;
-		}
-
-		if (this.scanState === 'starting') {
-			this.scanState = 'started';
-
-			this.emit('scanStart', this.scanFilterDuplicates);
-		} else if (this.scanState === 'stopping') {
-			this.scanState = 'stopped';
-
-			this.emit('scanStop');
-		}
-	};
-
-	// Called when we see the actual command "LE Set Scan Enable"
-	private onLeScanEnableSetCmd = (enable: boolean, filterDuplicates: boolean) => {
-		// Check to see if the new settings differ from what we expect.
-		// If we are scanning, then a change happens if the new command stops
-		// scanning or if duplicate filtering changes.
-		// If we are not scanning, then a change happens if scanning was enabled.
-		if (this.scanState === 'starting' || this.scanState === 'started') {
-			if (!enable) {
-				this.emit('scanStop');
-			} else if (this.scanFilterDuplicates !== filterDuplicates) {
-				this.scanFilterDuplicates = filterDuplicates;
-
-				this.emit('scanStart', this.scanFilterDuplicates);
-			}
-		} else if ((this.scanState === 'stopping' || this.scanState === 'stopped') && enable) {
-			// Someone started scanning on us.
-			this.emit('scanStart', this.scanFilterDuplicates);
-		}
-	};
 
 	private onHciLeAdvertisingReport = (
 		status: number,
@@ -442,36 +385,6 @@ export class Gap extends EventEmitter {
 			process.env.NOBLE_REPORT_ALL_HCI_EVENTS
 		) {
 			this.emit('discover', status, address, addressType, connectable, advertisement, rssi);
-		}
-	};
-
-	private onHciLeAdvertisingParametersSet = (status: number) => {
-		// NO-OP
-	};
-
-	private onHciLeAdvertisingDataSet = (status: number) => {
-		// NO-OP
-	};
-
-	public onHciLeScanResponseDataSet = (status: number) => {
-		// NO-OP
-	};
-
-	public onHciLeAdvertiseEnableSet = (status: number) => {
-		if (this.advertiseState === 'starting') {
-			this.advertiseState = 'started';
-
-			var error = null;
-
-			if (status) {
-				error = new Error(Hci.STATUS_MAPPER[status] || `Unknown (${status})`);
-			}
-
-			this.emit('advertisingStart', error);
-		} else if (this.advertiseState === 'stopping') {
-			this.advertiseState = 'stopped';
-
-			this.emit('advertisingStop');
 		}
 	};
 }

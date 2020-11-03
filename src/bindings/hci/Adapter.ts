@@ -51,17 +51,15 @@ export class HciAdapter extends Adapter {
 		}
 
 		this.hci = new Hci(Number(id));
-		this.hci.on('addressChange', (addr) => (this._address = addr));
 		this.hci.on('leConnComplete', this.onLeConnComplete);
 
 		this.gap = new Gap(this.hci);
-		this.gap.on('scanStart', this.onScanStart);
-		this.gap.on('scanStop', this.onScanStop);
 		this.gap.on('discover', this.onDiscover);
-		this.gap.on('advertisingStart', this.onAdvertisingStart);
-		this.gap.on('advertisingStop', this.onAdvertisingStop);
 
 		await this.hci.init();
+
+		this._addressType = this.hci.addressType;
+		this._address = this.hci.address;
 	}
 
 	public dispose() {
@@ -86,17 +84,7 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		return new Promise<void>((resolve) => {
-			const done = () => {
-				this.gap.off('scanStart', done);
-
-				resolve();
-			};
-
-			this.gap.on('scanStart', done);
-
-			this.gap.startScanning(true);
-		});
+		await this.gap.startScanning(true);
 	}
 
 	private onScanStart = () => {
@@ -108,21 +96,11 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		return new Promise<void>((resolve) => {
-			const done = () => {
-				this.gap.off('scanStop', done);
-
-				resolve();
-			};
-
-			this.gap.on('scanStop', done);
-
-			this.requestScanStop = true;
-			this.gap.stopScanning();
-		});
+		this.requestScanStop = true;
+		await this.gap.stopScanning();
 	}
 
-	private onScanStop = () => {
+	/*private onScanStop = () => {
 		this.scanning = false;
 
 		if (this.requestScanStop) {
@@ -134,7 +112,7 @@ export class HciAdapter extends Adapter {
 		this.startScanning().catch(() => {
 			// NO-OP
 		});
-	};
+	};*/
 
 	private onDiscover = (
 		status: number,
@@ -335,17 +313,7 @@ export class HciAdapter extends Adapter {
 			this.gatt.setData(this.deviceName, this.gatt.serviceInputs);
 		}
 
-		return new Promise<void>((resolve) => {
-			const done = () => {
-				this.gap.off('advertisingStart', done);
-
-				resolve();
-			};
-
-			this.gap.on('advertisingStart', done);
-
-			this.gap.startAdvertising(this.deviceName, serviceUUIDs || []);
-		});
+		await this.gap.startAdvertising(this.deviceName, serviceUUIDs || []);
 	}
 	private onAdvertisingStart = () => {
 		this.advertising = true;
@@ -356,17 +324,7 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		return new Promise<void>((resolve) => {
-			const done = () => {
-				this.gap.off('advertisingStop', done);
-
-				resolve();
-			};
-
-			this.gap.on('advertisingStop', done);
-
-			this.gap.stopAdvertising();
-		});
+		await this.gap.stopAdvertising();
 	}
 	private onAdvertisingStop = () => {
 		this.advertising = false;

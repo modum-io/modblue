@@ -104,20 +104,16 @@ interface HandleBuffer {
 	data: Buffer;
 }
 
+interface HciCommand {
+	data: Buffer;
+	onResponse: (status: number, result: Buffer) => void;
+}
+
 export declare interface Hci {
 	on(event: 'stateChange', listener: (state: string) => void): this;
-	on(event: 'addressChange', listener: (address: string) => void): this;
 	on(event: 'disconnComplete', listener: (handle: number, reason: number) => void): this;
 	on(event: 'encryptChange', listener: (handle: number, encrypt: number) => void): this;
 	on(event: 'aclDataPkt', listener: (handle: number, cid: number, data: Buffer) => void): this;
-	on(
-		event: 'readLocalVersion',
-		listener: (hciVer: number, hciRev: number, lmpVer: number, manufacturer: number, lmpSubVer: number) => void
-	): this;
-	on(event: 'rssiRead', listener: (handle: number, rssi: number) => void): this;
-	on(event: 'leScanEnableSetCmd', listener: (enable: boolean, filterDuplicates: boolean) => void): this;
-	on(event: 'leScanParametersSet', listener: () => void): this;
-	on(event: 'leScanEnableSet', listener: (status: number) => void): this;
 	on(
 		event: 'leConnComplete',
 		listener: (
@@ -140,33 +136,28 @@ export declare interface Hci {
 		event: 'leConnUpdateComplete',
 		listener: (status: number, handle: number, interval: number, latency: number, supervisionTimeout: number) => void
 	): this;
-
-	on(event: 'leAdvertisingParametersSet', listener: (status: number) => void): this;
-	on(event: 'leAdvertisingDataSet', listener: (status: number) => void): this;
-	on(event: 'leScanResponseDataSet', listener: (status: number) => void): this;
-	on(event: 'leAdvertiseEnableSet', listener: (status: number) => void): this;
 }
 
 export class Hci extends EventEmitter {
 	public static STATUS_MAPPER: string[] = STATUS_MAPPER;
 
-	public addressType: AddressType;
-	public address: string;
-
-	public isUp: boolean;
 	public state: string;
 	public deviceId: number;
+
+	public addressType: AddressType;
+	public address: string;
 
 	private socket: any;
 	private handleBuffers: Map<number, HandleBuffer>;
 	private pollTimer: NodeJS.Timer;
+	private cmds: Map<number, HciCommand>;
 
 	public constructor(deviceId?: number) {
 		super();
 
-		this.isUp = null;
 		this.state = null;
 		this.deviceId = deviceId;
+		this.cmds = new Map();
 
 		this.handleBuffers = new Map();
 
@@ -186,21 +177,36 @@ export class Hci extends EventEmitter {
 		this.deviceId = this.socket.bindRaw(this.deviceId);
 		this.socket.start();
 
-		this.pollTimer = setInterval(() => this.pollIsDevUp(), 1000);
-
-		return new Promise<void>((resolve, reject) => {
-			const onReady = (state: string) => {
-				this.off('stateChange', onReady);
-
-				if (state === 'poweredOn') {
+		await new Promise<void>((resolve) => {
+			const timer = setInterval(() => {
+				const isDevUp = this.socket.isDevUp();
+				if (isDevUp) {
+					clearInterval(timer);
 					resolve();
-				} else {
-					reject(new Error(`Invalid hci state: ${state}`));
 				}
-			};
-
-			this.on('stateChange', onReady);
+			}, 1000);
 		});
+
+		this.setSocketFilter();
+		await this.setEventMask();
+		await this.setLeEventMask();
+
+		const { hciVer, hciRev } = await this.readLocalVersion();
+		if (hciVer < 0x06) {
+			throw new Error(`Unsupported bluetooth version ${hciVer}.${hciRev}`);
+		}
+
+		console.log('hci', hciVer, hciRev);
+
+		await this.writeLeHostSupported();
+		await this.readLeHostSupported();
+		await this.readBdAddr();
+		await this.readLeBufferSize();
+
+		await this.setScanParameters();
+		// await this.setScanEnabled(false, true);
+
+		this.state = 'poweredOn';
 	}
 
 	public dispose() {
@@ -210,32 +216,31 @@ export class Hci extends EventEmitter {
 
 		clearInterval(this.pollTimer);
 		this.pollTimer = null;
+
+		this.state = null;
 	}
 
-	private pollIsDevUp() {
-		const isDevUp = this.socket.isDevUp();
-
-		if (this.isUp !== isDevUp) {
-			if (isDevUp) {
-				this.setSocketFilter();
-				this.setEventMask();
-				this.setLeEventMask();
-				this.readLocalVersion();
-				this.writeLeHostSupported();
-				this.readLeHostSupported();
-				this.readBdAddr();
-				this.readLeBufferSize();
-			} else {
-				this.socket.stop();
-				this.socket.removeAllListeners();
-				this.socket = null;
-
-				this.state = null;
-				this.emit('stateChange', 'poweredOff');
-			}
-
-			this.isUp = isDevUp;
+	private async sendCommand(data: Buffer) {
+		const cmd = data.readUInt16LE(1);
+		if (this.cmds.has(cmd)) {
+			throw new Error(`${cmd} command already queued`);
 		}
+
+		console.log('sending cmd', cmd, data);
+
+		return new Promise<Buffer>((resolve, reject) => {
+			this.cmds.set(cmd, {
+				data,
+				onResponse: (status, responseData) => {
+					if (status !== 0) {
+						reject(new Error(`Command ${cmd} received response ${Hci.STATUS_MAPPER[status]}`));
+					} else {
+						resolve(responseData);
+					}
+				}
+			});
+			this.socket.write(data);
+		});
 	}
 
 	private setSocketFilter() {
@@ -258,7 +263,7 @@ export class Hci extends EventEmitter {
 		this.socket.setFilter(filter);
 	}
 
-	private setEventMask() {
+	private async setEventMask() {
 		const cmd = Buffer.alloc(12);
 		const eventMask = Buffer.from('fffffbff07f8bf3d', 'hex');
 
@@ -271,7 +276,7 @@ export class Hci extends EventEmitter {
 
 		eventMask.copy(cmd, 4);
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
 	}
 
 	private reset() {
@@ -287,7 +292,7 @@ export class Hci extends EventEmitter {
 		this.socket.write(cmd);
 	}
 
-	private readLocalVersion() {
+	private async readLocalVersion() {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -297,10 +302,17 @@ export class Hci extends EventEmitter {
 		// length
 		cmd.writeUInt8(0x0, 3);
 
-		this.socket.write(cmd);
+		const result = await this.sendCommand(cmd);
+		const hciVer = result.readUInt8(0);
+		const hciRev = result.readUInt16LE(1);
+		const lmpVer = result.readInt8(3);
+		const manufacturer = result.readUInt16LE(4);
+		const lmpSubVer = result.readUInt16LE(6);
+
+		return { hciVer, hciRev, lmpVer, manufacturer, lmpSubVer };
 	}
 
-	private readBdAddr() {
+	private async readBdAddr() {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -310,10 +322,19 @@ export class Hci extends EventEmitter {
 		// length
 		cmd.writeUInt8(0x0, 3);
 
-		this.socket.write(cmd);
+		const result = await this.sendCommand(cmd);
+
+		this.addressType = 'public';
+		this.address = result
+			.toString('hex')
+			.match(/.{1,2}/g)
+			.reverse()
+			.join(':');
+
+		return this.address;
 	}
 
-	private setLeEventMask() {
+	private async setLeEventMask() {
 		const cmd = Buffer.alloc(12);
 		const leEventMask = Buffer.from('1f00000000000000', 'hex');
 
@@ -326,10 +347,10 @@ export class Hci extends EventEmitter {
 
 		leEventMask.copy(cmd, 4);
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
 	}
 
-	private readLeHostSupported() {
+	private async readLeHostSupported() {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -339,10 +360,15 @@ export class Hci extends EventEmitter {
 		// length
 		cmd.writeUInt8(0x00, 3);
 
-		this.socket.write(cmd);
+		const result = await this.sendCommand(cmd);
+
+		const le = result.readUInt8(0);
+		const simul = result.readUInt8(1);
+
+		return { le, simul };
 	}
 
-	private writeLeHostSupported() {
+	private async writeLeHostSupported() {
 		const cmd = Buffer.alloc(6);
 
 		// header
@@ -356,10 +382,10 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt8(0x01, 4); // le
 		cmd.writeUInt8(0x00, 5); // simul
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
 	}
 
-	public setScanParameters() {
+	public async setScanParameters() {
 		const cmd = Buffer.alloc(11);
 
 		// header
@@ -376,10 +402,12 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt8(0x00, 9); // own address type: 0 -> public, 1 -> random
 		cmd.writeUInt8(0x00, 10); // filter: 0 -> all event types
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
+
+		// this.emit('stateChange', 'poweredOn');
 	}
 
-	public setScanEnabled(enabled: boolean, filterDuplicates: boolean) {
+	public async setScanEnabled(enabled: boolean, filterDuplicates: boolean) {
 		const cmd = Buffer.alloc(6);
 
 		// header
@@ -393,7 +421,14 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt8(enabled ? 0x01 : 0x00, 4); // enable: 0 -> disabled, 1 -> enabled
 		cmd.writeUInt8(filterDuplicates ? 0x01 : 0x00, 5); // duplicates: 0 -> yes, 1 -> no
 
-		this.socket.write(cmd);
+		const result = await this.sendCommand(cmd);
+
+		const resEnabled = result.readUInt8(0) === 0x1;
+		const resFilterDuplicates = result.readUInt8(1) === 0x1;
+
+		if (resEnabled !== enabled || filterDuplicates !== resFilterDuplicates) {
+			throw new Error(`Scan enable command was not configured properly`);
+		}
 	}
 
 	public createLeConn(address: string, addressType: AddressType) {
@@ -505,7 +540,7 @@ export class Hci extends EventEmitter {
 		this.socket.write(cmd);
 	}
 
-	public readRssi(handle: number) {
+	public async readRssi(handle: number) {
 		const cmd = Buffer.alloc(6);
 
 		// header
@@ -518,7 +553,11 @@ export class Hci extends EventEmitter {
 		// data
 		cmd.writeUInt16LE(handle, 4); // handle
 
-		this.socket.write(cmd);
+		const result = await this.sendCommand(cmd);
+
+		const rssi = result.readInt8(2);
+
+		return rssi;
 	}
 
 	public writeAclDataPkt(handle: number, cid: number, data: Buffer) {
@@ -536,7 +575,7 @@ export class Hci extends EventEmitter {
 		this.socket.write(pkt);
 	}
 
-	public readLeBufferSize() {
+	public async readLeBufferSize() {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -546,10 +585,10 @@ export class Hci extends EventEmitter {
 		// length
 		cmd.writeUInt8(0x0, 3);
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
 	}
 
-	public setScanResponseData(data: Buffer) {
+	public async setScanResponseData(data: Buffer) {
 		const cmd = Buffer.alloc(36);
 
 		cmd.fill(0x00);
@@ -565,10 +604,10 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt8(data.length, 4);
 		data.copy(cmd, 5);
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
 	}
 
-	public setAdvertisingData(data: Buffer) {
+	public async setAdvertisingData(data: Buffer) {
 		const cmd = Buffer.alloc(36);
 
 		cmd.fill(0x00);
@@ -584,10 +623,10 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt8(data.length, 4);
 		data.copy(cmd, 5);
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
 	}
 
-	public setAdvertiseEnable(enabled: boolean) {
+	public async setAdvertiseEnable(enabled: boolean) {
 		const cmd = Buffer.alloc(5);
 
 		// header
@@ -600,10 +639,10 @@ export class Hci extends EventEmitter {
 		// data
 		cmd.writeUInt8(enabled ? 0x01 : 0x00, 4); // enable: 0 -> disabled, 1 -> enabled
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
 	}
 
-	private onSocketData = (data: Buffer) => {
+	private onSocketData = async (data: Buffer) => {
 		const eventType = data.readUInt8(0);
 		let handle;
 		let cmd;
@@ -627,7 +666,7 @@ export class Hci extends EventEmitter {
 				status = data.readUInt8(6);
 				const result = data.slice(7);
 
-				this.processCmdCompleteEvent(cmd, status, result);
+				await this.processCmdCompleteEvent(cmd, status, result);
 			} else if (subEventType === EVT_CMD_STATUS) {
 				status = data.readUInt8(3);
 				cmd = data.readUInt16LE(5);
@@ -679,12 +718,14 @@ export class Hci extends EventEmitter {
 			cmd = data.readUInt16LE(1);
 			// const len = data.readUInt8(3);
 
-			if (cmd === LE_SET_SCAN_ENABLE_CMD) {
+			await this.processCmdCompleteEvent(cmd, 0, data.slice(4));
+
+			/*if (cmd === LE_SET_SCAN_ENABLE_CMD) {
 				const enable = data.readUInt8(4) === 0x1;
 				const filterDuplicates = data.readUInt8(5) === 0x1;
 
 				this.emit('leScanEnableSetCmd', enable, filterDuplicates);
-			}
+			}*/
 		}
 	};
 
@@ -696,62 +737,24 @@ export class Hci extends EventEmitter {
 		}
 	};
 
-	private processCmdCompleteEvent(cmd: number, status: number, result: Buffer) {
+	private async processCmdCompleteEvent(cmd: number, status: number, result: Buffer) {
+		const queuedCmd = this.cmds.get(cmd);
+		if (queuedCmd) {
+			console.log('cmd response', cmd, status, result);
+			queuedCmd.onResponse(status, result);
+			this.cmds.delete(cmd);
+		}
+
 		if (cmd === RESET_CMD) {
-			this.setEventMask();
-			this.setLeEventMask();
-			this.readLocalVersion();
-			this.readBdAddr();
-		} else if (cmd === READ_LE_HOST_SUPPORTED_CMD) {
-			if (status === 0) {
-				// const le = result.readUInt8(0);
-				// const simul = result.readUInt8(1);
-			}
-		} else if (cmd === READ_LOCAL_VERSION_CMD) {
-			const hciVer = result.readUInt8(0);
-			const hciRev = result.readUInt16LE(1);
-			const lmpVer = result.readInt8(3);
-			const manufacturer = result.readUInt16LE(4);
-			const lmpSubVer = result.readUInt16LE(6);
-
-			if (hciVer < 0x06) {
-				this.emit('stateChange', 'unsupported');
-			} else if (this.state !== 'poweredOn') {
-				this.setScanEnabled(false, true);
-				this.setScanParameters();
-			}
-
-			this.emit('readLocalVersion', hciVer, hciRev, lmpVer, manufacturer, lmpSubVer);
-		} else if (cmd === READ_BD_ADDR_CMD) {
-			this.addressType = 'public';
-			this.address = result
-				.toString('hex')
-				.match(/.{1,2}/g)
-				.reverse()
-				.join(':');
-
-			this.emit('addressChange', this.address);
-		} else if (cmd === LE_SET_SCAN_PARAMETERS_CMD) {
-			this.emit('stateChange', 'poweredOn');
-
-			this.emit('leScanParametersSet');
-		} else if (cmd === LE_SET_SCAN_ENABLE_CMD) {
-			this.emit('leScanEnableSet', status);
-		} else if (cmd === READ_RSSI_CMD) {
-			const handle = result.readUInt16LE(0);
-			const rssi = result.readInt8(2);
-
-			this.emit('rssiRead', handle, rssi);
+			await this.setEventMask();
+			await this.setLeEventMask();
+			await this.readLocalVersion();
+			await this.readBdAddr();
 		} else if (cmd === LE_SET_ADVERTISING_PARAMETERS_CMD) {
-			this.emit('stateChange', 'poweredOn');
+			console.log('advertising parameters');
 
+			this.emit('stateChange', 'poweredOn');
 			this.emit('leAdvertisingParametersSet', status);
-		} else if (cmd === LE_SET_ADVERTISING_DATA_CMD) {
-			this.emit('leAdvertisingDataSet', status);
-		} else if (cmd === LE_SET_SCAN_RESPONSE_DATA_CMD) {
-			this.emit('leScanResponseDataSet', status);
-		} else if (cmd === LE_SET_ADVERTISE_ENABLE_CMD) {
-			this.emit('leAdvertiseEnableSet', status);
 		}
 	}
 

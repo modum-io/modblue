@@ -20,6 +20,11 @@ export abstract class Adapter extends EventEmitter {
 		return this._name;
 	}
 
+	protected _addressType: string;
+	public get addressType() {
+		return this._addressType;
+	}
+
 	protected _address: string;
 	public get address() {
 		return this._address;
