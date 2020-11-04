@@ -1,18 +1,21 @@
-import { Adapter, Peripheral } from '../../models';
+import { Adapter, GattLocal, Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
-import { Gap } from './gap';
-import { Hci } from './hci';
-import { HciNoble } from './Noble';
+import { HciGattLocal } from './gatt';
+import { Gap, Hci } from './misc';
 import { HciPeripheral } from './Peripheral';
 
-export class HciAdapter extends Adapter<HciNoble> {
+export class HciAdapter extends Adapter {
 	private initialized: boolean = false;
 	private scanning: boolean = false;
+	private advertising: boolean = false;
 
 	private hci: Hci;
 	private gap: Gap;
+	private gatt: HciGattLocal;
 
+	private deviceName: string = this.id;
+	private advertisedServiceUUIDs: string[] = [];
 	private peripherals: Map<string, HciPeripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
@@ -33,6 +36,7 @@ export class HciAdapter extends Adapter<HciNoble> {
 		this.initialized = true;
 
 		this.hci = new Hci(Number(this.id));
+		this.hci.on('disconnectComplete', this.onDisconnectComplete);
 
 		this.gap = new Gap(this.hci);
 		this.gap.on('discover', this.onDiscover);
@@ -81,7 +85,6 @@ export class HciAdapter extends Adapter<HciNoble> {
 	}
 
 	private onDiscover = (
-		status: number,
 		address: string,
 		addressType: AddressType,
 		connectable: boolean,
@@ -93,10 +96,9 @@ export class HciAdapter extends Adapter<HciNoble> {
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new HciPeripheral(this.noble, this, uuid, address, addressType, connectable, advertisement, rssi);
+			peripheral = new HciPeripheral(this, uuid, address, addressType, advertisement, rssi);
 			this.peripherals.set(uuid, peripheral);
 		} else {
-			peripheral.connectable = connectable;
 			peripheral.advertisement = advertisement;
 			peripheral.rssi = rssi;
 		}
@@ -110,10 +112,7 @@ export class HciAdapter extends Adapter<HciNoble> {
 		);
 
 		const connet = async () => {
-			const { handle, role } = await this.hci.createLeConn(peripheral.address, peripheral.addressType);
-			if (role !== 0) {
-				throw new Error(`Connection was not established as master`);
-			}
+			const handle = await this.hci.createLeConn(peripheral.address, peripheral.addressType);
 
 			this.uuidToHandle.set(peripheral.uuid, handle);
 			this.handleToUUID.set(handle, peripheral.uuid);
@@ -151,4 +150,48 @@ export class HciAdapter extends Adapter<HciNoble> {
 
 		await peripheral.onDisconnect();
 	}
+
+	public async startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void> {
+		await this.init();
+
+		if (this.advertising) {
+			return;
+		}
+
+		this.deviceName = deviceName;
+		this.advertisedServiceUUIDs = serviceUUIDs;
+		if (this.gatt) {
+			this.gatt.setData(this.deviceName, this.gatt.serviceInputs);
+		}
+
+		await this.gap.startAdvertising(this.deviceName, serviceUUIDs || []);
+
+		this.advertising = true;
+	}
+
+	public async stopAdvertising(): Promise<void> {
+		if (!this.advertising) {
+			return;
+		}
+
+		await this.gap.stopAdvertising();
+
+		this.advertising = false;
+	}
+
+	public async setupGatt(maxMtu?: number): Promise<GattLocal> {
+		await this.init();
+
+		this.gatt = new HciGattLocal(this, this.hci, maxMtu);
+		this.gatt.setData(this.deviceName, []);
+		return this.gatt;
+	}
+
+	private onDisconnectComplete = async (status: number, handle: number, reason: number) => {
+		// We have to restart advertising if we were advertising before
+		if (this.advertising) {
+			this.advertising = false;
+			await this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs);
+		}
+	};
 }

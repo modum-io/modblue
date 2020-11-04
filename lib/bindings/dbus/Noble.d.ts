@@ -1,10 +1,12 @@
-import { Adapter, Noble } from '../../models';
+import { MessageBus } from 'dbus-next';
+import { Noble } from '../../models';
+import { DbusAdapter } from './Adapter';
 export declare class DbusNoble extends Noble {
-    private readonly dbus;
-    private bluezObject;
+    readonly dbus: MessageBus;
+    private objManagerIface;
     private adapters;
     constructor();
     init(): Promise<void>;
     dispose(): Promise<void>;
-    getAdapters(): Promise<Adapter[]>;
+    getAdapters(): Promise<DbusAdapter[]>;
 }

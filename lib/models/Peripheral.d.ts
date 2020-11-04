@@ -1,24 +1,19 @@
-import { AddressType, PeripheralState } from '../types';
+import { AddressType } from '../types';
 import { Adapter } from './Adapter';
-import { Noble } from './Noble';
-import { Service } from './Service';
-export declare abstract class Peripheral<N extends Noble = Noble, A extends Adapter = Adapter> {
-    protected readonly noble: N;
-    readonly adapter: A;
+import { GattRemote } from './gatt';
+export declare type PeripheralState = 'connecting' | 'connected' | 'disconnecting' | 'disconnected';
+export declare abstract class Peripheral {
+    readonly adapter: Adapter;
     readonly uuid: string;
-    readonly address: string;
     readonly addressType: AddressType;
-    connectable: boolean;
+    readonly address: string;
     advertisement: any;
     rssi: number;
     protected _state: PeripheralState;
     get state(): PeripheralState;
-    protected _mtu: number;
-    get mtu(): number;
-    constructor(noble: N, adapter: A, uuid: string, address: string, addressType: AddressType, connectable?: boolean, advertisement?: any, rssi?: number);
+    constructor(adapter: Adapter, uuid: string, address: string, addressType: AddressType, advertisement?: any, rssi?: number);
     toString(): string;
-    abstract connect(requestMtu?: number): Promise<void>;
+    abstract connect(): Promise<void>;
     abstract disconnect(): Promise<void>;
-    abstract getDiscoveredServices(): Service[];
-    abstract discoverServices(serviceUUIDs?: string[]): Promise<Service[]>;
+    abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
 }

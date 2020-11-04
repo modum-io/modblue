@@ -1,15 +1,15 @@
-import { MessageBus, systemBus } from 'dbus-next';
+import { ClientInterface, MessageBus, systemBus } from 'dbus-next';
 
-import { Adapter, Noble } from '../../models';
+import { Noble } from '../../models';
 
 import { DbusAdapter } from './Adapter';
-import { BusObject, I_BLUEZ_ADAPTER } from './BusObject';
+import { I_BLUEZ_ADAPTER, I_OBJECT_MANAGER } from './misc';
 
 export class DbusNoble extends Noble {
-	private readonly dbus: MessageBus;
-	private bluezObject: BusObject;
+	public readonly dbus: MessageBus;
 
-	private adapters: Map<string, Adapter> = new Map();
+	private objManagerIface: ClientInterface;
+	private adapters: Map<string, DbusAdapter> = new Map();
 
 	public constructor() {
 		super();
@@ -18,25 +18,35 @@ export class DbusNoble extends Noble {
 	}
 
 	public async init() {
-		this.bluezObject = new BusObject(this.dbus, 'org.bluez', '/org/bluez');
+		// NO-OP
 	}
 
 	public async dispose() {
 		this.adapters = new Map();
 	}
 
-	public async getAdapters(): Promise<Adapter[]> {
-		const adapterIds = await this.bluezObject.getChildrenNames();
-		for (const adapterId of adapterIds) {
-			let adapter = this.adapters.get(adapterId);
+	public async getAdapters(): Promise<DbusAdapter[]> {
+		if (!this.objManagerIface) {
+			const objManager = await this.dbus.getProxyObject('org.bluez', '/');
+			this.objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
+		}
+
+		const objs = await this.objManagerIface.GetManagedObjects();
+		const keys = Object.keys(objs);
+
+		for (const adapterPath of keys) {
+			const adapterObj = objs[adapterPath][I_BLUEZ_ADAPTER];
+			if (!adapterObj) {
+				continue;
+			}
+
+			let adapter = this.adapters.get(adapterPath);
 			if (!adapter) {
-				const object = this.bluezObject.getChild(adapterId);
-				const name = await object.prop<string>(I_BLUEZ_ADAPTER, 'Name');
-				const address = await object.prop<string>(I_BLUEZ_ADAPTER, 'Address');
-				adapter = new DbusAdapter(this, adapterId, name, address, object);
-				this.adapters.set(adapterId, adapter);
+				adapter = new DbusAdapter(this, adapterPath, adapterObj.Name.value, adapterObj.Address.value);
+				this.adapters.set(adapterPath, adapter);
 			}
 		}
+
 		return [...this.adapters.values()];
 	}
 }

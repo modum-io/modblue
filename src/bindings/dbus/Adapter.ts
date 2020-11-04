@@ -1,28 +1,34 @@
-import { Adapter, Peripheral } from '../../models';
-import { AddressType } from '../../types';
+import { ClientInterface } from 'dbus-next';
 
-import { BusObject, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE } from './BusObject';
+import { Adapter, GattLocal, Peripheral } from '../../models';
+
+import { buildTypedValue, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE, I_OBJECT_MANAGER, I_PROPERTIES } from './misc';
 import { DbusNoble } from './Noble';
 import { DbusPeripheral } from './Peripheral';
-import { buildTypedValue } from './TypeValue';
 
-const UPDATE_INTERVAL = 1; // in seconds
+const UPDATE_INTERVAL = 5; // in seconds
 
-export class DbusAdapter extends Adapter<DbusNoble> {
-	private readonly object: BusObject;
+export class DbusAdapter extends Adapter {
+	public noble: DbusNoble;
+	public readonly path: string;
+
+	private objManagerIface: ClientInterface;
+	private adapterIface: ClientInterface;
+	private propsIface: ClientInterface;
+
 	private initialized: boolean = false;
 	private scanning: boolean = false;
 	private requestScanStop: boolean = false;
-
-	private peripherals: Map<string, Peripheral> = new Map();
 	private updateTimer: NodeJS.Timer;
 
-	public constructor(noble: DbusNoble, id: string, name: string, address: string, object: BusObject) {
-		super(noble, id);
+	private peripherals: Map<string, Peripheral> = new Map();
 
+	public constructor(noble: DbusNoble, path: string, name: string, address: string) {
+		super(noble, path.replace(`/org/bluez/`, ''));
+
+		this.path = path;
 		this._name = name;
 		this._address = address;
-		this.object = object;
 	}
 
 	private async init() {
@@ -32,7 +38,27 @@ export class DbusAdapter extends Adapter<DbusNoble> {
 
 		this.initialized = true;
 
-		const propertiesIface = await this.object.getPropertiesInterface();
+		const objManager = await this.noble.dbus.getProxyObject(`org.bluez`, '/');
+		this.objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
+		this.objManagerIface.on('InterfacesAdded', (path: string, data: any) => {
+			if (!path.startsWith(`${this.path}/`)) {
+				return;
+			}
+
+			const deviceObj = data[I_BLUEZ_DEVICE];
+			if (!deviceObj) {
+				return;
+			}
+
+			if (this.scanning) {
+				this.onDeviceFound(path, deviceObj);
+			}
+		});
+
+		const obj = await this.noble.dbus.getProxyObject(`org.bluez`, this.path);
+		this.adapterIface = obj.getInterface(I_BLUEZ_ADAPTER);
+		this.propsIface = obj.getInterface(I_PROPERTIES);
+
 		const onPropertiesChanged = (iface: string, changedProps: any) => {
 			if (iface !== I_BLUEZ_ADAPTER) {
 				return;
@@ -46,14 +72,12 @@ export class DbusAdapter extends Adapter<DbusNoble> {
 				}
 			}
 		};
-		propertiesIface.on('PropertiesChanged', onPropertiesChanged);
+		this.propsIface.on('PropertiesChanged', onPropertiesChanged);
 	}
 
-	private prop<T>(propName: string) {
-		return this.object.prop<T>(I_BLUEZ_ADAPTER, propName);
-	}
-	private callMethod<T>(methodName: string, ...args: any[]) {
-		return this.object.callMethod<T>(I_BLUEZ_ADAPTER, methodName, ...args);
+	private async prop<T>(iface: string, name: string): Promise<T> {
+		const rawProp = await this.propsIface.Get(iface, name);
+		return rawProp.value;
 	}
 
 	public async getScannedPeripherals(): Promise<Peripheral[]> {
@@ -71,19 +95,22 @@ export class DbusAdapter extends Adapter<DbusNoble> {
 			return;
 		}
 
-		this.updateTimer = setInterval(() => this.updatePeripherals(), UPDATE_INTERVAL * 1000);
-
-		const scanning = await this.prop<boolean>('Discovering');
-		if (scanning) {
-			this.onScanStart();
-			return;
+		const scanning = await this.prop<boolean>(I_BLUEZ_ADAPTER, 'Discovering');
+		if (!scanning) {
+			await this.adapterIface.SetDiscoveryFilter({
+				Transport: buildTypedValue('string', 'le'),
+				DuplicateData: buildTypedValue('boolean', false)
+			});
+			await this.adapterIface.StartDiscovery();
 		}
 
-		await this.callMethod('SetDiscoveryFilter', {
-			Transport: buildTypedValue('string', 'le'),
-			DuplicateData: buildTypedValue('boolean', false)
-		});
-		await this.callMethod('StartDiscovery');
+		const objs = await this.objManagerIface.GetManagedObjects();
+		const keys = Object.keys(objs);
+		for (const key of keys) {
+			this.objManagerIface.emit('InterfacesAdded', key, objs[key]);
+		}
+
+		this.updateTimer = setInterval(this.updatePeripherals, UPDATE_INTERVAL * 1000);
 	}
 
 	private onScanStart() {
@@ -99,7 +126,7 @@ export class DbusAdapter extends Adapter<DbusNoble> {
 		this.updateTimer = null;
 
 		this.requestScanStop = true;
-		await this.callMethod('StopDiscovery');
+		await this.adapterIface.StopDiscovery();
 	}
 
 	private onScanStop() {
@@ -116,22 +143,48 @@ export class DbusAdapter extends Adapter<DbusNoble> {
 		});
 	}
 
-	private async updatePeripherals() {
-		const peripheralIds = await this.object.getChildrenNames();
-		for (const peripheralId of peripheralIds) {
-			let peripheral = this.peripherals.get(peripheralId);
-			if (!peripheral) {
-				const object = this.object.getChild(peripheralId);
-				const address = await object.prop<string>(I_BLUEZ_DEVICE, 'Address');
-				const addressType = await object.prop<AddressType>(I_BLUEZ_DEVICE, 'AddressType');
-				peripheral = new DbusPeripheral(this.noble, this, peripheralId, address, addressType, object);
-				this.peripherals.set(peripheralId, peripheral);
+	private onDeviceFound = (path: string, data: any) => {
+		const id = path.replace(`${this.path}/`, '');
+
+		let peripheral = this.peripherals.get(id);
+		if (!peripheral) {
+			const address = data.Address?.value;
+			const addressType = data.AddressType?.value;
+			const advertisement = data.ManufacturerData?.value;
+			const rssi = data.RSSI?.value;
+			peripheral = new DbusPeripheral(this, path, id, address, addressType, advertisement, rssi);
+			this.peripherals.set(id, peripheral);
+		}
+
+		this.emit('discover', peripheral);
+	};
+
+	private updatePeripherals = async () => {
+		const objs = await this.objManagerIface.GetManagedObjects();
+		const keys = Object.keys(objs);
+
+		for (const devicePath of keys) {
+			if (!devicePath.startsWith(this.path)) {
+				continue;
 			}
 
-			if (this.scanning) {
-				// TODO: Devices are not removed from the list when they aren't detected anymore
-				this.emit('discover', peripheral);
+			const deviceObj = objs[devicePath][I_BLUEZ_DEVICE];
+			if (!deviceObj) {
+				continue;
 			}
+
+			this.onDeviceFound(devicePath, deviceObj);
 		}
+	};
+
+	public async startAdvertising(): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	public async stopAdvertising(): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+
+	public setupGatt(maxMtu?: number): Promise<GattLocal> {
+		throw new Error('Method not implemented.');
 	}
 }

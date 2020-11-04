@@ -1,19 +1,25 @@
-import { Peripheral, Service } from '../../models';
+import { ClientInterface } from 'dbus-next';
+
+import { Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
 import { DbusAdapter } from './Adapter';
-import { BusObject, I_BLUEZ_DEVICE, I_BLUEZ_SERVICE } from './BusObject';
-import { DbusNoble } from './Noble';
-import { DbusService } from './Service';
+import { DbusGattRemote } from './gatt';
+import { I_BLUEZ_DEVICE, I_PROPERTIES } from './misc';
 
 // tslint:disable: promise-must-complete
 
 const CONNECT_TIMEOUT = 10; // in seconds
 
-export class DbusPeripheral extends Peripheral<DbusNoble, DbusAdapter> {
-	private readonly object: BusObject;
+export class DbusPeripheral extends Peripheral {
+	public adapter: DbusAdapter;
+	public readonly path: string;
 
-	private services: Map<string, Service> = new Map();
+	private deviceIface: ClientInterface;
+	private propsIface: ClientInterface;
+	private _init: boolean = false;
+
+	private gatt: DbusGattRemote;
 
 	private isConnecting: boolean = false;
 	private connecting: [() => void, (error?: any) => void][] = [];
@@ -23,30 +29,42 @@ export class DbusPeripheral extends Peripheral<DbusNoble, DbusAdapter> {
 	private disconnectTimeout: NodeJS.Timer;
 
 	public constructor(
-		noble: DbusNoble,
 		adapter: DbusAdapter,
+		path: string,
 		id: string,
 		address: string,
 		addressType: AddressType,
-		object: BusObject
+		advertisement: any,
+		rssi: number
 	) {
-		super(noble, adapter, id, address, addressType);
+		super(adapter, id, address, addressType, advertisement, rssi);
 
-		this.object = object;
+		this.path = path;
 	}
 
-	private prop<T>(propName: string) {
-		return this.object.prop<T>(I_BLUEZ_DEVICE, propName);
+	private async init() {
+		if (this._init) {
+			return;
+		}
+
+		const obj = await this.adapter.noble.dbus.getProxyObject('org.bluez', this.path);
+		this.propsIface = obj.getInterface(I_PROPERTIES);
+		this.deviceIface = obj.getInterface(I_BLUEZ_DEVICE);
+
+		this._init = true;
 	}
-	private callMethod<T>(methodName: string, ...args: any[]) {
-		return this.object.callMethod<T>(I_BLUEZ_DEVICE, methodName, ...args);
+
+	private async prop<T>(iface: string, name: string): Promise<T> {
+		await this.init();
+		const rawProp = await this.propsIface.Get(iface, name);
+		return rawProp.value;
 	}
 
 	private async isConnected() {
-		return this.prop<boolean>('Connected');
+		return this.prop<boolean>(I_BLUEZ_DEVICE, 'Connected');
 	}
 
-	public async connect(requestMtu?: number): Promise<void> {
+	public async connect(): Promise<void> {
 		if (await this.isConnected()) {
 			return;
 		}
@@ -67,26 +85,27 @@ export class DbusPeripheral extends Peripheral<DbusNoble, DbusAdapter> {
 
 			const done = () => this.doneConnecting();
 
-			const propertiesIface = await this.object.getPropertiesInterface();
+			await this.init();
+
 			const onPropertiesChanged = (iface: string, changedProps: any) => {
 				if (iface !== I_BLUEZ_DEVICE) {
 					return;
 				}
 
 				if ('Connected' in changedProps && changedProps.Connected.value) {
-					propertiesIface.off('PropertiesChanged', onPropertiesChanged);
+					this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 					done();
 				}
 			};
-			propertiesIface.on('PropertiesChanged', onPropertiesChanged);
+			this.propsIface.on('PropertiesChanged', onPropertiesChanged);
 
 			const timeout = async () => {
 				this.doneConnecting('Connecting timed out');
-				propertiesIface.off('PropertiesChanged', onPropertiesChanged);
+				this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 
 				try {
 					// Disconnect can be used to cancel pending connects
-					await this.callMethod('Disconnect');
+					await this.deviceIface.Disconnect();
 				} catch {
 					// NO-OP
 				}
@@ -94,7 +113,7 @@ export class DbusPeripheral extends Peripheral<DbusNoble, DbusAdapter> {
 			this.connectTimeout = setTimeout(timeout, CONNECT_TIMEOUT * 1000);
 
 			try {
-				await this.callMethod('Connect');
+				await this.deviceIface.Connect();
 			} catch (err) {
 				this.doneConnecting(err);
 			}
@@ -114,9 +133,6 @@ export class DbusPeripheral extends Peripheral<DbusNoble, DbusAdapter> {
 			return new Promise<void>((resolve, reject) => this.disconnecting.push([resolve, reject]));
 		}
 
-		// Currently disabled the cache after disconnect because it seems to throw errors
-		// this.gattServer = null;
-
 		this.disconnecting = [];
 		this.isDisconnecting = true;
 
@@ -125,27 +141,28 @@ export class DbusPeripheral extends Peripheral<DbusNoble, DbusAdapter> {
 
 			const done = () => this.doneDisconnecting();
 
-			const propertiesIface = await this.object.getPropertiesInterface();
+			await this.init();
+
 			const onPropertiesChanged = (iface: string, changedProps: any) => {
 				if (iface !== I_BLUEZ_DEVICE) {
 					return;
 				}
 
 				if ('Connected' in changedProps && !changedProps.Connected.value) {
-					propertiesIface.off('PropertiesChanged', onPropertiesChanged);
+					this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 					done();
 				}
 			};
-			propertiesIface.on('PropertiesChanged', onPropertiesChanged);
+			this.propsIface.on('PropertiesChanged', onPropertiesChanged);
 
 			const timeout = () => {
 				this.doneDisconnecting('Disconnecting timed out');
-				propertiesIface.off('PropertiesChanged', onPropertiesChanged);
+				this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 			};
 			this.disconnectTimeout = setTimeout(timeout, CONNECT_TIMEOUT * 1000);
 
 			try {
-				await this.callMethod('Disconnect');
+				await this.deviceIface.Disconnect();
 			} catch (err) {
 				this.doneDisconnecting(err);
 			}
@@ -185,56 +202,16 @@ export class DbusPeripheral extends Peripheral<DbusNoble, DbusAdapter> {
 		this.disconnecting = [];
 	}
 
-	public getDiscoveredServices(): Service[] {
-		return [...this.services.values()];
-	}
+	public async setupGatt(requestMtu?: number): Promise<DbusGattRemote> {
+		if (this.gatt) {
+			return this.gatt;
+		}
 
-	public discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
-		return new Promise<Service[]>(async (resolve, reject) => {
-			let cancelled = false;
-			const onTimeout = () => {
-				cancelled = true;
-				reject(new Error('Discovering timed out'));
-			};
-			const timeout = setTimeout(onTimeout, CONNECT_TIMEOUT * 1000);
+		if (requestMtu) {
+			throw new Error(`MTU requests are not accepted for dbus`);
+		}
 
-			const servicesResolved = await this.prop<boolean>('ServicesResolved');
-			if (!servicesResolved) {
-				await new Promise(async (res) => {
-					const propertiesIface = await this.object.getPropertiesInterface();
-					const onPropertiesChanged = (iface: string, changedProps: any) => {
-						if (iface !== I_BLUEZ_DEVICE) {
-							return;
-						}
-
-						if ('ServicesResolved' in changedProps && changedProps.ServicesResolved.value) {
-							propertiesIface.off('PropertiesChanged', onPropertiesChanged);
-							res();
-						}
-					};
-					propertiesIface.on('PropertiesChanged', onPropertiesChanged);
-				});
-			}
-
-			if (cancelled) {
-				// If we canceled by timeout then all the promises have already been rejected, so just return.
-				return;
-			} else {
-				clearTimeout(timeout);
-			}
-
-			const serviceIds = await this.object.getChildrenNames();
-			for (const serviceId of serviceIds) {
-				let service = this.services.get(serviceId);
-				if (!service) {
-					const object = this.object.getChild(serviceId);
-					const uuid = (await object.prop<string>(I_BLUEZ_SERVICE, 'UUID')).replace(/\-/g, '');
-					service = new DbusService(this.noble, this, uuid, object);
-					this.services.set(uuid, service);
-				}
-			}
-
-			resolve([...this.services.values()]);
-		});
+		this.gatt = new DbusGattRemote(this);
+		return this.gatt;
 	}
 }

@@ -1,0 +1,42 @@
+/// <reference types="node" />
+import { GattRemote, Peripheral } from '../../../../models';
+import { Hci } from '../../misc';
+import { HciGattCharacteristicRemote } from './Characteristic';
+import { HciGattDescriptorRemote } from './Descriptor';
+import { HciGattServiceRemote } from './Service';
+export declare class HciGattRemote extends GattRemote {
+    private hci;
+    private handle;
+    private security;
+    private currentCommand;
+    private commandQueue;
+    services: Map<string, HciGattServiceRemote>;
+    constructor(peripheral: Peripheral, hci: Hci, handle: number);
+    private processCommands;
+    dispose(): void;
+    private onAclStreamData;
+    private writeAtt;
+    private errorResponse;
+    private queueCommand;
+    private mtuRequest;
+    readByGroupRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;
+    readByTypeRequest(startHandle: number, endHandle: number, groupUUID: number): Buffer;
+    readRequest(handle: number): Buffer;
+    readBlobRequest(handle: number, offset: number): Buffer;
+    findInfoRequest(startHandle: number, endHandle: number): Buffer;
+    writeRequest(handle: number, data: Buffer, withoutResponse: boolean): Buffer;
+    private prepareWriteRequest;
+    private executeWriteRequest;
+    private handleConfirmation;
+    exchangeMtu(mtu: number): Promise<number>;
+    protected doDiscoverServices(): Promise<HciGattServiceRemote[]>;
+    discoverCharacteristics(serviceUUID: string): Promise<HciGattCharacteristicRemote[]>;
+    read(serviceUUID: string, characteristicUUID: string): Promise<Buffer>;
+    write(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean): Promise<void>;
+    private longWrite;
+    broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): Promise<void>;
+    notify(serviceUUID: string, characteristicUUID: string, notify: boolean): Promise<void>;
+    discoverDescriptors(serviceUUID: string, characteristicUUID: string): Promise<HciGattDescriptorRemote[]>;
+    readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): Promise<Buffer>;
+    writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer): Promise<void>;
+}

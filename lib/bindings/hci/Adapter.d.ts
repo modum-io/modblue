@@ -1,11 +1,14 @@
-import { Adapter, Peripheral } from '../../models';
-import { HciNoble } from './Noble';
+import { Adapter, GattLocal, Peripheral } from '../../models';
 import { HciPeripheral } from './Peripheral';
-export declare class HciAdapter extends Adapter<HciNoble> {
+export declare class HciAdapter extends Adapter {
     private initialized;
     private scanning;
+    private advertising;
     private hci;
     private gap;
+    private gatt;
+    private deviceName;
+    private advertisedServiceUUIDs;
     private peripherals;
     private uuidToHandle;
     private handleToUUID;
@@ -18,4 +21,8 @@ export declare class HciAdapter extends Adapter<HciNoble> {
     private onDiscover;
     connect(peripheral: HciPeripheral): Promise<void>;
     disconnect(peripheral: HciPeripheral): Promise<void>;
+    startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
+    stopAdvertising(): Promise<void>;
+    setupGatt(maxMtu?: number): Promise<GattLocal>;
+    private onDisconnectComplete;
 }

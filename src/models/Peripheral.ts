@@ -1,19 +1,17 @@
-import { AddressType, PeripheralState } from '../types';
+import { AddressType } from '../types';
 
 import { Adapter } from './Adapter';
-import { Noble } from './Noble';
-import { Service } from './Service';
+import { GattRemote } from './gatt';
 
-export abstract class Peripheral<N extends Noble = Noble, A extends Adapter = Adapter> {
-	protected readonly noble: N;
+export type PeripheralState = 'connecting' | 'connected' | 'disconnecting' | 'disconnected';
 
-	public readonly adapter: A;
+export abstract class Peripheral {
+	public readonly adapter: Adapter;
 
 	public readonly uuid: string;
-	public readonly address: string;
 	public readonly addressType: AddressType;
+	public readonly address: string;
 
-	public connectable: boolean;
 	public advertisement: any;
 	public rssi: number;
 
@@ -21,34 +19,24 @@ export abstract class Peripheral<N extends Noble = Noble, A extends Adapter = Ad
 	public get state() {
 		return this._state;
 	}
-	protected _mtu: number;
-	public get mtu() {
-		return this._mtu;
-	}
 
 	public constructor(
-		noble: N,
-		adapter: A,
+		adapter: Adapter,
 		uuid: string,
 		address: string,
 		addressType: AddressType,
-		connectable?: boolean,
 		advertisement?: any,
 		rssi?: number
 	) {
-		this.noble = noble;
-
 		this.adapter = adapter;
 		this.uuid = uuid;
-		this.address = address;
 		this.addressType = addressType;
+		this.address = address;
 
-		this.connectable = connectable;
 		this.advertisement = advertisement;
 		this.rssi = rssi;
 
 		this._state = 'disconnected';
-		this._mtu = null;
 	}
 
 	public toString() {
@@ -56,19 +44,14 @@ export abstract class Peripheral<N extends Noble = Noble, A extends Adapter = Ad
 			uuid: this.uuid,
 			address: this.address,
 			addressType: this.addressType,
-			connectable: this.connectable,
 			advertisement: this.advertisement,
 			rssi: this.rssi,
-			state: this._state,
-			mtu: this._mtu
+			state: this._state
 		});
 	}
 
-	public abstract async connect(requestMtu?: number): Promise<void>;
-
+	public abstract async connect(): Promise<void>;
 	public abstract async disconnect(): Promise<void>;
 
-	public abstract getDiscoveredServices(): Service[];
-
-	public abstract async discoverServices(serviceUUIDs?: string[]): Promise<Service[]>;
+	public abstract async setupGatt(requestMtu?: number): Promise<GattRemote>;
 }

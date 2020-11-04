@@ -1,0 +1,1 @@
+export { HciGattLocal } from './Gatt';

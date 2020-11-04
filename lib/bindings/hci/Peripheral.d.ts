@@ -1,19 +1,17 @@
-import { Peripheral, Service } from '../../models';
+import { Peripheral } from '../../models';
 import { HciAdapter } from './Adapter';
-import { Hci } from './hci';
-import { HciNoble } from './Noble';
-export declare class HciPeripheral extends Peripheral<HciNoble, HciAdapter> {
+import { HciGattRemote } from './gatt';
+import { Hci } from './misc';
+export declare class HciPeripheral extends Peripheral {
+    adapter: HciAdapter;
     private hci;
-    private handle;
     private gatt;
+    private mtuExchanged;
+    private handle;
     private signaling;
-    private requestedMTU;
-    private services;
-    connect(requestMtu?: number): Promise<void>;
+    connect(): Promise<void>;
     onConnect(hci: Hci, handle: number): Promise<void>;
     disconnect(): Promise<void>;
     onDisconnect(): Promise<void>;
-    getDiscoveredServices(): Service[];
-    discoverServices(serviceUUIDs?: string[]): Promise<Service[]>;
-    discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]): Promise<Service[]>;
+    setupGatt(requestMtu?: number): Promise<HciGattRemote>;
 }

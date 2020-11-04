@@ -11,7 +11,7 @@ Arguments:
 `;
 
 const BINDINGS = process.argv[2];
-const PERIPHERAL_ADDRESSES = (process.argv[3] || '').split('|');
+const PERIPHERAL_ADDRESSES = (process.argv[3] || '').split(/[,|;]/g);
 const SERVICE_UUID = process.argv[4];
 const CHAR_UUID = process.argv[5];
 
@@ -25,12 +25,9 @@ const main = async () => {
 	console.log('Initializing noble...');
 
 	const noble = BINDINGS === 'hci' ? new HciNoble() : BINDINGS === 'dbus' ? new DbusNoble() : null;
-
 	if (!noble) {
 		throw new Error(`Could not find requested bindings ${BINDINGS}`);
 	}
-
-	await noble.init();
 
 	console.log('Getting adapters...');
 
@@ -78,9 +75,13 @@ const main = async () => {
 
 			await peripheral.connect();
 
-			console.log(`Connected (mtu: ${peripheral.mtu}), discovering services...`);
+			console.log(`Connected, setting up gatt...`);
 
-			const services = await peripheral.discoverServices();
+			const gatt = await peripheral.setupGatt();
+
+			console.log(`Setup (mtu: ${gatt.mtu}), discovering services...`);
+
+			const services = await gatt.discoverServices();
 			const service = services.find((s) => s.uuid === SERVICE_UUID);
 			if (!service) {
 				throw new Error(`Missing service ${SERVICE_UUID}.\nAvailable: ${services.map((s) => s.uuid).join(', ')}`);
@@ -98,7 +99,7 @@ const main = async () => {
 
 			const data = await char.read();
 
-			console.log(data);
+			console.log(`Data: ${data.toString(`hex`)}`);
 
 			console.log('Disconnecting...');
 
