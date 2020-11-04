@@ -1,12 +1,12 @@
 /// <reference types="node" />
-import { BaseCharacteristic } from '../../Characteristic';
-import { BaseDescriptor } from '../../Descriptor';
+import { Characteristic } from '../../Characteristic';
+import { Descriptor } from '../../Descriptor';
 import { BusObject } from './BusObject';
-import { Noble } from './Noble';
-import { Service } from './Service';
-export declare class Characteristic extends BaseCharacteristic<Noble, Service> {
+import { DbusNoble } from './Noble';
+import { DbusService } from './Service';
+export declare class DbusCharacteristic extends Characteristic<DbusNoble, DbusService> {
     private readonly object;
-    constructor(noble: Noble, service: Service, uuid: string, properties: string[], object: BusObject);
+    constructor(noble: DbusNoble, service: DbusService, uuid: string, properties: string[], object: BusObject);
     private prop;
     private callMethod;
     read(offset?: number): Promise<Buffer>;
@@ -14,6 +14,6 @@ export declare class Characteristic extends BaseCharacteristic<Noble, Service> {
     broadcast(broadcast: boolean): Promise<void>;
     subscribe(): Promise<void>;
     unsubscribe(): Promise<void>;
-    getDiscoveredDescriptors(): BaseDescriptor[];
-    discoverDescriptors(): Promise<BaseDescriptor[]>;
+    getDiscoveredDescriptors(): Descriptor[];
+    discoverDescriptors(): Promise<Descriptor[]>;
 }

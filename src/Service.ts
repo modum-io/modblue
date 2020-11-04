@@ -1,8 +1,8 @@
-import { BaseCharacteristic } from './Characteristic';
-import { BaseNoble } from './Noble';
-import { BasePeripheral } from './Peripheral';
+import { Characteristic } from './Characteristic';
+import { Noble } from './Noble';
+import { Peripheral } from './Peripheral';
 
-export abstract class BaseService<N extends BaseNoble = BaseNoble, P extends BasePeripheral = BasePeripheral> {
+export abstract class Service<N extends Noble = Noble, P extends Peripheral = Peripheral> {
 	protected readonly noble: N;
 
 	public readonly peripheral: P;
@@ -23,9 +23,9 @@ export abstract class BaseService<N extends BaseNoble = BaseNoble, P extends Bas
 		});
 	}
 
-	public abstract async discoverIncludedServices(serviceUUIDs: string[]): Promise<BaseService[]>;
+	public abstract async discoverIncludedServices(serviceUUIDs: string[]): Promise<Service[]>;
 
-	public abstract getDiscoveredCharacteristics(): BaseCharacteristic[];
+	public abstract getDiscoveredCharacteristics(): Characteristic[];
 
-	public abstract async discoverCharacteristics(characteristicUUIDs?: string[]): Promise<BaseCharacteristic[]>;
+	public abstract async discoverCharacteristics(characteristicUUIDs?: string[]): Promise<Characteristic[]>;
 }

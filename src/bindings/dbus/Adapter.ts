@@ -1,15 +1,15 @@
-import { BaseAdapter } from '../../Adapter';
-import { BasePeripheral } from '../../Peripheral';
+import { Adapter } from '../../Adapter';
+import { Peripheral } from '../../Peripheral';
 import { AddressType } from '../../types';
 
 import { BusObject, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE } from './BusObject';
-import { Noble } from './Noble';
-import { Peripheral } from './Peripheral';
+import { DbusNoble } from './Noble';
+import { DbusPeripheral } from './Peripheral';
 import { buildTypedValue } from './TypeValue';
 
 const UPDATE_INTERVAL = 1; // in seconds
 
-export class Adapter extends BaseAdapter<Noble> {
+export class DbusAdapter extends Adapter<DbusNoble> {
 	private readonly object: BusObject;
 	private initialized: boolean = false;
 	private scanning: boolean = false;
@@ -18,7 +18,7 @@ export class Adapter extends BaseAdapter<Noble> {
 	private peripherals: Map<string, Peripheral> = new Map();
 	private updateTimer: NodeJS.Timer;
 
-	public constructor(noble: Noble, id: string, name: string, address: string, object: BusObject) {
+	public constructor(noble: DbusNoble, id: string, name: string, address: string, object: BusObject) {
 		super(noble, id);
 
 		this._name = name;
@@ -57,7 +57,7 @@ export class Adapter extends BaseAdapter<Noble> {
 		return this.object.callMethod<T>(I_BLUEZ_ADAPTER, methodName, ...args);
 	}
 
-	public async getScannedPeripherals(): Promise<BasePeripheral[]> {
+	public async getScannedPeripherals(): Promise<Peripheral[]> {
 		return [...this.peripherals.values()];
 	}
 
@@ -125,7 +125,7 @@ export class Adapter extends BaseAdapter<Noble> {
 				const object = this.object.getChild(peripheralId);
 				const address = await object.prop<string>(I_BLUEZ_DEVICE, 'Address');
 				const addressType = await object.prop<AddressType>(I_BLUEZ_DEVICE, 'AddressType');
-				peripheral = new Peripheral(this.noble, this, peripheralId, address, addressType, object);
+				peripheral = new DbusPeripheral(this.noble, this, peripheralId, address, addressType, object);
 				this.peripherals.set(peripheralId, peripheral);
 			}
 

@@ -1,10 +1,7 @@
-import { BaseCharacteristic } from './Characteristic';
-import { BaseNoble } from './Noble';
+import { Characteristic } from './Characteristic';
+import { Noble } from './Noble';
 
-export abstract class BaseDescriptor<
-	N extends BaseNoble = BaseNoble,
-	C extends BaseCharacteristic = BaseCharacteristic
-> {
+export abstract class Descriptor<N extends Noble = Noble, C extends Characteristic = Characteristic> {
 	protected readonly noble: N;
 
 	public readonly characteristic: C;

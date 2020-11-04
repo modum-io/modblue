@@ -1,17 +1,17 @@
-import { BaseCharacteristic } from '../../Characteristic';
-import { BaseDescriptor } from '../../Descriptor';
+import { Characteristic } from '../../Characteristic';
+import { Descriptor } from '../../Descriptor';
 
-import { Descriptor } from './Descriptor';
+import { HciDescriptor } from './Descriptor';
 import { Gatt } from './gatt';
-import { Noble } from './Noble';
-import { Service } from './Service';
+import { HciNoble } from './Noble';
+import { HciService } from './Service';
 
-export class Characteristic extends BaseCharacteristic<Noble, Service> {
+export class HciCharacteristic extends Characteristic<HciNoble, HciService> {
 	private gatt: Gatt;
 
 	private descriptors: Map<string, Descriptor> = new Map();
 
-	public constructor(noble: Noble, service: Service, uuid: string, properties: string[], gatt: Gatt) {
+	public constructor(noble: HciNoble, service: HciService, uuid: string, properties: string[], gatt: Gatt) {
 		super(noble, service, uuid, properties);
 
 		this.gatt = gatt;
@@ -40,16 +40,16 @@ export class Characteristic extends BaseCharacteristic<Noble, Service> {
 		await this.notify(false);
 	}
 
-	public getDiscoveredDescriptors(): BaseDescriptor[] {
+	public getDiscoveredDescriptors(): Descriptor[] {
 		return [...this.descriptors.values()];
 	}
 
-	public async discoverDescriptors(uuids?: string[]): Promise<BaseDescriptor[]> {
+	public async discoverDescriptors(uuids?: string[]): Promise<Descriptor[]> {
 		const descriptors = await this.gatt.discoverDescriptors(this.service.uuid, this.uuid, uuids || []);
 		for (const rawDescriptor of descriptors) {
 			let descriptor = this.descriptors.get(rawDescriptor.uuid);
 			if (!descriptor) {
-				descriptor = new Descriptor(this.noble, this, rawDescriptor.uuid, this.gatt);
+				descriptor = new HciDescriptor(this.noble, this, rawDescriptor.uuid, this.gatt);
 				this.descriptors.set(rawDescriptor.uuid, descriptor);
 			}
 		}

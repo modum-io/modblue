@@ -1,13 +1,13 @@
-import { BaseDescriptor } from '../../Descriptor';
+import { Descriptor } from '../../Descriptor';
 
-import { Characteristic } from './Characteristic';
+import { HciCharacteristic } from './Characteristic';
 import { Gatt } from './gatt';
-import { Noble } from './Noble';
+import { HciNoble } from './Noble';
 
-export class Descriptor extends BaseDescriptor {
+export class HciDescriptor extends Descriptor {
 	private gatt: Gatt;
 
-	public constructor(noble: Noble, characteristic: Characteristic, uuid: string, gatt: Gatt) {
+	public constructor(noble: HciNoble, characteristic: HciCharacteristic, uuid: string, gatt: Gatt) {
 		super(noble, characteristic, uuid);
 
 		this.gatt = gatt;

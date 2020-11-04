@@ -1,9 +1,9 @@
-import { BaseAdapter } from './Adapter';
-import { BaseNoble } from './Noble';
-import { BaseService } from './Service';
+import { Adapter } from './Adapter';
+import { Noble } from './Noble';
+import { Service } from './Service';
 import { AddressType, PeripheralState } from './types';
 
-export abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends BaseAdapter = BaseAdapter> {
+export abstract class Peripheral<N extends Noble = Noble, A extends Adapter = Adapter> {
 	protected readonly noble: N;
 
 	public readonly adapter: A;
@@ -67,7 +67,7 @@ export abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends 
 
 	public abstract async disconnect(): Promise<void>;
 
-	public abstract getDiscoveredServices(): BaseService[];
+	public abstract getDiscoveredServices(): Service[];
 
-	public abstract async discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]>;
+	public abstract async discoverServices(serviceUUIDs?: string[]): Promise<Service[]>;
 }

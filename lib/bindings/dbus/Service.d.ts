@@ -1,13 +1,13 @@
-import { BaseCharacteristic } from '../../Characteristic';
-import { BaseService } from '../../Service';
+import { Characteristic } from '../../Characteristic';
+import { Service } from '../../Service';
 import { BusObject } from './BusObject';
-import { Noble } from './Noble';
-import { Peripheral } from './Peripheral';
-export declare class Service extends BaseService<Noble, Peripheral> {
+import { DbusNoble } from './Noble';
+import { DbusPeripheral } from './Peripheral';
+export declare class DbusService extends Service<DbusNoble, DbusPeripheral> {
     private readonly object;
     private characteristics;
-    constructor(noble: Noble, peripheral: Peripheral, uuid: string, object: BusObject);
-    discoverIncludedServices(serviceUUIDs: string[]): Promise<BaseService[]>;
-    getDiscoveredCharacteristics(): BaseCharacteristic[];
-    discoverCharacteristics(characteristicUUIDs?: string[]): Promise<BaseCharacteristic[]>;
+    constructor(noble: DbusNoble, peripheral: DbusPeripheral, uuid: string, object: BusObject);
+    discoverIncludedServices(serviceUUIDs: string[]): Promise<Service[]>;
+    getDiscoveredCharacteristics(): Characteristic[];
+    discoverCharacteristics(characteristicUUIDs?: string[]): Promise<Characteristic[]>;
 }

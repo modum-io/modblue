@@ -1,10 +1,10 @@
-import { BasePeripheral } from '../../Peripheral';
-import { BaseService } from '../../Service';
+import { Peripheral } from '../../Peripheral';
+import { Service } from '../../Service';
 import { AddressType } from '../../types';
-import { Adapter } from './Adapter';
+import { DbusAdapter } from './Adapter';
 import { BusObject } from './BusObject';
-import { Noble } from './Noble';
-export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
+import { DbusNoble } from './Noble';
+export declare class DbusPeripheral extends Peripheral<DbusNoble, DbusAdapter> {
     private readonly object;
     private services;
     private isConnecting;
@@ -13,7 +13,7 @@ export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     private isDisconnecting;
     private disconnecting;
     private disconnectTimeout;
-    constructor(noble: Noble, adapter: Adapter, id: string, address: string, addressType: AddressType, object: BusObject);
+    constructor(noble: DbusNoble, adapter: DbusAdapter, id: string, address: string, addressType: AddressType, object: BusObject);
     private prop;
     private callMethod;
     private isConnected;
@@ -21,6 +21,6 @@ export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     disconnect(): Promise<void>;
     private doneConnecting;
     private doneDisconnecting;
-    getDiscoveredServices(): BaseService[];
-    discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]>;
+    getDiscoveredServices(): Service[];
+    discoverServices(serviceUUIDs?: string[]): Promise<Service[]>;
 }

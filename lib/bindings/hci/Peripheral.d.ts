@@ -1,10 +1,9 @@
-import { BasePeripheral } from '../../Peripheral';
-import { BaseService } from '../../Service';
-import { Adapter } from './Adapter';
+import { Peripheral } from '../../Peripheral';
+import { Service } from '../../Service';
+import { HciAdapter } from './Adapter';
 import { Hci } from './hci';
-import { Noble } from './Noble';
-import { Service } from './Service';
-export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
+import { HciNoble } from './Noble';
+export declare class HciPeripheral extends Peripheral<HciNoble, HciAdapter> {
     private hci;
     private handle;
     private gatt;
@@ -15,7 +14,7 @@ export declare class Peripheral extends BasePeripheral<Noble, Adapter> {
     onConnect(hci: Hci, handle: number): Promise<void>;
     disconnect(): Promise<void>;
     onDisconnect(): Promise<void>;
-    getDiscoveredServices(): BaseService[];
-    discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]>;
-    discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]): Promise<BaseService[]>;
+    getDiscoveredServices(): Service[];
+    discoverServices(serviceUUIDs?: string[]): Promise<Service[]>;
+    discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]): Promise<Service[]>;
 }

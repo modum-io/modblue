@@ -1,8 +1,8 @@
-import { BaseAdapter } from '../../Adapter';
-import { BasePeripheral } from '../../Peripheral';
-import { Noble } from './Noble';
-import { Peripheral } from './Peripheral';
-export declare class Adapter extends BaseAdapter<Noble> {
+import { Adapter } from '../../Adapter';
+import { Peripheral } from '../../Peripheral';
+import { HciNoble } from './Noble';
+import { HciPeripheral } from './Peripheral';
+export declare class HciAdapter extends Adapter<HciNoble> {
     private initialized;
     private scanning;
     private hci;
@@ -10,13 +10,13 @@ export declare class Adapter extends BaseAdapter<Noble> {
     private peripherals;
     private uuidToHandle;
     private handleToUUID;
-    getScannedPeripherals(): Promise<BasePeripheral[]>;
+    getScannedPeripherals(): Promise<Peripheral[]>;
     isScanning(): Promise<boolean>;
     private init;
     dispose(): void;
     startScanning(): Promise<void>;
     stopScanning(): Promise<void>;
     private onDiscover;
-    connect(peripheral: Peripheral): Promise<void>;
-    disconnect(peripheral: Peripheral): Promise<void>;
+    connect(peripheral: HciPeripheral): Promise<void>;
+    disconnect(peripheral: HciPeripheral): Promise<void>;
 }

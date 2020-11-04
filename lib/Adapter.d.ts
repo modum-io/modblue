@@ -1,13 +1,13 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { BaseNoble } from './Noble';
-import { BasePeripheral } from './Peripheral';
+import { Noble } from './Noble';
+import { Peripheral } from './Peripheral';
 import { AddressType } from './types';
-export declare interface BaseAdapter<N extends BaseNoble = BaseNoble> {
-    on(event: 'discover', listener: (peripheral: BasePeripheral) => void): this;
-    emit(event: 'discover', peripheral: BasePeripheral): boolean;
+export declare interface Adapter<N extends Noble = Noble> {
+    on(event: 'discover', listener: (peripheral: Peripheral) => void): this;
+    emit(event: 'discover', peripheral: Peripheral): boolean;
 }
-export declare abstract class BaseAdapter<N extends BaseNoble = BaseNoble> extends EventEmitter {
+export declare abstract class Adapter<N extends Noble = Noble> extends EventEmitter {
     protected readonly noble: N;
     readonly id: string;
     protected _name: string;
@@ -21,5 +21,5 @@ export declare abstract class BaseAdapter<N extends BaseNoble = BaseNoble> exten
     abstract isScanning(): Promise<boolean>;
     abstract startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;
     abstract stopScanning(): Promise<void>;
-    abstract getScannedPeripherals(): Promise<BasePeripheral[]>;
+    abstract getScannedPeripherals(): Promise<Peripheral[]>;
 }

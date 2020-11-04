@@ -1,7 +1,7 @@
 /// <reference types="node" />
-import { BaseCharacteristic } from './Characteristic';
-import { BaseNoble } from './Noble';
-export declare abstract class BaseDescriptor<N extends BaseNoble = BaseNoble, C extends BaseCharacteristic = BaseCharacteristic> {
+import { Characteristic } from './Characteristic';
+import { Noble } from './Noble';
+export declare abstract class Descriptor<N extends Noble = Noble, C extends Characteristic = Characteristic> {
     protected readonly noble: N;
     readonly characteristic: C;
     readonly uuid: string;

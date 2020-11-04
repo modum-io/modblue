@@ -1,17 +1,17 @@
-import { BasePeripheral } from '../../Peripheral';
-import { BaseService } from '../../Service';
+import { Peripheral } from '../../Peripheral';
+import { Service } from '../../Service';
 import { AddressType } from '../../types';
 
-import { Adapter } from './Adapter';
+import { DbusAdapter } from './Adapter';
 import { BusObject, I_BLUEZ_DEVICE, I_BLUEZ_SERVICE } from './BusObject';
-import { Noble } from './Noble';
-import { Service } from './Service';
+import { DbusNoble } from './Noble';
+import { DbusService } from './Service';
 
 // tslint:disable: promise-must-complete
 
 const CONNECT_TIMEOUT = 10; // in seconds
 
-export class Peripheral extends BasePeripheral<Noble, Adapter> {
+export class DbusPeripheral extends Peripheral<DbusNoble, DbusAdapter> {
 	private readonly object: BusObject;
 
 	private services: Map<string, Service> = new Map();
@@ -24,8 +24,8 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 	private disconnectTimeout: NodeJS.Timer;
 
 	public constructor(
-		noble: Noble,
-		adapter: Adapter,
+		noble: DbusNoble,
+		adapter: DbusAdapter,
 		id: string,
 		address: string,
 		addressType: AddressType,
@@ -186,11 +186,11 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.disconnecting = [];
 	}
 
-	public getDiscoveredServices(): BaseService[] {
+	public getDiscoveredServices(): Service[] {
 		return [...this.services.values()];
 	}
 
-	public discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]> {
+	public discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
 		return new Promise<Service[]>(async (resolve, reject) => {
 			let cancelled = false;
 			const onTimeout = () => {
@@ -230,7 +230,7 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 				if (!service) {
 					const object = this.object.getChild(serviceId);
 					const uuid = (await object.prop<string>(I_BLUEZ_SERVICE, 'UUID')).replace(/\-/g, '');
-					service = new Service(this.noble, this, uuid, object);
+					service = new DbusService(this.noble, this, uuid, object);
 					this.services.set(uuid, service);
 				}
 			}

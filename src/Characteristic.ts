@@ -1,13 +1,10 @@
 import { EventEmitter } from 'events';
 
-import { BaseDescriptor } from './Descriptor';
-import { BaseNoble } from './Noble';
-import { BaseService } from './Service';
+import { Descriptor } from './Descriptor';
+import { Noble } from './Noble';
+import { Service } from './Service';
 
-export abstract class BaseCharacteristic<
-	N extends BaseNoble = BaseNoble,
-	S extends BaseService = BaseService
-> extends EventEmitter {
+export abstract class Characteristic<N extends Noble = Noble, S extends Service = Service> extends EventEmitter {
 	protected readonly noble: N;
 
 	public readonly service: S;
@@ -43,7 +40,7 @@ export abstract class BaseCharacteristic<
 	public abstract async subscribe(): Promise<void>;
 	public abstract async unsubscribe(): Promise<void>;
 
-	public abstract getDiscoveredDescriptors(): BaseDescriptor[];
+	public abstract getDiscoveredDescriptors(): Descriptor[];
 
-	public abstract async discoverDescriptors(): Promise<BaseDescriptor[]>;
+	public abstract async discoverDescriptors(): Promise<Descriptor[]>;
 }

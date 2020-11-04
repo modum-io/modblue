@@ -1,15 +1,15 @@
-import { BaseCharacteristic } from '../../Characteristic';
-import { BaseDescriptor } from '../../Descriptor';
+import { Characteristic } from '../../Characteristic';
+import { Descriptor } from '../../Descriptor';
 
 import { BusObject, I_BLUEZ_CHARACTERISTIC } from './BusObject';
-import { Noble } from './Noble';
-import { Service } from './Service';
+import { DbusNoble } from './Noble';
+import { DbusService } from './Service';
 import { buildTypedValue } from './TypeValue';
 
-export class Characteristic extends BaseCharacteristic<Noble, Service> {
+export class DbusCharacteristic extends Characteristic<DbusNoble, DbusService> {
 	private readonly object: BusObject;
 
-	public constructor(noble: Noble, service: Service, uuid: string, properties: string[], object: BusObject) {
+	public constructor(noble: DbusNoble, service: DbusService, uuid: string, properties: string[], object: BusObject) {
 		super(noble, service, uuid, properties);
 
 		this.object = object;
@@ -49,11 +49,11 @@ export class Characteristic extends BaseCharacteristic<Noble, Service> {
 		throw new Error('Method not implemented.');
 	}
 
-	public getDiscoveredDescriptors(): BaseDescriptor[] {
+	public getDiscoveredDescriptors(): Descriptor[] {
 		throw new Error('Method not implemented.');
 	}
 
-	public discoverDescriptors(): Promise<BaseDescriptor[]> {
+	public discoverDescriptors(): Promise<Descriptor[]> {
 		throw new Error('Method not implemented.');
 	}
 }

@@ -1,11 +1,11 @@
-import { BaseAdapter } from '../../Adapter';
-import { BaseNoble } from '../../Noble';
-export declare class Noble extends BaseNoble {
+import { Adapter } from '../../Adapter';
+import { Noble } from '../../Noble';
+export declare class DbusNoble extends Noble {
     private readonly dbus;
     private bluezObject;
     private adapters;
     constructor();
     init(): Promise<void>;
     dispose(): Promise<void>;
-    getAdapters(): Promise<BaseAdapter[]>;
+    getAdapters(): Promise<Adapter[]>;
 }

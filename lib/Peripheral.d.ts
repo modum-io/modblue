@@ -1,8 +1,8 @@
-import { BaseAdapter } from './Adapter';
-import { BaseNoble } from './Noble';
-import { BaseService } from './Service';
+import { Adapter } from './Adapter';
+import { Noble } from './Noble';
+import { Service } from './Service';
 import { AddressType, PeripheralState } from './types';
-export declare abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A extends BaseAdapter = BaseAdapter> {
+export declare abstract class Peripheral<N extends Noble = Noble, A extends Adapter = Adapter> {
     protected readonly noble: N;
     readonly adapter: A;
     readonly uuid: string;
@@ -19,6 +19,6 @@ export declare abstract class BasePeripheral<N extends BaseNoble = BaseNoble, A 
     toString(): string;
     abstract connect(requestMtu?: number): Promise<void>;
     abstract disconnect(): Promise<void>;
-    abstract getDiscoveredServices(): BaseService[];
-    abstract discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]>;
+    abstract getDiscoveredServices(): Service[];
+    abstract discoverServices(serviceUUIDs?: string[]): Promise<Service[]>;
 }

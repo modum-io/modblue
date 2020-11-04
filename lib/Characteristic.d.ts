@@ -1,9 +1,9 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { BaseDescriptor } from './Descriptor';
-import { BaseNoble } from './Noble';
-import { BaseService } from './Service';
-export declare abstract class BaseCharacteristic<N extends BaseNoble = BaseNoble, S extends BaseService = BaseService> extends EventEmitter {
+import { Descriptor } from './Descriptor';
+import { Noble } from './Noble';
+import { Service } from './Service';
+export declare abstract class Characteristic<N extends Noble = Noble, S extends Service = Service> extends EventEmitter {
     protected readonly noble: N;
     readonly service: S;
     readonly uuid: string;
@@ -15,6 +15,6 @@ export declare abstract class BaseCharacteristic<N extends BaseNoble = BaseNoble
     abstract broadcast(broadcast: boolean): Promise<void>;
     abstract subscribe(): Promise<void>;
     abstract unsubscribe(): Promise<void>;
-    abstract getDiscoveredDescriptors(): BaseDescriptor[];
-    abstract discoverDescriptors(): Promise<BaseDescriptor[]>;
+    abstract getDiscoveredDescriptors(): Descriptor[];
+    abstract discoverDescriptors(): Promise<Descriptor[]>;
 }

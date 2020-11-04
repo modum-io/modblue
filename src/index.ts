@@ -1,9 +1,9 @@
-export { BaseAdapter as Adapter } from './Adapter';
-export { BaseCharacteristic as Characteristic } from './Characteristic';
-export { BaseDescriptor as Descriptor } from './Descriptor';
-export { BaseNoble as Noble } from './Noble';
-export { BasePeripheral as Peripheral } from './Peripheral';
-export { BaseService as Service } from './Service';
+export { Adapter } from './Adapter';
+export { Characteristic } from './Characteristic';
+export { Descriptor } from './Descriptor';
+export { Noble } from './Noble';
+export { Peripheral } from './Peripheral';
+export { Service } from './Service';
 
-export { Noble as HCINoble } from './bindings/hci';
-export { Noble as DBUSNoble } from './bindings/dbus';
+export { HciNoble } from './bindings/hci';
+export { DbusNoble } from './bindings/dbus';

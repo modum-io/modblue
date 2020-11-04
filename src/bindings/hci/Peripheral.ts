@@ -1,14 +1,14 @@
-import { BasePeripheral } from '../../Peripheral';
-import { BaseService } from '../../Service';
+import { Peripheral } from '../../Peripheral';
+import { Service } from '../../Service';
 
-import { Adapter } from './Adapter';
+import { HciAdapter } from './Adapter';
 import { Gatt } from './gatt';
 import { Hci } from './hci';
-import { Noble } from './Noble';
-import { Service } from './Service';
+import { HciNoble } from './Noble';
+import { HciService } from './Service';
 import { Signaling } from './signaling';
 
-export class Peripheral extends BasePeripheral<Noble, Adapter> {
+export class HciPeripheral extends Peripheral<HciNoble, HciAdapter> {
 	private hci: Hci;
 	private handle: number;
 	private gatt: Gatt;
@@ -60,28 +60,28 @@ export class Peripheral extends BasePeripheral<Noble, Adapter> {
 		this.services = new Map();
 	}
 
-	public getDiscoveredServices(): BaseService[] {
+	public getDiscoveredServices(): Service[] {
 		return [...this.services.values()];
 	}
 
-	public async discoverServices(serviceUUIDs?: string[]): Promise<BaseService[]> {
+	public async discoverServices(serviceUUIDs?: string[]): Promise<Service[]> {
 		const services = await this.gatt.discoverServices(serviceUUIDs || []);
 		for (const rawService of services) {
 			let service = this.services.get(rawService.uuid);
 			if (!service) {
-				service = new Service(this.noble, this, rawService.uuid, this.gatt);
+				service = new HciService(this.noble, this, rawService.uuid, this.gatt);
 				this.services.set(rawService.uuid, service);
 			}
 		}
 		return [...this.services.values()];
 	}
 
-	public async discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]): Promise<BaseService[]> {
+	public async discoverIncludedServices(baseService: Service, serviceUUIDs?: string[]): Promise<Service[]> {
 		const services = await this.gatt.discoverIncludedServices(baseService.uuid, serviceUUIDs);
 		for (const rawService of services) {
 			let service = this.services.get(rawService.uuid);
 			if (!service) {
-				service = new Service(this.noble, this, rawService.uuid, this.gatt);
+				service = new HciService(this.noble, this, rawService.uuid, this.gatt);
 				this.services.set(rawService.uuid, service);
 			}
 		}

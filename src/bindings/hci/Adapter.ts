@@ -1,24 +1,24 @@
-import { BaseAdapter } from '../../Adapter';
-import { BasePeripheral } from '../../Peripheral';
+import { Adapter } from '../../Adapter';
+import { Peripheral } from '../../Peripheral';
 import { AddressType } from '../../types';
 
 import { Gap } from './gap';
 import { Hci } from './hci';
-import { Noble } from './Noble';
-import { Peripheral } from './Peripheral';
+import { HciNoble } from './Noble';
+import { HciPeripheral } from './Peripheral';
 
-export class Adapter extends BaseAdapter<Noble> {
+export class HciAdapter extends Adapter<HciNoble> {
 	private initialized: boolean = false;
 	private scanning: boolean = false;
 
 	private hci: Hci;
 	private gap: Gap;
 
-	private peripherals: Map<string, Peripheral> = new Map();
+	private peripherals: Map<string, HciPeripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
 
-	public async getScannedPeripherals(): Promise<BasePeripheral[]> {
+	public async getScannedPeripherals(): Promise<Peripheral[]> {
 		return [...this.peripherals.values()];
 	}
 
@@ -94,7 +94,7 @@ export class Adapter extends BaseAdapter<Noble> {
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new Peripheral(this.noble, this, uuid, address, addressType, connectable, advertisement, rssi);
+			peripheral = new HciPeripheral(this.noble, this, uuid, address, addressType, connectable, advertisement, rssi);
 			this.peripherals.set(uuid, peripheral);
 		} else {
 			peripheral.connectable = connectable;
@@ -105,7 +105,7 @@ export class Adapter extends BaseAdapter<Noble> {
 		this.emit('discover', peripheral);
 	};
 
-	public async connect(peripheral: Peripheral) {
+	public async connect(peripheral: HciPeripheral) {
 		const timeout = new Promise<void>((_, reject) =>
 			setTimeout(() => reject(new Error('Connecting timed out')), 10000)
 		);
@@ -132,7 +132,7 @@ export class Adapter extends BaseAdapter<Noble> {
 		}
 	}
 
-	public async disconnect(peripheral: Peripheral) {
+	public async disconnect(peripheral: HciPeripheral) {
 		const handle = this.uuidToHandle.get(peripheral.uuid);
 
 		const timeout = new Promise<void>((_, reject) =>

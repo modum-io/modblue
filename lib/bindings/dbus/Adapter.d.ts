@@ -1,19 +1,19 @@
-import { BaseAdapter } from '../../Adapter';
-import { BasePeripheral } from '../../Peripheral';
+import { Adapter } from '../../Adapter';
+import { Peripheral } from '../../Peripheral';
 import { BusObject } from './BusObject';
-import { Noble } from './Noble';
-export declare class Adapter extends BaseAdapter<Noble> {
+import { DbusNoble } from './Noble';
+export declare class DbusAdapter extends Adapter<DbusNoble> {
     private readonly object;
     private initialized;
     private scanning;
     private requestScanStop;
     private peripherals;
     private updateTimer;
-    constructor(noble: Noble, id: string, name: string, address: string, object: BusObject);
+    constructor(noble: DbusNoble, id: string, name: string, address: string, object: BusObject);
     private init;
     private prop;
     private callMethod;
-    getScannedPeripherals(): Promise<BasePeripheral[]>;
+    getScannedPeripherals(): Promise<Peripheral[]>;
     isScanning(): Promise<boolean>;
     startScanning(): Promise<void>;
     private onScanStart;

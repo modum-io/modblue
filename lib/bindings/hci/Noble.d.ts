@@ -1,8 +1,8 @@
-import { BaseAdapter } from '../../Adapter';
-import { BaseNoble } from '../../Noble';
-export declare class Noble extends BaseNoble {
+import { Adapter } from '../../Adapter';
+import { Noble } from '../../Noble';
+export declare class HciNoble extends Noble {
     private adapters;
     init(): Promise<void>;
     dispose(): Promise<void>;
-    getAdapters(): Promise<BaseAdapter[]>;
+    getAdapters(): Promise<Adapter[]>;
 }
