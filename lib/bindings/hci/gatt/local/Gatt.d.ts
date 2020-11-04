@@ -7,6 +7,7 @@ export declare class HciGattLocal extends GattLocal {
     constructor(adapter: HciAdapter, hci: Hci, maxMtu?: number);
     private onAclStreamData;
     private errorResponse;
+    private getMtu;
     private handleMtuRequest;
     private handleFindInfoRequest;
     private handleFindByTypeRequest;

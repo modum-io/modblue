@@ -91,6 +91,10 @@ export class HciGattLocal extends GattLocal {
 		return buf;
 	}
 
+	private getMtu(handle: number) {
+		return this.negotiatedMtus.get(handle) || 23;
+	}
+
 	private handleMtuRequest(_handle: number, _cid: number, request: Buffer) {
 		let mtu = request.readUInt16LE(1);
 
@@ -152,7 +156,7 @@ export class HciGattLocal extends GattLocal {
 			}
 
 			const lengthPerInfo = uuidSize === 2 ? 4 : 18;
-			const maxInfo = Math.floor((this._maxMtu - 2) / lengthPerInfo);
+			const maxInfo = Math.floor((this.getMtu(_handle) - 2) / lengthPerInfo);
 			numInfo = Math.min(numInfo, maxInfo);
 
 			response = Buffer.alloc(2 + numInfo * lengthPerInfo);
@@ -217,7 +221,7 @@ export class HciGattLocal extends GattLocal {
 
 		if (handles.length) {
 			const lengthPerHandle = 4;
-			const maxHandles = Math.floor((this._maxMtu - 1) / lengthPerHandle);
+			const maxHandles = Math.floor((this.getMtu(_handle) - 1) / lengthPerHandle);
 			const numHandles = Math.min(handles.length, maxHandles);
 
 			response = Buffer.alloc(1 + numHandles * lengthPerHandle);
@@ -274,7 +278,7 @@ export class HciGattLocal extends GattLocal {
 				}
 
 				const lengthPerService = uuidSize === 2 ? 6 : 20;
-				const maxServices = Math.floor((this._maxMtu - 2) / lengthPerService);
+				const maxServices = Math.floor((this.getMtu(_handle) - 2) / lengthPerService);
 				numServices = Math.min(numServices, maxServices);
 
 				response = Buffer.alloc(2 + numServices * lengthPerService);
@@ -345,7 +349,7 @@ export class HciGattLocal extends GattLocal {
 				}
 
 				const lengthPerCharacteristic = uuidSize === 2 ? 7 : 21;
-				const maxCharacteristics = Math.floor((this._maxMtu - 2) / lengthPerCharacteristic);
+				const maxCharacteristics = Math.floor((this.getMtu(_handle) - 2) / lengthPerCharacteristic);
 				numCharacteristics = Math.min(numCharacteristics, maxCharacteristics);
 
 				response = Buffer.alloc(2 + numCharacteristics * lengthPerCharacteristic);
@@ -408,7 +412,7 @@ export class HciGattLocal extends GattLocal {
 				}
 
 				if (responseStatus === CONST.ATT_ECODE_SUCCESS) {
-					const dataLength = Math.min(responseBuffer.length, this._maxMtu - 4);
+					const dataLength = Math.min(responseBuffer.length, this.getMtu(_handle) - 4);
 					response = Buffer.alloc(4 + dataLength);
 
 					response[0] = CONST.ATT_OP_READ_BY_TYPE_RESP;
@@ -485,7 +489,7 @@ export class HciGattLocal extends GattLocal {
 
 			if (result !== null) {
 				if (result === CONST.ATT_ECODE_SUCCESS) {
-					const dataLength = Math.min(data.length, this._maxMtu - 1);
+					const dataLength = Math.min(data.length, this.getMtu(_handle) - 1);
 					response = Buffer.alloc(1 + dataLength);
 
 					response[0] =
