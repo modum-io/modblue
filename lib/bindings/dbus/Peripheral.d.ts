@@ -1,5 +1,4 @@
-import { Peripheral } from '../../Peripheral';
-import { Service } from '../../Service';
+import { Peripheral, Service } from '../../models';
 import { AddressType } from '../../types';
 import { DbusAdapter } from './Adapter';
 import { BusObject } from './BusObject';

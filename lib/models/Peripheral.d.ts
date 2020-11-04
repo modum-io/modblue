@@ -1,7 +1,7 @@
+import { AddressType, PeripheralState } from '../types';
 import { Adapter } from './Adapter';
 import { Noble } from './Noble';
 import { Service } from './Service';
-import { AddressType, PeripheralState } from './types';
 export declare abstract class Peripheral<N extends Noble = Noble, A extends Adapter = Adapter> {
     protected readonly noble: N;
     readonly adapter: A;

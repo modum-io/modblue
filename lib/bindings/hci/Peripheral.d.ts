@@ -1,5 +1,4 @@
-import { Peripheral } from '../../Peripheral';
-import { Service } from '../../Service';
+import { Peripheral, Service } from '../../models';
 import { HciAdapter } from './Adapter';
 import { Hci } from './hci';
 import { HciNoble } from './Noble';

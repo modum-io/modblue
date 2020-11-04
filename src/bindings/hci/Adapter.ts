@@ -1,5 +1,4 @@
-import { Adapter } from '../../Adapter';
-import { Peripheral } from '../../Peripheral';
+import { Adapter, Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
 import { Gap } from './gap';

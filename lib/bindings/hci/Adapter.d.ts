@@ -1,5 +1,4 @@
-import { Adapter } from '../../Adapter';
-import { Peripheral } from '../../Peripheral';
+import { Adapter, Peripheral } from '../../models';
 import { HciNoble } from './Noble';
 import { HciPeripheral } from './Peripheral';
 export declare class HciAdapter extends Adapter<HciNoble> {

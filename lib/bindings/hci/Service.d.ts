@@ -1,5 +1,4 @@
-import { Characteristic } from '../../Characteristic';
-import { Service } from '../../Service';
+import { Characteristic, Service } from '../../models';
 import { Gatt } from './gatt';
 import { HciNoble } from './Noble';
 import { HciPeripheral } from './Peripheral';

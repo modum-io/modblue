@@ -1,5 +1,4 @@
-import { Adapter } from '../../Adapter';
-import { Peripheral } from '../../Peripheral';
+import { Adapter, Peripheral } from '../../models';
 import { BusObject } from './BusObject';
 import { DbusNoble } from './Noble';
 export declare class DbusAdapter extends Adapter<DbusNoble> {

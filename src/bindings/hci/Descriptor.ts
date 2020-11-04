@@ -1,4 +1,4 @@
-import { Descriptor } from '../../Descriptor';
+import { Descriptor } from '../../models';
 
 import { HciCharacteristic } from './Characteristic';
 import { Gatt } from './gatt';

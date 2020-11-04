@@ -1,5 +1,4 @@
-import { Adapter } from '../../Adapter';
-import { Noble } from '../../Noble';
+import { Adapter, Noble } from '../../models';
 
 import { HciAdapter } from './Adapter';
 import { Hci } from './hci';

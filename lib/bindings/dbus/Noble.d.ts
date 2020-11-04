@@ -1,5 +1,4 @@
-import { Adapter } from '../../Adapter';
-import { Noble } from '../../Noble';
+import { Adapter, Noble } from '../../models';
 export declare class DbusNoble extends Noble {
     private readonly dbus;
     private bluezObject;

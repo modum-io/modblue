@@ -1,6 +1,5 @@
 /// <reference types="node" />
-import { Characteristic } from '../../Characteristic';
-import { Descriptor } from '../../Descriptor';
+import { Characteristic, Descriptor } from '../../models';
 import { Gatt } from './gatt';
 import { HciNoble } from './Noble';
 import { HciService } from './Service';

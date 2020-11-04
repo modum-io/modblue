@@ -1,8 +1,8 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
+import { AddressType } from '../types';
 import { Noble } from './Noble';
 import { Peripheral } from './Peripheral';
-import { AddressType } from './types';
 export declare interface Adapter<N extends Noble = Noble> {
     on(event: 'discover', listener: (peripheral: Peripheral) => void): this;
     emit(event: 'discover', peripheral: Peripheral): boolean;

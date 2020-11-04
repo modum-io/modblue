@@ -1,5 +1,4 @@
-import { Characteristic } from '../../Characteristic';
-import { Service } from '../../Service';
+import { Characteristic, Service } from '../../models';
 
 import { BusObject, I_BLUEZ_CHARACTERISTIC } from './BusObject';
 import { DbusCharacteristic } from './Characteristic';

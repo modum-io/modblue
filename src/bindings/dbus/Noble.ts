@@ -1,7 +1,6 @@
 import { MessageBus, systemBus } from 'dbus-next';
 
-import { Adapter } from '../../Adapter';
-import { Noble } from '../../Noble';
+import { Adapter, Noble } from '../../models';
 
 import { DbusAdapter } from './Adapter';
 import { BusObject, I_BLUEZ_ADAPTER } from './BusObject';

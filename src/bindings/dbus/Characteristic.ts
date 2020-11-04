@@ -1,5 +1,4 @@
-import { Characteristic } from '../../Characteristic';
-import { Descriptor } from '../../Descriptor';
+import { Characteristic, Descriptor } from '../../models';
 
 import { BusObject, I_BLUEZ_CHARACTERISTIC } from './BusObject';
 import { DbusNoble } from './Noble';

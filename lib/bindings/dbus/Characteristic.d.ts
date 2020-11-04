@@ -1,6 +1,5 @@
 /// <reference types="node" />
-import { Characteristic } from '../../Characteristic';
-import { Descriptor } from '../../Descriptor';
+import { Characteristic, Descriptor } from '../../models';
 import { BusObject } from './BusObject';
 import { DbusNoble } from './Noble';
 import { DbusService } from './Service';

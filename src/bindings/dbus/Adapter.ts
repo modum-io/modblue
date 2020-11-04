@@ -1,5 +1,4 @@
-import { Adapter } from '../../Adapter';
-import { Peripheral } from '../../Peripheral';
+import { Adapter, Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
 import { BusObject, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE } from './BusObject';

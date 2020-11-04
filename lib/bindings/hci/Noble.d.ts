@@ -1,5 +1,4 @@
-import { Adapter } from '../../Adapter';
-import { Noble } from '../../Noble';
+import { Adapter, Noble } from '../../models';
 export declare class HciNoble extends Noble {
     private adapters;
     init(): Promise<void>;
