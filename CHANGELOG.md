@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.1](https://github.com/modum-io/modblue/compare/v1.0.0...v1.0.1) (2020-11-04)
+
+### Bug Fixes
+
+- **peripheral:** Fix not using negotiated MTU ([a1217c0](https://github.com/modum-io/modblue/commit/a1217c00f248e17fac789ecb245aaa747a02b1b9))
+
 ## [1.0.0](https://github.com/modum-io/modblue/compare/v0.1.0...v1.0.0) (2020-11-04)
 
 ### ⚠ BREAKING CHANGES
