@@ -184,6 +184,18 @@ export abstract class GattLocal extends Gatt {
 					object: newChar
 				};
 
+				if (char.properties.includes('indicate') || char.properties.includes('notify')) {
+					// notify or indicate: add client characteristic configuration descriptor
+					const newDescr = new GattDescriptorLocal(newChar, '2902', Buffer.from([0x00, 0x00]));
+
+					const clientCharacteristicConfigurationDescriptorHandle = handle++;
+					handles[clientCharacteristicConfigurationDescriptorHandle] = {
+						type: 'descriptor',
+						object: newDescr,
+						value: clientCharacteristicConfigurationDescriptorHandle
+					};
+				}
+
 				if (char.descriptors) {
 					for (const descr of char.descriptors) {
 						const newDescr = new GattDescriptorLocal(newChar, descr.uuid, descr.value);

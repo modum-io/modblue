@@ -38,14 +38,29 @@ const main = async () => {
 	const gatt = await adapter.setupGatt();
 	gatt.setData(NAME, [
 		{
-			uuid: '48ee0000bf49460ca3d77ec7a512a4cd',
+			uuid: '48ee0000bf49460ca3d77ec7a512a4ce',
 			characteristics: [
 				{
-					uuid: '48ee0001bf49460ca3d77ec7a512a4cd',
-					properties: ['read', 'write', 'write-without-response'],
+					uuid: '48ee0001bf49460ca3d77ec7a512a4ce',
+					properties: ['read'],
 					secure: [],
 					descriptors: [],
-					value: Buffer.from('1337'),
+					value: Buffer.from('test', 'utf-8')
+				},
+				{
+					uuid: '48ee0002bf49460ca3d77ec7a512a4ce',
+					properties: ['read'],
+					secure: [],
+					descriptors: [],
+					onRead: async (offset) => {
+						return [0, Buffer.from('other', 'utf-8').slice(offset)];
+					}
+				},
+				{
+					uuid: '48ee0003bf49460ca3d77ec7a512a4cd',
+					properties: ['write', 'write-without-response'],
+					secure: [],
+					descriptors: [],
 					onWrite: (offset, data, withoutResponse) => {
 						console.log('writing', offset, data, withoutResponse);
 					}
