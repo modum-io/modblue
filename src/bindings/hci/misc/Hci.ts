@@ -662,7 +662,7 @@ export class Hci extends EventEmitter {
 		await this.sendCommand(cmd);
 	}
 
-	public async setAdvertiseEnable(enabled: boolean) {
+	public async setAdvertisingEnabled(enabled: boolean) {
 		const cmd = Buffer.alloc(5);
 
 		// header

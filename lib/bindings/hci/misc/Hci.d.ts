@@ -57,7 +57,7 @@ export declare class Hci extends EventEmitter {
     readLeBufferSize(): Promise<void>;
     setScanResponseData(data: Buffer): Promise<void>;
     setAdvertisingData(data: Buffer): Promise<void>;
-    setAdvertiseEnable(enabled: boolean): Promise<void>;
+    setAdvertisingEnabled(enabled: boolean): Promise<void>;
     private onSocketData;
     private onSocketError;
     private processLeAdvertisingReport;

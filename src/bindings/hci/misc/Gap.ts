@@ -183,13 +183,20 @@ export class Gap extends EventEmitter {
 
 		this.advertiseState = 'starting';
 
+		try {
+			await this.hci.setAdvertisingEnabled(false);
+		} catch {
+			// NO-OP
+		}
+
 		if (IS_INTEL_EDISON || IS_YOCTO) {
 			// work around for Intel Edison
 		} else {
 			await this.hci.setScanResponseData(scanData);
 			await this.hci.setAdvertisingData(advertisementData);
 		}
-		await this.hci.setAdvertiseEnable(true);
+
+		await this.hci.setAdvertisingEnabled(true);
 		await this.hci.setScanResponseData(scanData);
 		await this.hci.setAdvertisingData(advertisementData);
 
@@ -199,7 +206,7 @@ export class Gap extends EventEmitter {
 	public async stopAdvertising() {
 		this.advertiseState = 'stopping';
 
-		await this.hci.setAdvertiseEnable(false);
+		await this.hci.setAdvertisingEnabled(false);
 
 		this.advertiseState = 'stopped';
 	}
