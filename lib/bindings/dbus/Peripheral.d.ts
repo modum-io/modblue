@@ -20,7 +20,7 @@ export declare class DbusPeripheral extends Peripheral {
     private prop;
     private isConnected;
     connect(): Promise<void>;
-    disconnect(): Promise<number>;
+    disconnect(): Promise<void>;
     private doneConnecting;
     private doneDisconnecting;
     setupGatt(requestMtu?: number): Promise<DbusGattRemote>;

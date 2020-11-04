@@ -6,6 +6,7 @@ export declare class DbusNoble extends Noble {
     private objManagerIface;
     private adapters;
     constructor();
+    init(): Promise<void>;
     dispose(): Promise<void>;
     getAdapters(): Promise<DbusAdapter[]>;
 }

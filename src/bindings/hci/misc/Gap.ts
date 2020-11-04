@@ -36,8 +36,8 @@ export declare interface Gap {
 
 export class Gap extends EventEmitter {
 	private hci: Hci;
-	private scanState: string;
 	private advertiseState: string;
+	private scanState: string;
 	private scanFilterDuplicates: boolean;
 	private discoveries: Map<string, Discovery>;
 
@@ -60,7 +60,11 @@ export class Gap extends EventEmitter {
 		// Always set scan parameters before scanning
 		// https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=229737
 		// p106 - p107
-		await this.hci.setScanEnabled(false, true);
+		try {
+			await this.hci.setScanEnabled(false, true);
+		} catch {
+			// NO-OP
+		}
 		await this.hci.setScanParameters();
 
 		if (IS_NTC_CHIP) {
@@ -69,6 +73,7 @@ export class Gap extends EventEmitter {
 		}
 
 		await this.hci.setScanEnabled(true, this.scanFilterDuplicates);
+
 		this.scanState = 'started';
 	}
 

@@ -51,7 +51,7 @@ export abstract class Peripheral {
 	}
 
 	public abstract async connect(): Promise<void>;
-	public abstract async disconnect(): Promise<number>;
+	public abstract async disconnect(): Promise<void>;
 
 	public abstract async setupGatt(requestMtu?: number): Promise<GattRemote>;
 }

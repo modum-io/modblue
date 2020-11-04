@@ -13,4 +13,5 @@ export declare class GattCharacteristicRemote extends GattCharacteristic {
     subscribe(): Promise<void>;
     unsubscribe(): Promise<void>;
     discoverDescriptors(): Promise<GattDescriptorRemote[]>;
+    getDiscoveredDescriptors(): GattDescriptorRemote[];
 }

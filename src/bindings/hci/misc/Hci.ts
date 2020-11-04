@@ -106,35 +106,15 @@ interface HandleBuffer {
 
 interface HciCommand {
 	data: Buffer;
-	onResponse: (status: number, result: Buffer) => void;
+	onStatus: (status: number) => void;
+	onResponse: (status: number, data: Buffer) => void;
 }
 
 export declare interface Hci {
-	on(event: 'stateChange', listener: (state: string) => void): this;
-	on(event: 'disconnComplete', listener: (handle: number, reason: number) => void): this;
-	on(event: 'encryptChange', listener: (handle: number, encrypt: number) => void): this;
 	on(event: 'aclDataPkt', listener: (handle: number, cid: number, data: Buffer) => void): this;
-	on(
-		event: 'leConnComplete',
-		listener: (
-			status: number,
-			handle: number,
-			role: number,
-			addressType: AddressType,
-			address: string,
-			interval: number,
-			latency: number,
-			supervisionTimeout: number,
-			masterClockAccuracy: number
-		) => void
-	): this;
 	on(
 		event: 'leAdvertisingReport',
 		listener: (_: 0, type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void
-	): this;
-	on(
-		event: 'leConnUpdateComplete',
-		listener: (status: number, handle: number, interval: number, latency: number, supervisionTimeout: number) => void
 	): this;
 }
 
@@ -149,7 +129,6 @@ export class Hci extends EventEmitter {
 
 	private socket: any;
 	private handleBuffers: Map<number, HandleBuffer>;
-	private pollTimer: NodeJS.Timer;
 	private cmds: Map<number, HciCommand>;
 
 	public constructor(deviceId?: number) {
@@ -157,11 +136,9 @@ export class Hci extends EventEmitter {
 
 		this.state = null;
 		this.deviceId = deviceId;
-		this.cmds = new Map();
 
 		this.handleBuffers = new Map();
-
-		this.on('stateChange', this.onStateChange);
+		this.cmds = new Map();
 	}
 
 	public static getDeviceList() {
@@ -179,11 +156,11 @@ export class Hci extends EventEmitter {
 
 		await new Promise<void>((resolve) => {
 			const timer = setInterval(() => {
-				const isDevUp = this.socket.isDevUp();
-				if (isDevUp) {
+				if (this.socket.isDevUp()) {
 					clearInterval(timer);
 					resolve();
 				}
+				// tslint:disable-next-line: align
 			}, 1000);
 		});
 
@@ -191,20 +168,25 @@ export class Hci extends EventEmitter {
 		await this.setEventMask();
 		await this.setLeEventMask();
 
-		const { hciVer, hciRev } = await this.readLocalVersion();
-		if (hciVer < 0x06) {
-			throw new Error(`Unsupported bluetooth version ${hciVer}.${hciRev}`);
+		if (this.state === 'unauthorized') {
+			throw new Error('Not authorized');
 		}
 
-		console.log('hci', hciVer, hciRev);
+		const { hciVer, hciRev } = await this.readLocalVersion();
+		if (hciVer < 0x06) {
+			throw new Error(`HCI version ${hciVer}.${hciRev} not supported`);
+		}
+
+		try {
+			await this.setScanEnabled(false, true);
+		} catch {
+			// NO-OP
+		}
 
 		await this.writeLeHostSupported();
 		await this.readLeHostSupported();
 		await this.readBdAddr();
 		await this.readLeBufferSize();
-
-		await this.setScanParameters();
-		// await this.setScanEnabled(false, true);
 
 		this.state = 'poweredOn';
 	}
@@ -213,33 +195,57 @@ export class Hci extends EventEmitter {
 		this.socket.stop();
 		this.socket.removeAllListeners();
 		this.socket = null;
-
-		clearInterval(this.pollTimer);
-		this.pollTimer = null;
-
-		this.state = null;
 	}
 
-	private async sendCommand(data: Buffer) {
+	private async sendCommand(data: Buffer, onlyStatus?: false): Promise<Buffer>;
+	private async sendCommand(data: Buffer, onlyStatus?: true): Promise<void>;
+	private async sendCommand(data: Buffer, onlyStatus?: boolean): Promise<Buffer | void> {
 		const cmd = data.readUInt16LE(1);
 		if (this.cmds.has(cmd)) {
 			throw new Error(`${cmd} command already queued`);
 		}
 
-		console.log('sending cmd', cmd, data);
-
 		return new Promise<Buffer>((resolve, reject) => {
 			this.cmds.set(cmd, {
 				data,
-				onResponse: (status, responseData) => {
-					if (status !== 0) {
-						reject(new Error(`Command ${cmd} received response ${Hci.STATUS_MAPPER[status]}`));
-					} else {
-						resolve(responseData);
+				onStatus: (status) => {
+					if (onlyStatus) {
+						status !== 0
+							? reject(new Error(`Command ${cmd} status ${STATUS_MAPPER[status]} (0x${status.toString(16)})`))
+							: resolve();
+						this.cmds.delete(cmd);
 					}
-				}
+				},
+				onResponse: (status, responseData) =>
+					status !== 0
+						? reject(new Error(`Command ${cmd} response ${STATUS_MAPPER[status]} (0x${status.toString(16)})`))
+						: resolve(responseData)
 			});
 			this.socket.write(data);
+		});
+	}
+
+	private async waitForEvent(event: number) {
+		return new Promise<Buffer>((resolve) => {
+			const handler = (data: Buffer) => {
+				this.removeListener(`event_${event}`, handler);
+				resolve(data);
+			};
+			this.addListener(`event_${event}`, handler);
+		});
+	}
+
+	private async waitForLeMetaEvent(metaEvent: number) {
+		return new Promise<Buffer>((resolve, reject) => {
+			const handler = (status: number, data: Buffer) => {
+				this.removeListener(`event_le_${metaEvent}`, handler);
+				if (status !== 0) {
+					reject(new Error(`Received LE error ${STATUS_MAPPER[status]} (0x${status.toString(16)})`));
+				} else {
+					resolve(data);
+				}
+			};
+			this.addListener(`event_le_${metaEvent}`, handler);
 		});
 	}
 
@@ -279,7 +285,7 @@ export class Hci extends EventEmitter {
 		await this.sendCommand(cmd);
 	}
 
-	private reset() {
+	private async reset() {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -289,7 +295,10 @@ export class Hci extends EventEmitter {
 		// length
 		cmd.writeUInt8(0x00, 3);
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
+
+		this.dispose();
+		await this.init();
 	}
 
 	private async readLocalVersion() {
@@ -330,8 +339,6 @@ export class Hci extends EventEmitter {
 			.match(/.{1,2}/g)
 			.reverse()
 			.join(':');
-
-		return this.address;
 	}
 
 	private async setLeEventMask() {
@@ -362,7 +369,7 @@ export class Hci extends EventEmitter {
 
 		const result = await this.sendCommand(cmd);
 
-		const le = result.readUInt8(0);
+		const le = result.readUInt8(0) === 0x01;
 		const simul = result.readUInt8(1);
 
 		return { le, simul };
@@ -403,8 +410,6 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt8(0x00, 10); // filter: 0 -> all event types
 
 		await this.sendCommand(cmd);
-
-		// this.emit('stateChange', 'poweredOn');
 	}
 
 	public async setScanEnabled(enabled: boolean, filterDuplicates: boolean) {
@@ -421,17 +426,12 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt8(enabled ? 0x01 : 0x00, 4); // enable: 0 -> disabled, 1 -> enabled
 		cmd.writeUInt8(filterDuplicates ? 0x01 : 0x00, 5); // duplicates: 0 -> yes, 1 -> no
 
-		const result = await this.sendCommand(cmd);
-
-		const resEnabled = result.readUInt8(0) === 0x1;
-		const resFilterDuplicates = result.readUInt8(1) === 0x1;
-
-		if (resEnabled !== enabled || filterDuplicates !== resFilterDuplicates) {
-			throw new Error(`Scan enable command was not configured properly`);
-		}
+		await this.sendCommand(cmd);
 	}
 
-	public createLeConn(address: string, addressType: AddressType) {
+	public async createLeConn(address: string, addressType: AddressType) {
+		address = address.toUpperCase();
+
 		const cmd = Buffer.alloc(29);
 
 		// header
@@ -458,10 +458,39 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(0x0004, 25); // min ce length
 		cmd.writeUInt16LE(0x0006, 27); // max ce length
 
-		this.socket.write(cmd);
+		try {
+			// Cancel any other connection requests before trying this one
+			await this.cancelLeConn();
+		} catch {
+			// NO-OP
+		}
+
+		await this.sendCommand(cmd, true);
+
+		while (true) {
+			const data = await this.waitForLeMetaEvent(EVT_LE_CONN_COMPLETE);
+			const handle = data.readUInt16LE(0);
+			const role = data.readUInt8(2);
+			const _addressType = data.readUInt8(3) === 0x01 ? 'random' : 'public';
+			const _address = data
+				.slice(4, 10)
+				.toString('hex')
+				.match(/.{1,2}/g)
+				.reverse()
+				.join(':')
+				.toUpperCase();
+			const interval = data.readUInt16LE(10) * 1.25;
+			const latency = data.readUInt16LE(12); // TODO: multiplier?
+			const supervisionTimeout = data.readUInt16LE(14) * 10;
+			const masterClockAccuracy = data.readUInt8(16); // TODO: multiplier?
+
+			if (addressType === _addressType && address === _address) {
+				return { handle, role, interval, latency, supervisionTimeout, masterClockAccuracy };
+			}
+		}
 	}
 
-	public cancelLeConn() {
+	public async cancelLeConn() {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -471,7 +500,7 @@ export class Hci extends EventEmitter {
 		// length
 		cmd.writeUInt8(0x00, 3);
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd);
 	}
 
 	public connUpdateLe(
@@ -521,7 +550,7 @@ export class Hci extends EventEmitter {
 		this.socket.write(cmd);
 	}
 
-	public disconnect(handle: number, reason?: number) {
+	public async disconnect(handle: number, reason?: number) {
 		const cmd = Buffer.alloc(7);
 
 		reason = reason || HCI_OE_USER_ENDED_CONNECTION;
@@ -537,7 +566,15 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(handle, 4); // handle
 		cmd.writeUInt8(reason, 6); // reason
 
-		this.socket.write(cmd);
+		await this.sendCommand(cmd, true);
+
+		while (true) {
+			const data = await this.waitForEvent(EVT_DISCONN_COMPLETE);
+			const disconnHandle = data.readUInt16LE(4);
+			if (disconnHandle === handle) {
+				break;
+			}
+		}
 	}
 
 	public async readRssi(handle: number) {
@@ -554,7 +591,6 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(handle, 4); // handle
 
 		const result = await this.sendCommand(cmd);
-
 		const rssi = result.readInt8(2);
 
 		return rssi;
@@ -647,158 +683,107 @@ export class Hci extends EventEmitter {
 		let handle;
 		let cmd;
 		let status;
+		let queuedCmd;
 
-		if (eventType === HCI_EVENT_PKT) {
-			const subEventType = data.readUInt8(1);
+		switch (eventType) {
+			case HCI_EVENT_PKT:
+				const subEventType = data.readUInt8(1);
 
-			if (subEventType === EVT_DISCONN_COMPLETE) {
-				handle = data.readUInt16LE(4);
-				const reason = data.readUInt8(6);
+				this.emit(`event_${subEventType}`, data);
 
-				this.emit('disconnComplete', handle, reason);
-			} else if (subEventType === EVT_ENCRYPT_CHANGE) {
-				handle = data.readUInt16LE(4);
-				const encrypt = data.readUInt8(6);
+				switch (subEventType) {
+					case EVT_CMD_COMPLETE:
+						cmd = data.readUInt16LE(4);
+						status = data.readUInt8(6);
+						const result = data.slice(7);
 
-				this.emit('encryptChange', handle, encrypt);
-			} else if (subEventType === EVT_CMD_COMPLETE) {
-				cmd = data.readUInt16LE(4);
-				status = data.readUInt8(6);
-				const result = data.slice(7);
+						queuedCmd = this.cmds.get(cmd);
+						if (queuedCmd) {
+							queuedCmd.onResponse(status, result);
+							this.cmds.delete(cmd);
+						}
+						break;
 
-				await this.processCmdCompleteEvent(cmd, status, result);
-			} else if (subEventType === EVT_CMD_STATUS) {
-				status = data.readUInt8(3);
-				cmd = data.readUInt16LE(5);
+					case EVT_CMD_STATUS:
+						status = data.readUInt8(3);
+						cmd = data.readUInt16LE(5);
 
-				this.processCmdStatusEvent(cmd, status);
-			} else if (subEventType === EVT_LE_META_EVENT) {
-				const leMetaEventType = data.readUInt8(3);
-				const leMetaEventStatus = data.readUInt8(4);
-				const leMetaEventData = data.slice(5);
+						queuedCmd = this.cmds.get(cmd);
+						if (queuedCmd) {
+							queuedCmd.onStatus(status);
+						}
+						break;
 
-				this.processLeMetaEvent(leMetaEventType, leMetaEventStatus, leMetaEventData);
-			}
-		} else if (eventType === HCI_ACLDATA_PKT) {
-			const flagsAndHandle = data.readUInt16LE(1);
-			const flags = flagsAndHandle >> 12;
-			handle = flagsAndHandle & 0x0fff;
+					case EVT_LE_META_EVENT:
+						const leMetaEventType = data.readUInt8(3);
+						const leMetaEventStatus = data.readUInt8(4);
+						const leMetaEventData = data.slice(5);
 
-			if (flags === ACL_START) {
-				const cid = data.readUInt16LE(7);
+						this.emit(`event_le_${leMetaEventType}`, leMetaEventStatus, leMetaEventData);
 
-				const length = data.readUInt16LE(5);
-				const pktData = data.slice(9);
+						if (leMetaEventType === EVT_LE_ADVERTISING_REPORT) {
+							this.processLeAdvertisingReport(leMetaEventStatus, leMetaEventData);
+						}
+						break;
 
-				if (length === pktData.length) {
-					this.emit('aclDataPkt', handle, cid, pktData);
-				} else {
-					this.handleBuffers.set(handle, {
-						length: length,
-						cid: cid,
-						data: pktData
-					});
+					default:
+						break;
 				}
-			} else if (flags === ACL_CONT) {
-				const buff = this.handleBuffers.get(handle);
+				break;
 
-				if (!buff || !buff.data) {
-					return;
+			case HCI_ACLDATA_PKT:
+				const flags = data.readUInt16LE(1) >> 12;
+				handle = data.readUInt16LE(1) & 0x0fff;
+
+				if (ACL_START === flags) {
+					const cid = data.readUInt16LE(7);
+
+					const length = data.readUInt16LE(5);
+					const pktData = data.slice(9);
+
+					if (length === pktData.length) {
+						this.emit('aclDataPkt', handle, cid, pktData);
+					} else {
+						this.handleBuffers.set(handle, {
+							length: length,
+							cid: cid,
+							data: pktData
+						});
+					}
+				} else if (ACL_CONT === flags) {
+					const buff = this.handleBuffers.get(handle);
+
+					if (!buff || !buff.data) {
+						return;
+					}
+
+					buff.data = Buffer.concat([buff.data, data.slice(5)]);
+
+					if (buff.data.length === buff.length) {
+						this.emit('aclDataPkt', handle, buff.cid, buff.data);
+
+						this.handleBuffers.delete(handle);
+					}
 				}
+				break;
 
-				buff.data = Buffer.concat([buff.data, data.slice(5)]);
+			case HCI_COMMAND_PKT:
+				/*cmd = data.readUInt16LE(1);
+				const len = data.readUInt8(3);*/
+				break;
 
-				if (buff.data.length === buff.length) {
-					this.emit('aclDataPkt', handle, buff.cid, buff.data);
-
-					this.handleBuffers.delete(handle);
-				}
-			}
-		} else if (eventType === HCI_COMMAND_PKT) {
-			cmd = data.readUInt16LE(1);
-			// const len = data.readUInt8(3);
-
-			await this.processCmdCompleteEvent(cmd, 0, data.slice(4));
-
-			/*if (cmd === LE_SET_SCAN_ENABLE_CMD) {
-				const enable = data.readUInt8(4) === 0x1;
-				const filterDuplicates = data.readUInt8(5) === 0x1;
-
-				this.emit('leScanEnableSetCmd', enable, filterDuplicates);
-			}*/
+			default:
+				break;
 		}
 	};
 
 	private onSocketError = (error: any) => {
 		if (error.code === 'EPERM') {
-			this.emit('stateChange', 'unauthorized');
+			this.state = 'unauthorized';
 		} else if (error.message === 'Network is down') {
 			// no-op
 		}
 	};
-
-	private async processCmdCompleteEvent(cmd: number, status: number, result: Buffer) {
-		const queuedCmd = this.cmds.get(cmd);
-		if (queuedCmd) {
-			console.log('cmd response', cmd, status, result);
-			queuedCmd.onResponse(status, result);
-			this.cmds.delete(cmd);
-		}
-
-		if (cmd === RESET_CMD) {
-			await this.setEventMask();
-			await this.setLeEventMask();
-			await this.readLocalVersion();
-			await this.readBdAddr();
-		} else if (cmd === LE_SET_ADVERTISING_PARAMETERS_CMD) {
-			console.log('advertising parameters');
-
-			this.emit('stateChange', 'poweredOn');
-			this.emit('leAdvertisingParametersSet', status);
-		}
-	}
-
-	private processLeMetaEvent(eventType: number, status: number, data: Buffer) {
-		if (eventType === EVT_LE_CONN_COMPLETE) {
-			this.processLeConnComplete(status, data);
-		} else if (eventType === EVT_LE_ADVERTISING_REPORT) {
-			this.processLeAdvertisingReport(status, data);
-		} else if (eventType === EVT_LE_CONN_UPDATE_COMPLETE) {
-			this.processLeConnUpdateComplete(status, data);
-		} else if (eventType === EVT_LE_READ_REMOTE_FEATURES_COMPLETE) {
-			// const handle = data.readUInt16LE(0);
-			// TODO: Handle errors while connecting
-		}
-	}
-
-	private processLeConnComplete(status: number, data: Buffer) {
-		const handle = data.readUInt16LE(0);
-		const role = data.readUInt8(2);
-		const addressType = data.readUInt8(3) === 0x01 ? 'random' : 'public';
-		const address = data
-			.slice(4, 10)
-			.toString('hex')
-			.match(/.{1,2}/g)
-			.reverse()
-			.join(':');
-		const interval = data.readUInt16LE(10) * 1.25;
-		const latency = data.readUInt16LE(12); // TODO: multiplier?
-		const supervisionTimeout = data.readUInt16LE(14) * 10;
-		const masterClockAccuracy = data.readUInt8(16); // TODO: multiplier?
-
-		this.emit(
-			'leConnComplete',
-			status,
-			handle,
-			role,
-			addressType,
-			address,
-			interval,
-			latency,
-			supervisionTimeout,
-			masterClockAccuracy
-		);
-	}
 
 	private processLeAdvertisingReport(count: number, data: Buffer) {
 		try {
@@ -820,28 +805,7 @@ export class Hci extends EventEmitter {
 				data = data.slice(eirLength + 10);
 			}
 		} catch (e) {
-			console.warn(`processLeAdvertisingReport: Caught illegal packet (buffer overflow): ${e}`);
+			console.warn(`processLeAdvertisingReport: Caught illegal packet: ${e}`);
 		}
 	}
-
-	private processLeConnUpdateComplete(status: number, data: Buffer) {
-		const handle = data.readUInt16LE(0);
-		const interval = data.readUInt16LE(2) * 1.25;
-		const latency = data.readUInt16LE(4); // TODO: multiplier?
-		const supervisionTimeout = data.readUInt16LE(6) * 10;
-
-		this.emit('leConnUpdateComplete', status, handle, interval, latency, supervisionTimeout);
-	}
-
-	private processCmdStatusEvent(cmd: number, status: number) {
-		if (cmd === LE_CREATE_CONN_CMD) {
-			if (status !== 0) {
-				this.emit('leConnComplete', status);
-			}
-		}
-	}
-
-	private onStateChange = (state: string) => {
-		this.state = state;
-	};
 }

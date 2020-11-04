@@ -21,8 +21,8 @@ export class HciPeripheral extends Peripheral {
 		this.hci = hci;
 		this.handle = handle;
 
-		this.signaling = new Signaling(hci, handle);
-		this.signaling.on('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
+		this.hci = hci;
+		this.signaling = new Signaling(this.hci, this.handle);
 
 		this.gatt = new HciGattRemote(this, hci, handle);
 		await this.gatt.exchangeMtu(256);
@@ -31,23 +31,20 @@ export class HciPeripheral extends Peripheral {
 		this._state = 'connected';
 	}
 
-	private onConnectionParameterUpdateRequest = (
-		minInterval: number,
-		maxInterval: number,
-		latency: number,
-		supervisionTimeout: number
-	) => {
-		this.hci.connUpdateLe(this.handle, minInterval, maxInterval, latency, supervisionTimeout);
-	};
-
-	public async disconnect(): Promise<number> {
+	public async disconnect(): Promise<void> {
 		this._state = 'disconnecting';
-		return this.adapter.disconnect(this);
+		await this.adapter.disconnect(this);
 	}
-	public onDisconnect() {
-		this.signaling.off('connectionParameterUpdateRequest', this.onConnectionParameterUpdateRequest);
-		this.signaling.dispose();
-		this.signaling = null;
+	public async onDisconnect() {
+		if (this.gatt) {
+			this.gatt.dispose();
+			this.gatt = null;
+		}
+
+		if (this.signaling) {
+			this.signaling.dispose();
+			this.signaling = null;
+		}
 
 		this.gatt.dispose();
 		this.gatt = null;

@@ -1,4 +1,4 @@
-# Noble2
+# ModBlue
 
 Trying to make the world better place by improving the bluetooth experience one library at a time.
 

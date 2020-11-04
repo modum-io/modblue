@@ -38,4 +38,7 @@ export class GattCharacteristicRemote extends GattCharacteristic {
 		}
 		return [...this.descriptors.values()];
 	}
+	public getDiscoveredDescriptors(): GattDescriptorRemote[] {
+		return [...this.descriptors.values()];
+	}
 }

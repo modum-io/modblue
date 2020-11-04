@@ -17,6 +17,10 @@ export class DbusNoble extends Noble {
 		this.dbus = systemBus();
 	}
 
+	public async init() {
+		// NO-OP
+	}
+
 	public async dispose() {
 		this.adapters = new Map();
 	}

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0](https://github.com/modum-io/noble2/compare/v0.0.3...v0.1.0) (2020-11-03)
+
+### ⚠ BREAKING CHANGES
+
+- Rename package
+- **hci:** Change disconnect return value
+
+### Features
+
+- Update dependencies ([3adf744](https://github.com/modum-io/noble2/commit/3adf744bb097f103df3899c6fab6c5a5f3a8eec6))
+- **hci:** Rework hci interface ([bade296](https://github.com/modum-io/noble2/commit/bade296fe5faeec291db95ae7d2a9cfcee06ba41))
+
 ### [0.0.3](https://github.com/modum-io/noble2/compare/v0.0.2...v0.0.3) (2020-09-29)
 
 ### 0.0.2 (2020-09-29)

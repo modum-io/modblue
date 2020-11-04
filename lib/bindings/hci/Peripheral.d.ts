@@ -11,8 +11,7 @@ export declare class HciPeripheral extends Peripheral {
     private signaling;
     connect(): Promise<void>;
     onConnect(hci: Hci, handle: number): Promise<void>;
-    private onConnectionParameterUpdateRequest;
-    disconnect(): Promise<number>;
-    onDisconnect(): void;
+    disconnect(): Promise<void>;
+    onDisconnect(): Promise<void>;
     setupGatt(requestMtu?: number): Promise<HciGattRemote>;
 }

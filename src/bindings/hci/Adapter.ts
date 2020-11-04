@@ -5,18 +5,10 @@ import { HciGattLocal } from './gatt';
 import { Gap, Hci } from './misc';
 import { HciPeripheral } from './Peripheral';
 
-interface ConnectRequest {
-	peripheral: HciPeripheral;
-	resolve?: () => void;
-	reject?: (error: any) => void;
-	isDone?: boolean;
-}
-
 export class HciAdapter extends Adapter {
 	private initialized: boolean = false;
 	private scanning: boolean = false;
 	private advertising: boolean = false;
-	private requestScanStop: boolean = false;
 
 	private hci: Hci;
 	private gap: Gap;
@@ -26,9 +18,6 @@ export class HciAdapter extends Adapter {
 	private peripherals: Map<string, HciPeripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
-
-	private connectionRequest: ConnectRequest;
-	private connectionRequestQueue: ConnectRequest[] = [];
 
 	public async getScannedPeripherals(): Promise<Peripheral[]> {
 		return [...this.peripherals.values()];
@@ -45,13 +34,7 @@ export class HciAdapter extends Adapter {
 
 		this.initialized = true;
 
-		const id = Number(this.id.replace('hci', ''));
-		if (!isFinite(id)) {
-			throw new Error(`Invalid adapter id ${this.id}`);
-		}
-
-		this.hci = new Hci(Number(id));
-		this.hci.on('leConnComplete', this.onLeConnComplete);
+		this.hci = new Hci(Number(this.id));
 
 		this.gap = new Gap(this.hci);
 		this.gap.on('discover', this.onDiscover);
@@ -85,34 +68,19 @@ export class HciAdapter extends Adapter {
 		}
 
 		await this.gap.startScanning(true);
-	}
 
-	private onScanStart = () => {
 		this.scanning = true;
-	};
+	}
 
 	public async stopScanning(): Promise<void> {
 		if (!this.scanning) {
 			return;
 		}
 
-		this.requestScanStop = true;
 		await this.gap.stopScanning();
-	}
 
-	/*private onScanStop = () => {
 		this.scanning = false;
-
-		if (this.requestScanStop) {
-			this.requestScanStop = false;
-			return;
-		}
-
-		// Some adapters stop scanning when connecting. We want to automatically start scanning again.
-		this.startScanning().catch(() => {
-			// NO-OP
-		});
-	};*/
+	}
 
 	private onDiscover = (
 		status: number,
@@ -138,167 +106,51 @@ export class HciAdapter extends Adapter {
 	};
 
 	public async connect(peripheral: HciPeripheral) {
-		const request: ConnectRequest = { peripheral, isDone: false };
-
-		const disconnect = (disconnHandle: number, reason: number) => {
-			// If the device was connected then the handle should be there
-			const handle = this.uuidToHandle.get(peripheral.uuid);
-
-			if (!handle || disconnHandle !== handle) {
-				// This isn't our peripheral, ignore
-				return;
-			}
-
-			this.hci.off('disconnComplete', disconnect);
-
-			// Always perform the disconnect steps
-			peripheral.onDisconnect();
-
-			this.uuidToHandle.delete(peripheral.uuid);
-			this.handleToUUID.delete(handle);
-
-			// This disconnect handler is also called after we established a connection,
-			// on sudden connection drop. Only reject the connection request if we're not done yet.
-			if (!request.isDone) {
-				request.reject(new Error(`Disconnect while connecting: Code ${reason}`));
-				this.connectionRequest = null;
-				this.processConnectionRequests();
-			}
-		};
-
-		// Add a disconnect handler in case our peripheral gets disconnect while connecting
-		this.hci.on('disconnComplete', disconnect);
-
-		const timeout = () => {
-			// Don't cancel the connection if we've already established it
-			if (request.isDone) {
-				return;
-			}
-
-			this.hci.cancelLeConn();
-
-			// Don't actively reject the promise, as it will be reject in the le conn create callback
-		};
-		setTimeout(timeout, 10000);
-
-		this.connectionRequestQueue.push(request);
-		this.processConnectionRequests();
-
-		// Create a promise to resolve once the connection request is done
-		// (we may have to wait in queue for other connections to complete first)
-		// tslint:disable-next-line: promise-must-complete
-		return new Promise<void>((res, rej) => {
-			request.resolve = () => {
-				request.isDone = true;
-				res();
-			};
-			request.reject = (error?: any) => {
-				request.isDone = true;
-				rej(error);
-			};
-		});
-	}
-
-	private onLeConnComplete = async (
-		status: number,
-		handle: number,
-		role: number,
-		addressType: AddressType,
-		address: string,
-		interval: number,
-		latency: number,
-		supervisionTimeout: number,
-		masterClockAccuracy: number
-	) => {
-		console.log(
-			'<- connection complete',
-			status,
-			handle,
-			role,
-			address,
-			interval,
-			latency,
-			supervisionTimeout,
-			masterClockAccuracy
+		const timeout = new Promise<void>((_, reject) =>
+			setTimeout(() => reject(new Error('Connecting timed out')), 10000)
 		);
 
-		if (role === 0) {
-			// Master - we scanned & initiated the connection
-			const uuid = address.toUpperCase();
-
-			const peripheral = this.peripherals.get(uuid);
-			if (!peripheral) {
-				console.log(`Unknown peripheral ${address} connected`);
-				return;
+		const connet = async () => {
+			const { handle, role } = await this.hci.createLeConn(peripheral.address, peripheral.addressType);
+			if (role !== 0) {
+				throw new Error(`Connection was not established as master`);
 			}
 
-			const request = this.connectionRequest;
-			if (!request) {
-				console.log(`Peripheral ${address} connected, but we have no pending connection request`);
-				return;
-			}
-			if (request.peripheral !== peripheral) {
-				console.log(`Peripheral ${address} connected, but we requested ${request.peripheral.address}`);
-				return;
-			}
+			this.uuidToHandle.set(peripheral.uuid, handle);
+			this.handleToUUID.set(handle, peripheral.uuid);
 
-			if (status === 0) {
-				this.uuidToHandle.set(uuid, handle);
-				this.handleToUUID.set(handle, uuid);
+			await peripheral.onConnect(this.hci, handle);
 
-				await peripheral.onConnect(this.hci, handle);
+			return true;
+		};
 
-				if (!request.isDone) {
-					request.resolve();
-				}
-			} else {
-				const statusMessage = (Hci.STATUS_MAPPER[status] || 'HCI Error: Unknown') + ` (0x${status.toString(16)})`;
-				if (!request.isDone) {
-					request.reject(new Error(statusMessage));
-				}
-			}
-
-			this.connectionRequest = null;
-			this.processConnectionRequests();
-		} else if (role === 1) {
-			// Slave - we're accepting an incoming connection
-			console.log(`Incoming connection from ${address}`);
-		}
-	};
-
-	private processConnectionRequests() {
-		if (this.connectionRequest) {
-			return;
-		}
-
-		if (this.connectionRequestQueue.length > 0) {
-			const newRequest = this.connectionRequestQueue.shift();
-			this.connectionRequest = newRequest;
-			this.hci.createLeConn(newRequest.peripheral.address, newRequest.peripheral.addressType);
+		try {
+			await Promise.race([connet(), timeout]);
+		} catch (err) {
+			await peripheral.onDisconnect();
+			throw err;
 		}
 	}
 
 	public async disconnect(peripheral: HciPeripheral) {
 		const handle = this.uuidToHandle.get(peripheral.uuid);
 
-		return new Promise<number>((resolve) => {
-			const done = (disconnHandle: number, reason: number) => {
-				if (disconnHandle !== handle) {
-					// This isn't our peripheral, ignore
-					return;
-				}
+		const timeout = new Promise<void>((_, reject) =>
+			setTimeout(() => reject(new Error('Disconnecting timed out')), 10000)
+		);
 
-				// Any other disconnect handling is done in the handler that we attached during connect
+		const disconnect = async () => {
+			await this.hci.disconnect(handle);
+			return true;
+		};
 
-				this.hci.off('disconnComplete', done);
+		try {
+			await Promise.race([disconnect(), timeout]);
+		} catch {
+			// NO-OP
+		}
 
-				resolve(reason);
-			};
-
-			this.hci.on('disconnComplete', done);
-
-			this.hci.disconnect(handle);
-		});
+		await peripheral.onDisconnect();
 	}
 
 	public async startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void> {
@@ -314,10 +166,9 @@ export class HciAdapter extends Adapter {
 		}
 
 		await this.gap.startAdvertising(this.deviceName, serviceUUIDs || []);
-	}
-	private onAdvertisingStart = () => {
+
 		this.advertising = true;
-	};
+	}
 
 	public async stopAdvertising(): Promise<void> {
 		if (!this.advertising) {
@@ -325,10 +176,9 @@ export class HciAdapter extends Adapter {
 		}
 
 		await this.gap.stopAdvertising();
-	}
-	private onAdvertisingStop = () => {
+
 		this.advertising = false;
-	};
+	}
 
 	public async setupGatt(maxMtu?: number): Promise<GattLocal> {
 		await this.init();

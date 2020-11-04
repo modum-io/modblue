@@ -14,6 +14,6 @@ export declare abstract class Peripheral {
     constructor(adapter: Adapter, uuid: string, address: string, addressType: AddressType, advertisement?: any, rssi?: number);
     toString(): string;
     abstract connect(): Promise<void>;
-    abstract disconnect(): Promise<number>;
+    abstract disconnect(): Promise<void>;
     abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
 }
