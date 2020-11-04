@@ -55,8 +55,6 @@ export class HciGattRemote extends GattRemote {
 	}
 
 	private onAclStreamData = async (handle: number, cid: number, data: Buffer) => {
-		console.log('<- acl', this.handle === handle, cid === CONST.ATT_CID, data);
-
 		if (handle !== this.handle || cid !== CONST.ATT_CID) {
 			return;
 		}
@@ -66,7 +64,6 @@ export class HciGattRemote extends GattRemote {
 		} else if (data[0] % 2 === 0) {
 			// NO-OP
 			// This used to be noble multi role stuff
-			console.log('noble multi role data');
 		} else if (data[0] === CONST.ATT_OP_HANDLE_NOTIFY || data[0] === CONST.ATT_OP_HANDLE_IND) {
 			/*const valueHandle = data.readUInt16LE(1);
 			const valueData = data.slice(3);
@@ -107,7 +104,6 @@ export class HciGattRemote extends GattRemote {
 	};
 
 	private writeAtt(data: Buffer) {
-		console.log('-> acl', this.handle, CONST.ATT_CID, data);
 		this.hci.writeAclDataPkt(this.handle, CONST.ATT_CID, data);
 	}
 
