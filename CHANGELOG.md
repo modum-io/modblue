@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/modum-io/modblue/compare/v0.1.0...v1.0.0) (2020-11-04)
+
+### ⚠ BREAKING CHANGES
+
+- Change base class names
+- Rework library structure
+- Changed class names
+- Added gat object
+
+### Features
+
+- Rename binding classes ([0f3ba2d](https://github.com/modum-io/modblue/commit/0f3ba2d83127b353fba4c3f585910dd8d03eccfd))
+- **hci:** Start reworking hci ([4e627e9](https://github.com/modum-io/modblue/commit/4e627e9e3b24a2d9a5fd1357cfdfbc57b59aa2a0))
+- Add bleno functionality ([1ce7278](https://github.com/modum-io/modblue/commit/1ce7278ab2b44c11fe69b766af6141fa0073e53d))
+- Implement advertising ([eab0c61](https://github.com/modum-io/modblue/commit/eab0c61abe8c37c9af9a2fbf216e2e14d1f12b2d))
+- Major rework ([560b2c5](https://github.com/modum-io/modblue/commit/560b2c5dc1cdb83a21b84c2977bdb533e563b761))
+- Major structural rework ([25de9f3](https://github.com/modum-io/modblue/commit/25de9f3ce94fa269fdb713b04761767aef4e630a))
+
+### Bug Fixes
+
+- Remove console logs ([f61495c](https://github.com/modum-io/modblue/commit/f61495cd51304a33b5ab80163fe8a0579aa448ef))
+- **peripheral:** Fix discovering services ([098bb3f](https://github.com/modum-io/modblue/commit/098bb3fa0d180f72d7c48401faa5e008880609ee))
+- Fix gatt issues [WIP] ([14f23c5](https://github.com/modum-io/modblue/commit/14f23c5c2f268b767d0773394540f1df9cc1ef0e))
+- Fix some connection issues [WIP] ([378c305](https://github.com/modum-io/modblue/commit/378c3056938029dede02c53218a45803a1d17fb2))
+- Stop advertising before configuring ([41b8172](https://github.com/modum-io/modblue/commit/41b8172e0230bfd56ca382d57c4312cc6bfa329f))
+- **gatt:** Fix order of handles ([b5e2665](https://github.com/modum-io/modblue/commit/b5e26658168c431de935da1c95c17ae872486fb1))
+- **hci:** Don't use deprecated Buffer constructor ([812dbb8](https://github.com/modum-io/modblue/commit/812dbb8647fedfe668a92af54c5a199912b479b7))
+- **hci:** Fix invalid states not ending init ([be847bf](https://github.com/modum-io/modblue/commit/be847bf71cd8a9f16468f3ff07b3626255a74d50))
+- **hci:** Start handling incoming connection [WIP] ([9c3e7b8](https://github.com/modum-io/modblue/commit/9c3e7b896a516fceb141a2a3ce2911a51498a541))
+
 ## [0.1.0](https://github.com/modum-io/noble2/compare/v0.0.3...v0.1.0) (2020-11-03)
 
 ### ⚠ BREAKING CHANGES
