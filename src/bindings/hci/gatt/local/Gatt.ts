@@ -113,7 +113,7 @@ export class HciGattLocal extends GattLocal {
 	private handleFindInfoRequest(_handle: number, _cid: number, request: Buffer) {
 		let response: Buffer = null;
 
-		const startHandle = Math.max(request.readUInt16LE(1), 0);
+		const startHandle = Math.max(request.readUInt16LE(1), 1);
 		const endHandle = Math.min(request.readUInt16LE(3), this.handles.length - 1);
 
 		const infos: { handle: number; uuid: string }[] = [];
@@ -186,7 +186,7 @@ export class HciGattLocal extends GattLocal {
 	private handleFindByTypeRequest(_handle: number, _cid: number, request: Buffer) {
 		let response: Buffer = null;
 
-		const startHandle = Math.max(request.readUInt16LE(1), 0);
+		const startHandle = Math.max(request.readUInt16LE(1), 1);
 		const endHandle = Math.min(request.readUInt16LE(3), this.handles.length - 1);
 
 		const uuid = request
@@ -240,7 +240,7 @@ export class HciGattLocal extends GattLocal {
 	private handleReadByGroupRequest(_handle: number, _cid: number, request: Buffer) {
 		let response: Buffer = null;
 
-		const startHandle = Math.max(request.readUInt16LE(1), 0);
+		const startHandle = Math.max(request.readUInt16LE(1), 1);
 		const endHandle = Math.min(request.readUInt16LE(3), this.handles.length - 1);
 
 		const uuid = request
@@ -312,7 +312,7 @@ export class HciGattLocal extends GattLocal {
 	private async handleReadByTypeRequest(_handle: number, _cid: number, request: Buffer) {
 		let response: Buffer = null;
 
-		const startHandle = Math.max(request.readUInt16LE(1), 0);
+		const startHandle = Math.max(request.readUInt16LE(1), 1);
 		const endHandle = Math.min(request.readUInt16LE(3), this.handles.length - 1);
 
 		const uuid = request

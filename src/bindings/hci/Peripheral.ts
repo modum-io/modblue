@@ -46,12 +46,9 @@ export class HciPeripheral extends Peripheral {
 			this.signaling = null;
 		}
 
-		this.gatt.dispose();
-		this.gatt = null;
-
 		this.hci = null;
-
 		this.handle = null;
+
 		this._state = 'disconnected';
 	}
 

@@ -110,17 +110,35 @@ interface HciCommand {
 	onResponse: (status: number, data: Buffer) => void;
 }
 
+type AclDataPacketListener = (handle: number, cid: number, data: Buffer) => void;
+type LeConnCompleteListener = (
+	status: number,
+	handle: number,
+	role: number,
+	addressType: AddressType,
+	address: string,
+	interval: number,
+	latency: number,
+	supervisionTimeout: number,
+	masterClockAccuracy: number
+) => void;
+type LeAdvertisingReportListener = (
+	type: number,
+	address: string,
+	addressType: AddressType,
+	eir: Buffer,
+	rssi: number
+) => void;
+type DisconnectCompleteListener = (status: number, handle: number, reason: number) => void;
+
 export declare interface Hci {
-	on(event: 'aclDataPkt', listener: (handle: number, cid: number, data: Buffer) => void): this;
-	on(
-		event: 'leAdvertisingReport',
-		listener: (_: 0, type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void
-	): this;
+	on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
+	on(event: 'leConnComplete', listener: LeConnCompleteListener): this;
+	on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
+	on(event: 'disconnectComplete', listener: DisconnectCompleteListener): this;
 }
 
 export class Hci extends EventEmitter {
-	public static STATUS_MAPPER: string[] = STATUS_MAPPER;
-
 	public state: string;
 	public deviceId: number;
 
@@ -467,27 +485,29 @@ export class Hci extends EventEmitter {
 
 		await this.sendCommand(cmd, true);
 
-		while (true) {
-			const data = await this.waitForLeMetaEvent(EVT_LE_CONN_COMPLETE);
-			const handle = data.readUInt16LE(0);
-			const role = data.readUInt8(2);
-			const _addressType = data.readUInt8(3) === 0x01 ? 'random' : 'public';
-			const _address = data
-				.slice(4, 10)
-				.toString('hex')
-				.match(/.{1,2}/g)
-				.reverse()
-				.join(':')
-				.toUpperCase();
-			const interval = data.readUInt16LE(10) * 1.25;
-			const latency = data.readUInt16LE(12); // TODO: multiplier?
-			const supervisionTimeout = data.readUInt16LE(14) * 10;
-			const masterClockAccuracy = data.readUInt8(16); // TODO: multiplier?
+		return new Promise<number>((resolve, reject) => {
+			const onComplete: LeConnCompleteListener = (status, handle, role, _addressType, _address) => {
+				if (_address !== address || _addressType !== addressType) {
+					return;
+				}
 
-			if (addressType === _addressType && address === _address) {
-				return { handle, role, interval, latency, supervisionTimeout, masterClockAccuracy };
-			}
-		}
+				this.off('leConnComplete', onComplete);
+
+				if (status !== 0) {
+					reject(new Error(`Could not create le connection: ${STATUS_MAPPER[status]} (0x${status.toString(16)})`));
+					return;
+				}
+
+				if (role !== 0) {
+					reject(new Error(`Could not aquire le connection as master role`));
+					return;
+				}
+
+				resolve(handle);
+			};
+
+			this.on('leConnComplete', onComplete);
+		});
 	}
 
 	public async cancelLeConn() {
@@ -692,6 +712,14 @@ export class Hci extends EventEmitter {
 				this.emit(`event_${subEventType}`, data);
 
 				switch (subEventType) {
+					case EVT_DISCONN_COMPLETE:
+						status = data.readUInt8(3);
+						const disconnHandle = data.readUInt16LE(4);
+						const reason = data.readUInt8(6);
+
+						this.processDisconnectComplete(status, disconnHandle, reason);
+						break;
+
 					case EVT_CMD_COMPLETE:
 						cmd = data.readUInt16LE(4);
 						status = data.readUInt8(6);
@@ -723,6 +751,8 @@ export class Hci extends EventEmitter {
 
 						if (leMetaEventType === EVT_LE_ADVERTISING_REPORT) {
 							this.processLeAdvertisingReport(leMetaEventStatus, leMetaEventData);
+						} else if (leMetaEventType === EVT_LE_CONN_COMPLETE) {
+							this.processLeConnComplete(leMetaEventStatus, leMetaEventData);
 						}
 						break;
 
@@ -785,6 +815,40 @@ export class Hci extends EventEmitter {
 		}
 	};
 
+	private processDisconnectComplete(status: number, handle: number, reason: number) {
+		this.emit('disconnectComplete', status, handle, reason);
+	}
+
+	private processLeConnComplete(status: number, data: Buffer) {
+		const handle = data.readUInt16LE(0);
+		const role = data.readUInt8(2);
+		const addressType = data.readUInt8(3) === 0x01 ? 'random' : 'public';
+		const address = data
+			.slice(4, 10)
+			.toString('hex')
+			.match(/.{1,2}/g)
+			.reverse()
+			.join(':')
+			.toUpperCase();
+		const interval = data.readUInt16LE(10) * 1.25;
+		const latency = data.readUInt16LE(12); // TODO: multiplier?
+		const supervisionTimeout = data.readUInt16LE(14) * 10;
+		const masterClockAccuracy = data.readUInt8(16); // TODO: multiplier?
+
+		this.emit(
+			'leConnComplete',
+			status,
+			handle,
+			role,
+			addressType,
+			address,
+			interval,
+			latency,
+			supervisionTimeout,
+			masterClockAccuracy
+		);
+	}
+
 	private processLeAdvertisingReport(count: number, data: Buffer) {
 		try {
 			for (let i = 0; i < count; i++) {
@@ -800,7 +864,7 @@ export class Hci extends EventEmitter {
 				const eir = data.slice(9, eirLength + 9);
 				const rssi = data.readInt8(eirLength + 9);
 
-				this.emit('leAdvertisingReport', 0, type, address, addressType, eir, rssi);
+				this.emit('leAdvertisingReport', type, address, addressType, eir, rssi);
 
 				data = data.slice(eirLength + 10);
 			}

@@ -120,7 +120,7 @@ export abstract class GattLocal extends Gatt {
 
 		const allServices = baseServices.concat(services);
 
-		let handle = 0;
+		let handle = 1;
 		for (const service of allServices) {
 			const newChars: GattCharacteristicLocal[] = [];
 			const newService = new GattServiceLocal(this, service.uuid, newChars);

@@ -20,18 +20,16 @@ interface Discovery {
 	hasScanResponse: boolean;
 }
 
+type DiscoverListener = (
+	address: string,
+	addressType: AddressType,
+	connectable: boolean,
+	advertisement: any,
+	rssi: number
+) => void;
+
 export declare interface Gap {
-	on(
-		event: 'discover',
-		listener: (
-			status: number,
-			address: string,
-			addressType: AddressType,
-			connectable: boolean,
-			advertisement: any,
-			rssi: number
-		) => void
-	): this;
+	on(event: 'discover', listener: DiscoverListener): this;
 }
 
 export class Gap extends EventEmitter {
@@ -161,8 +159,6 @@ export class Gap extends EventEmitter {
 		if (name && name.length) {
 			const nameBuffer = Buffer.from(name);
 
-			console.log(name);
-
 			scanData.writeUInt8(1 + nameBuffer.length, 0);
 			scanData.writeUInt8(0x08, 1);
 			nameBuffer.copy(scanData, 2);
@@ -212,7 +208,6 @@ export class Gap extends EventEmitter {
 	}
 
 	private onHciLeAdvertisingReport = (
-		status: number,
 		type: number,
 		address: string,
 		addressType: AddressType,
@@ -396,7 +391,7 @@ export class Gap extends EventEmitter {
 			(discoveryCount > 1 && !hasScanResponse) ||
 			process.env.NOBLE_REPORT_ALL_HCI_EVENTS
 		) {
-			this.emit('discover', status, address, addressType, connectable, advertisement, rssi);
+			this.emit('discover', address, addressType, connectable, advertisement, rssi);
 		}
 	};
 }

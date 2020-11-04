@@ -8,6 +8,7 @@ export declare class HciAdapter extends Adapter {
     private gap;
     private gatt;
     private deviceName;
+    private advertisedServiceUUIDs;
     private peripherals;
     private uuidToHandle;
     private handleToUUID;
@@ -23,4 +24,5 @@ export declare class HciAdapter extends Adapter {
     startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
     stopAdvertising(): Promise<void>;
     setupGatt(maxMtu?: number): Promise<GattLocal>;
+    private onDisconnectComplete;
 }

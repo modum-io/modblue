@@ -1,8 +1,9 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 import { AddressType } from '../../../types';
+declare type DiscoverListener = (address: string, addressType: AddressType, connectable: boolean, advertisement: any, rssi: number) => void;
 export declare interface Gap {
-    on(event: 'discover', listener: (status: number, address: string, addressType: AddressType, connectable: boolean, advertisement: any, rssi: number) => void): this;
+    on(event: 'discover', listener: DiscoverListener): this;
 }
 export declare class Gap extends EventEmitter {
     private hci;
@@ -18,3 +19,4 @@ export declare class Gap extends EventEmitter {
     stopAdvertising(): Promise<void>;
     private onHciLeAdvertisingReport;
 }
+export {};

@@ -15,6 +15,7 @@ export class HciAdapter extends Adapter {
 	private gatt: HciGattLocal;
 
 	private deviceName: string = this.id;
+	private advertisedServiceUUIDs: string[] = [];
 	private peripherals: Map<string, HciPeripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
@@ -35,6 +36,7 @@ export class HciAdapter extends Adapter {
 		this.initialized = true;
 
 		this.hci = new Hci(Number(this.id));
+		this.hci.on('disconnectComplete', this.onDisconnectComplete);
 
 		this.gap = new Gap(this.hci);
 		this.gap.on('discover', this.onDiscover);
@@ -83,7 +85,6 @@ export class HciAdapter extends Adapter {
 	}
 
 	private onDiscover = (
-		status: number,
 		address: string,
 		addressType: AddressType,
 		connectable: boolean,
@@ -111,10 +112,7 @@ export class HciAdapter extends Adapter {
 		);
 
 		const connet = async () => {
-			const { handle, role } = await this.hci.createLeConn(peripheral.address, peripheral.addressType);
-			if (role !== 0) {
-				throw new Error(`Connection was not established as master`);
-			}
+			const handle = await this.hci.createLeConn(peripheral.address, peripheral.addressType);
 
 			this.uuidToHandle.set(peripheral.uuid, handle);
 			this.handleToUUID.set(handle, peripheral.uuid);
@@ -161,6 +159,7 @@ export class HciAdapter extends Adapter {
 		}
 
 		this.deviceName = deviceName;
+		this.advertisedServiceUUIDs = serviceUUIDs;
 		if (this.gatt) {
 			this.gatt.setData(this.deviceName, this.gatt.serviceInputs);
 		}
@@ -187,4 +186,12 @@ export class HciAdapter extends Adapter {
 		this.gatt.setData(this.deviceName, []);
 		return this.gatt;
 	}
+
+	private onDisconnectComplete = async (status: number, handle: number, reason: number) => {
+		// We have to restart advertising if we were advertising before
+		if (this.advertising) {
+			this.advertising = false;
+			await this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs);
+		}
+	};
 }

@@ -10,12 +10,17 @@ interface HciDevice {
     name: string;
     address: string;
 }
+declare type AclDataPacketListener = (handle: number, cid: number, data: Buffer) => void;
+declare type LeConnCompleteListener = (status: number, handle: number, role: number, addressType: AddressType, address: string, interval: number, latency: number, supervisionTimeout: number, masterClockAccuracy: number) => void;
+declare type LeAdvertisingReportListener = (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
+declare type DisconnectCompleteListener = (status: number, handle: number, reason: number) => void;
 export declare interface Hci {
-    on(event: 'aclDataPkt', listener: (handle: number, cid: number, data: Buffer) => void): this;
-    on(event: 'leAdvertisingReport', listener: (_: 0, type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void): this;
+    on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
+    on(event: 'leConnComplete', listener: LeConnCompleteListener): this;
+    on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
+    on(event: 'disconnectComplete', listener: DisconnectCompleteListener): this;
 }
 export declare class Hci extends EventEmitter {
-    static STATUS_MAPPER: string[];
     state: string;
     deviceId: number;
     addressType: AddressType;
@@ -40,14 +45,7 @@ export declare class Hci extends EventEmitter {
     private writeLeHostSupported;
     setScanParameters(): Promise<void>;
     setScanEnabled(enabled: boolean, filterDuplicates: boolean): Promise<void>;
-    createLeConn(address: string, addressType: AddressType): Promise<{
-        handle: number;
-        role: number;
-        interval: number;
-        latency: number;
-        supervisionTimeout: number;
-        masterClockAccuracy: number;
-    }>;
+    createLeConn(address: string, addressType: AddressType): Promise<number>;
     cancelLeConn(): Promise<void>;
     connUpdateLe(handle: number, minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number): void;
     startLeEncryption(handle: number, random: any, diversifier: Buffer, key: Buffer): void;
@@ -60,6 +58,8 @@ export declare class Hci extends EventEmitter {
     setAdvertisingEnabled(enabled: boolean): Promise<void>;
     private onSocketData;
     private onSocketError;
+    private processDisconnectComplete;
+    private processLeConnComplete;
     private processLeAdvertisingReport;
 }
 export {};

@@ -46,7 +46,9 @@ const main = async () => {
 					secure: [],
 					descriptors: [],
 					value: Buffer.from('1337'),
-					onWrite: (offset, data, withoutResponse) => console.log('writing', offset, data, withoutResponse)
+					onWrite: (offset, data, withoutResponse) => {
+						console.log('writing', offset, data, withoutResponse);
+					}
 				}
 			]
 		}
