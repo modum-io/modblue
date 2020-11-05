@@ -102,7 +102,6 @@ export class HciGattLocal extends GattLocal {
 		let mtu = request.readUInt16LE(1);
 
 		mtu = Math.max(23, Math.min(mtu, this.maxMtu));
-		console.log('mtu negotiated', mtu);
 		this.negotiatedMtus.set(_handle, mtu);
 
 		const response = Buffer.alloc(3);
