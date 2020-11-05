@@ -11,14 +11,18 @@ interface HciDevice {
     address: string;
 }
 declare type AclDataPacketListener = (handle: number, cid: number, data: Buffer) => void;
+declare type LeScanEnableListener = (enabled: boolean, filterDuplicates: boolean) => void;
 declare type LeConnCompleteListener = (status: number, handle: number, role: number, addressType: AddressType, address: string, interval: number, latency: number, supervisionTimeout: number, masterClockAccuracy: number) => void;
-declare type LeAdvertisingReportListener = (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
 declare type DisconnectCompleteListener = (status: number, handle: number, reason: number) => void;
+declare type LeAdvertisingReportListener = (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
+declare type LeAdvertiseEnableListener = (enabled: boolean) => void;
 export declare interface Hci {
     on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
+    on(event: 'leScanEnable', listener: LeScanEnableListener): this;
     on(event: 'leConnComplete', listener: LeConnCompleteListener): this;
-    on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
     on(event: 'disconnectComplete', listener: DisconnectCompleteListener): this;
+    on(event: 'leAdvertiseEnable', listener: LeAdvertiseEnableListener): this;
+    on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
 }
 export declare class Hci extends EventEmitter {
     state: string;
@@ -58,7 +62,6 @@ export declare class Hci extends EventEmitter {
     setAdvertisingEnabled(enabled: boolean): Promise<void>;
     private onSocketData;
     private onSocketError;
-    private processDisconnectComplete;
     private processLeConnComplete;
     private processLeAdvertisingReport;
 }

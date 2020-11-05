@@ -111,6 +111,8 @@ interface HciCommand {
 }
 
 type AclDataPacketListener = (handle: number, cid: number, data: Buffer) => void;
+
+type LeScanEnableListener = (enabled: boolean, filterDuplicates: boolean) => void;
 type LeConnCompleteListener = (
 	status: number,
 	handle: number,
@@ -122,6 +124,8 @@ type LeConnCompleteListener = (
 	supervisionTimeout: number,
 	masterClockAccuracy: number
 ) => void;
+type DisconnectCompleteListener = (status: number, handle: number, reason: number) => void;
+
 type LeAdvertisingReportListener = (
 	type: number,
 	address: string,
@@ -129,13 +133,17 @@ type LeAdvertisingReportListener = (
 	eir: Buffer,
 	rssi: number
 ) => void;
-type DisconnectCompleteListener = (status: number, handle: number, reason: number) => void;
+type LeAdvertiseEnableListener = (enabled: boolean) => void;
 
 export declare interface Hci {
 	on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
+
+	on(event: 'leScanEnable', listener: LeScanEnableListener): this;
 	on(event: 'leConnComplete', listener: LeConnCompleteListener): this;
-	on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
 	on(event: 'disconnectComplete', listener: DisconnectCompleteListener): this;
+
+	on(event: 'leAdvertiseEnable', listener: LeAdvertiseEnableListener): this;
+	on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
 }
 
 export class Hci extends EventEmitter {
@@ -172,11 +180,22 @@ export class Hci extends EventEmitter {
 		this.deviceId = this.socket.bindRaw(this.deviceId);
 		this.socket.start();
 
-		await new Promise<void>((resolve) => {
+		await new Promise<void>((resolve, reject) => {
+			if (this.socket.isDevUp()) {
+				return resolve();
+			}
+
+			let count = 0;
 			const timer = setInterval(() => {
 				if (this.socket.isDevUp()) {
 					clearInterval(timer);
-					resolve();
+					return resolve();
+				}
+
+				count++;
+				if (count > 3) {
+					clearInterval(timer);
+					return reject(`Initializing socket timed out - Are you sure it's running?`);
 				}
 				// tslint:disable-next-line: align
 			}, 1000);
@@ -717,7 +736,7 @@ export class Hci extends EventEmitter {
 						const disconnHandle = data.readUInt16LE(4);
 						const reason = data.readUInt8(6);
 
-						this.processDisconnectComplete(status, disconnHandle, reason);
+						this.emit('disconnectComplete', status, disconnHandle, reason);
 						break;
 
 					case EVT_CMD_COMPLETE:
@@ -798,8 +817,26 @@ export class Hci extends EventEmitter {
 				break;
 
 			case HCI_COMMAND_PKT:
-				/*cmd = data.readUInt16LE(1);
-				const len = data.readUInt8(3);*/
+				cmd = data.readUInt16LE(1);
+				// const len = data.readUInt8(3);
+
+				switch (cmd) {
+					case LE_SET_SCAN_ENABLE_CMD:
+						const scanEnabled = data.readUInt8(4) === 0x1;
+						const filterDuplicates = data.readUInt8(5) === 0x1;
+
+						this.emit('leScanEnable', scanEnabled, filterDuplicates);
+						break;
+
+					case LE_SET_ADVERTISE_ENABLE_CMD:
+						const advertiseEnabled = data.readUInt8(4) === 0x1;
+
+						this.emit('leAdvertiseEnable', advertiseEnabled);
+						break;
+
+					default:
+						break;
+				}
 				break;
 
 			default:
@@ -814,10 +851,6 @@ export class Hci extends EventEmitter {
 			// no-op
 		}
 	};
-
-	private processDisconnectComplete(status: number, handle: number, reason: number) {
-		this.emit('disconnectComplete', status, handle, reason);
-	}
 
 	private processLeConnComplete(status: number, data: Buffer) {
 		const handle = data.readUInt16LE(0);

@@ -10,6 +10,7 @@ export declare class HciAdapter extends Adapter {
     private deviceName;
     private advertisedServiceUUIDs;
     private peripherals;
+    private connectedDevices;
     private uuidToHandle;
     private handleToUUID;
     getScannedPeripherals(): Promise<Peripheral[]>;
@@ -24,5 +25,7 @@ export declare class HciAdapter extends Adapter {
     startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
     stopAdvertising(): Promise<void>;
     setupGatt(maxMtu?: number): Promise<GattLocal>;
+    private onLeScanEnable;
+    private onLeConnComplete;
     private onDisconnectComplete;
 }

@@ -17,6 +17,7 @@ export class HciAdapter extends Adapter {
 	private deviceName: string = this.id;
 	private advertisedServiceUUIDs: string[] = [];
 	private peripherals: Map<string, HciPeripheral> = new Map();
+	private connectedDevices: Map<number, Peripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
 
@@ -36,6 +37,8 @@ export class HciAdapter extends Adapter {
 		this.initialized = true;
 
 		this.hci = new Hci(Number(this.id));
+		this.hci.on('leScanEnable', this.onLeScanEnable);
+		this.hci.on('leConnComplete', this.onLeConnComplete);
 		this.hci.on('disconnectComplete', this.onDisconnectComplete);
 
 		this.gap = new Gap(this.hci);
@@ -96,7 +99,7 @@ export class HciAdapter extends Adapter {
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new HciPeripheral(this, uuid, address, addressType, advertisement, rssi);
+			peripheral = new HciPeripheral(this, uuid, addressType, address, advertisement, rssi);
 			this.peripherals.set(uuid, peripheral);
 		} else {
 			peripheral.advertisement = advertisement;
@@ -187,7 +190,46 @@ export class HciAdapter extends Adapter {
 		return this.gatt;
 	}
 
+	private onLeScanEnable = async (enabled: boolean, filterDuplicates: boolean) => {
+		// We have to restart scanning if we were scanning before
+		if (this.scanning && !enabled) {
+			this.scanning = false;
+			await this.startScanning();
+		}
+	};
+
+	private onLeConnComplete = async (
+		status: number,
+		handle: number,
+		role: number,
+		addressType: AddressType,
+		address: string
+	) => {
+		// Skip failed or master connections, they are handled elsewhere
+		if (status !== 0 || role === 0) {
+			return;
+		}
+
+		address = address.toUpperCase();
+		const uuid = address;
+
+		const peripheral = new HciPeripheral(this, uuid, addressType, address, null, 0);
+		this.connectedDevices.set(handle, peripheral);
+
+		this.emit('connect', peripheral);
+	};
+
 	private onDisconnectComplete = async (status: number, handle: number, reason: number) => {
+		if (status !== 0) {
+			return;
+		}
+
+		const connectedDevice = this.connectedDevices.get(handle);
+		if (connectedDevice) {
+			this.connectedDevices.delete(handle);
+			this.emit('disconnect', connectedDevice, reason);
+		}
+
 		// We have to restart advertising if we were advertising before
 		if (this.advertising) {
 			this.advertising = false;

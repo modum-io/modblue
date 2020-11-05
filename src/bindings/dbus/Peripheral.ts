@@ -32,12 +32,12 @@ export class DbusPeripheral extends Peripheral {
 		adapter: DbusAdapter,
 		path: string,
 		id: string,
-		address: string,
 		addressType: AddressType,
+		address: string,
 		advertisement: any,
 		rssi: number
 	) {
-		super(adapter, id, address, addressType, advertisement, rssi);
+		super(adapter, id, addressType, address, advertisement, rssi);
 
 		this.path = path;
 	}

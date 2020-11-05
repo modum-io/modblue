@@ -11,7 +11,7 @@ export declare abstract class Peripheral {
     rssi: number;
     protected _state: PeripheralState;
     get state(): PeripheralState;
-    constructor(adapter: Adapter, uuid: string, address: string, addressType: AddressType, advertisement?: any, rssi?: number);
+    constructor(adapter: Adapter, uuid: string, addressType: AddressType, address: string, advertisement?: any, rssi?: number);
     toString(): string;
     abstract connect(): Promise<void>;
     abstract disconnect(): Promise<void>;
