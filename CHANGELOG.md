@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.1](https://github.com/modum-io/modblue/compare/v2.0.0...v2.0.1) (2020-11-05)
+
+### Bug Fixes
+
+- **mtu:** Fix mtu negotiation ([ee936c0](https://github.com/modum-io/modblue/commit/ee936c058750fa3e060f4ed583e20279bbf772f8))
+
 ## [2.0.0](https://github.com/modum-io/modblue/compare/v1.0.1...v2.0.0) (2020-11-05)
 
 ### ⚠ BREAKING CHANGES
