@@ -6,8 +6,12 @@ import { Peripheral } from './Peripheral';
 
 export declare interface Adapter {
 	on(event: 'discover', listener: (peripheral: Peripheral) => void): this;
+	on(event: 'connect', listener: (peripheral: Peripheral) => void): this;
+	on(event: 'disconnect', listener: (peripheral: Peripheral) => void): this;
 
 	emit(event: 'discover', peripheral: Peripheral): boolean;
+	emit(event: 'connect', peripheral: Peripheral): boolean;
+	emit(event: 'disconnect', peripheral: Peripheral, reason: number): boolean;
 }
 
 export abstract class Adapter extends EventEmitter {

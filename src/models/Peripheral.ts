@@ -23,8 +23,8 @@ export abstract class Peripheral {
 	public constructor(
 		adapter: Adapter,
 		uuid: string,
-		address: string,
 		addressType: AddressType,
+		address: string,
 		advertisement?: any,
 		rssi?: number
 	) {

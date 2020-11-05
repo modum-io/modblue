@@ -1,6 +1,7 @@
 import { ClientInterface } from 'dbus-next';
 
 import { Adapter, GattLocal, Peripheral } from '../../models';
+import { AddressType } from '../../types';
 
 import { buildTypedValue, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE, I_OBJECT_MANAGER, I_PROPERTIES } from './misc';
 import { DbusNoble } from './Noble';
@@ -148,11 +149,11 @@ export class DbusAdapter extends Adapter {
 
 		let peripheral = this.peripherals.get(id);
 		if (!peripheral) {
-			const address = data.Address?.value;
-			const addressType = data.AddressType?.value;
+			const address = data.Address?.value as string;
+			const addressType = data.AddressType?.value as AddressType;
 			const advertisement = data.ManufacturerData?.value;
-			const rssi = data.RSSI?.value;
-			peripheral = new DbusPeripheral(this, path, id, address, addressType, advertisement, rssi);
+			const rssi = data.RSSI?.value as number;
+			peripheral = new DbusPeripheral(this, path, id, addressType, address, advertisement, rssi);
 			this.peripherals.set(id, peripheral);
 		}
 
