@@ -4,6 +4,9 @@ import { HciAdapter } from './Adapter';
 import { HciGattRemote } from './gatt';
 import { Hci, Signaling } from './misc';
 
+// 512 bytes is max char size + 1 byte att opcode + 2 bytes handle + 2 bytes offset for long writes
+const DEFAULT_MTU = 517;
+
 export class HciPeripheral extends Peripheral {
 	public adapter: HciAdapter;
 
@@ -25,8 +28,7 @@ export class HciPeripheral extends Peripheral {
 		this.signaling = new Signaling(this.hci, this.handle);
 
 		this.gatt = new HciGattRemote(this, hci, handle);
-		await this.gatt.exchangeMtu(256);
-		this.mtuExchanged = true;
+		this.mtuExchanged = false;
 
 		this._state = 'connected';
 	}
@@ -57,10 +59,10 @@ export class HciPeripheral extends Peripheral {
 			throw new Error(`Peripheral is not connected`);
 		}
 
-		/*if (!this.mtuExchanged) {
-			await this.gatt.exchangeMtu(requestMtu || 256);
+		if (!this.mtuExchanged) {
+			await this.gatt.exchangeMtu(requestMtu || DEFAULT_MTU);
 			this.mtuExchanged = true;
-		}*/
+		}
 
 		return this.gatt;
 	}
