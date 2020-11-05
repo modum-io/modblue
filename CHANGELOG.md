@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/modum-io/modblue/compare/v1.0.1...v2.0.0) (2020-11-05)
+
+### ⚠ BREAKING CHANGES
+
+- **hci:** Align peripheral constructor parameter order with data
+
+### Bug Fixes
+
+- **hci:** Fix issues when scanning and advertising ([f0c41ee](https://github.com/modum-io/modblue/commit/f0c41eefb24faa13125a07aa1d2c3be329476937))
+
 ### [1.0.1](https://github.com/modum-io/modblue/compare/v1.0.0...v1.0.1) (2020-11-04)
 
 ### Bug Fixes
