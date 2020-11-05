@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.2](https://github.com/modum-io/modblue/compare/v2.0.1...v2.0.2) (2020-11-05)
+
+### Bug Fixes
+
+- Remove console log ([fdd121a](https://github.com/modum-io/modblue/commit/fdd121a3311b79036925b41e319d59f6853d9826))
+
 ### [2.0.1](https://github.com/modum-io/modblue/compare/v2.0.0...v2.0.1) (2020-11-05)
 
 ### Bug Fixes
