@@ -3,12 +3,15 @@ import { HciAdapter } from '../../Adapter';
 import { Hci } from '../../misc';
 import * as CONST from '../Constants';
 
+// 512 bytes is max char size + 1 byte att opcode + 2 bytes handle + 2 bytes offset for long writes
+const DEFAULT_MAX_MTU = 517;
+
 export class HciGattLocal extends GattLocal {
 	private hci: Hci;
 
 	private negotiatedMtus: Map<number, number>;
 
-	public constructor(adapter: HciAdapter, hci: Hci, maxMtu: number = 256) {
+	public constructor(adapter: HciAdapter, hci: Hci, maxMtu: number = DEFAULT_MAX_MTU) {
 		super(adapter, maxMtu);
 
 		this.hci = hci;
@@ -98,12 +101,8 @@ export class HciGattLocal extends GattLocal {
 	private handleMtuRequest(_handle: number, _cid: number, request: Buffer) {
 		let mtu = request.readUInt16LE(1);
 
-		if (mtu < 23) {
-			mtu = 23;
-		} else if (mtu > this.maxMtu) {
-			mtu = this.maxMtu;
-		}
-
+		mtu = Math.max(23, Math.min(mtu, this.maxMtu));
+		console.log('mtu negotiated', mtu);
 		this.negotiatedMtus.set(_handle, mtu);
 
 		const response = Buffer.alloc(3);
