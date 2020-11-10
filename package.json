@@ -17,7 +17,7 @@
 	"scripts": {
 		"build": "tsc",
 		"docs": "npx typedoc",
-		"release": "standard-version -a"
+		"release": "npm run build && npm run docs && standard-version -a"
 	},
 	"dependencies": {
 		"@abandonware/bluetooth-hci-socket": "0.5.3-6",
@@ -37,7 +37,7 @@
 	},
 	"husky": {
 		"hooks": {
-			"pre-commit": "npm run build && npm run docs && pretty-quick --staged"
+			"pre-commit": "pretty-quick --staged"
 		}
 	}
 }
