@@ -7,7 +7,7 @@ Trying to make the world better place by improving the bluetooth experience one 
 ### Installation
 
 ```bash
-npm i -E @modum/modblue
+npm i -E @modum-io/modblue
 ```
 
 ### Usage
@@ -20,7 +20,7 @@ Currently there are the following bindings available:
 Create a new `Noble` object to get started (all bindings have the same interface)
 
 ```ts
-import { HciNoble, DbusNoble } from '@modum/modblue';
+import { HciNoble, DbusNoble } from '@modum-io/modblue';
 
 const noble = new HciNoble();    // or: new DbusNoble()
 await noble.init();              // Initialize for use, only needed once
@@ -95,7 +95,7 @@ await descriptor.writeValue(buffer);
 First you have to setup the local GATT and the services and characteristics you want to advertise:
 
 ```ts
-import { GattServiceInput } from '@modum/modblue';
+import { GattServiceInput } from '@modum-io/modblue';
 
 const maxMtu: number = 517;                             // Optional: Specify the maximum MTU that should be negotiated with connecting devices.
 const gatt = await adapter.setupGatt(maxMtu);           // Setup our local GATT server
