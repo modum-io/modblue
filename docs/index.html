@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>@modum/modblue - v2.0.3</title>
-	<meta name="description" content="Documentation for @modum/modblue - v2.0.3">
+	<title>@modum-io/modblue - v3.0.0</title>
+	<meta name="description" content="Documentation for @modum-io/modblue - v3.0.0">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
 	<script async src="assets/js/search.js" id="search-script"></script>
@@ -23,7 +23,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="index.html" class="title">@modum/modblue - v2.0.3</a>
+					<a href="index.html" class="title">@modum-io/modblue - v3.0.0</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -50,7 +50,7 @@
 	</div>
 	<div class="tsd-page-title">
 		<div class="container">
-			<h1>Project @modum/modblue - v2.0.3</h1>
+			<h1>Project @modum-io/modblue - v3.0.0</h1>
 		</div>
 	</div>
 </header>
@@ -68,7 +68,7 @@
 				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
 					<h3>Installation</h3>
 				</a>
-				<pre><code class="language-bash">npm i -E @modum/modblue</code></pre>
+				<pre><code class="language-bash">npm i -E @modum-io/modblue</code></pre>
 				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
 					<h3>Usage</h3>
 				</a>
@@ -78,7 +78,7 @@
 					<li><code>dbus</code> (using <a href="https://github.com/dbusjs/node-dbus-next">dbus-next</a>)</li>
 				</ul>
 				<p>Create a new <code>Noble</code> object to get started (all bindings have the same interface)</p>
-				<pre><code class="language-ts"><span class="hljs-keyword">import</span> { HciNoble, DbusNoble } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@modum/modblue&#x27;</span>;
+				<pre><code class="language-ts"><span class="hljs-keyword">import</span> { HciNoble, DbusNoble } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@modum-io/modblue&#x27;</span>;
 
 <span class="hljs-keyword">const</span> noble = <span class="hljs-keyword">new</span> HciNoble();    <span class="hljs-comment">// or: new DbusNoble()</span>
 <span class="hljs-keyword">await</span> noble.init();              <span class="hljs-comment">// Initialize for use, only needed once</span></code></pre>
@@ -131,7 +131,7 @@
 					<h3>Advertising</h3>
 				</a>
 				<p>First you have to setup the local GATT and the services and characteristics you want to advertise:</p>
-				<pre><code class="language-ts"><span class="hljs-keyword">import</span> { GattServiceInput } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@modum/modblue&#x27;</span>;
+				<pre><code class="language-ts"><span class="hljs-keyword">import</span> { GattServiceInput } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@modum-io/modblue&#x27;</span>;
 
 <span class="hljs-keyword">const</span> maxMtu: <span class="hljs-built_in">number</span> = <span class="hljs-number">517</span>;                             <span class="hljs-comment">// Optional: Specify the maximum MTU that should be negotiated with connecting devices.</span>
 <span class="hljs-keyword">const</span> gatt = <span class="hljs-keyword">await</span> adapter.setupGatt(maxMtu);           <span class="hljs-comment">// Setup our local GATT server</span>
