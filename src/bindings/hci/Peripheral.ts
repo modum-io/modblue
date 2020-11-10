@@ -1,4 +1,4 @@
-import { Peripheral } from '../../models';
+import { GattRemote, Peripheral } from '../../models';
 
 import { HciAdapter } from './Adapter';
 import { HciGattRemote } from './gatt';
@@ -54,7 +54,7 @@ export class HciPeripheral extends Peripheral {
 		this._state = 'disconnected';
 	}
 
-	public async setupGatt(requestMtu?: number): Promise<HciGattRemote> {
+	public async setupGatt(requestMtu?: number): Promise<GattRemote> {
 		if (this.state !== 'connected' || !this.handle) {
 			throw new Error(`Peripheral is not connected`);
 		}

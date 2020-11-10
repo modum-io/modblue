@@ -1,6 +1,5 @@
-import { Peripheral } from '../../models';
+import { GattRemote, Peripheral } from '../../models';
 import { HciAdapter } from './Adapter';
-import { HciGattRemote } from './gatt';
 import { Hci } from './misc';
 export declare class HciPeripheral extends Peripheral {
     adapter: HciAdapter;
@@ -13,5 +12,5 @@ export declare class HciPeripheral extends Peripheral {
     onConnect(hci: Hci, handle: number): Promise<void>;
     disconnect(): Promise<void>;
     onDisconnect(): Promise<void>;
-    setupGatt(requestMtu?: number): Promise<HciGattRemote>;
+    setupGatt(requestMtu?: number): Promise<GattRemote>;
 }

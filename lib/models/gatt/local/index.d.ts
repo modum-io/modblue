@@ -1,4 +1,4 @@
 export { GattCharacteristicLocal } from './Characteristic';
 export { GattDescriptorLocal } from './Descriptor';
-export { GattLocal } from './Gatt';
+export { GattLocal, GattServiceInput, GattCharacteristicInput, GattDescriptorInput } from './Gatt';
 export { GattServiceLocal } from './Service';

@@ -10,6 +10,13 @@ export declare interface Adapter {
     emit(event: 'discover', peripheral: Peripheral): boolean;
     emit(event: 'connect', peripheral: Peripheral): boolean;
     emit(event: 'disconnect', peripheral: Peripheral, reason: number): boolean;
+    isScanning(): Promise<boolean>;
+    startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;
+    stopScanning(): Promise<void>;
+    getScannedPeripherals(): Promise<Peripheral[]>;
+    startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
+    stopAdvertising(): Promise<void>;
+    setupGatt(maxMtu?: number): Promise<GattLocal>;
 }
 export declare abstract class Adapter extends EventEmitter {
     readonly noble: Noble;
@@ -22,11 +29,4 @@ export declare abstract class Adapter extends EventEmitter {
     get address(): string;
     constructor(noble: Noble, id: string, name?: string, address?: string);
     toString(): string;
-    abstract isScanning(): Promise<boolean>;
-    abstract startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;
-    abstract stopScanning(): Promise<void>;
-    abstract getScannedPeripherals(): Promise<Peripheral[]>;
-    abstract startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
-    abstract stopAdvertising(): Promise<void>;
-    abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
 }

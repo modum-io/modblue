@@ -61,7 +61,7 @@ export abstract class GattLocal extends Gatt {
 		return this._deviceName;
 	}
 
-	public _serviceInputs: GattServiceInput[];
+	protected _serviceInputs: GattServiceInput[];
 	public get serviceInputs() {
 		return this._serviceInputs;
 	}

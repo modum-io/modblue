@@ -1,6 +1,6 @@
 import { ClientInterface, MessageBus, systemBus } from 'dbus-next';
 
-import { Noble } from '../../models';
+import { Adapter, Noble } from '../../models';
 
 import { DbusAdapter } from './Adapter';
 import { I_BLUEZ_ADAPTER, I_OBJECT_MANAGER } from './misc';
@@ -25,7 +25,7 @@ export class DbusNoble extends Noble {
 		this.adapters = new Map();
 	}
 
-	public async getAdapters(): Promise<DbusAdapter[]> {
+	public async getAdapters(): Promise<Adapter[]> {
 		if (!this.objManagerIface) {
 			const objManager = await this.dbus.getProxyObject('org.bluez', '/');
 			this.objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);

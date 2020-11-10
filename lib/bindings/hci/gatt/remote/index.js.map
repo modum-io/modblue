@@ -1,1 +1,1 @@
-{"version":3,"file":"index.js","sourceRoot":"src/","sources":["bindings/hci/gatt/remote/index.ts"],"names":[],"mappings":";;;AAAA,mDAA+D;AAAtD,6HAAA,2BAA2B,OAAA;AACpC,2CAAuD;AAA9C,qHAAA,uBAAuB,OAAA;AAChC,+BAAuC;AAA9B,qGAAA,aAAa,OAAA;AACtB,qCAAiD;AAAxC,+GAAA,oBAAoB,OAAA"}
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../../../src/bindings/hci/gatt/remote/index.ts"],"names":[],"mappings":";;;AAAA,mDAA+D;AAAtD,6HAAA,2BAA2B,OAAA;AACpC,2CAAuD;AAA9C,qHAAA,uBAAuB,OAAA;AAChC,+BAAuC;AAA9B,qGAAA,aAAa,OAAA;AACtB,qCAAiD;AAAxC,+GAAA,oBAAoB,OAAA"}

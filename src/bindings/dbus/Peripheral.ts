@@ -1,6 +1,6 @@
 import { ClientInterface } from 'dbus-next';
 
-import { Peripheral } from '../../models';
+import { GattRemote, Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
 import { DbusAdapter } from './Adapter';
@@ -202,7 +202,7 @@ export class DbusPeripheral extends Peripheral {
 		this.disconnecting = [];
 	}
 
-	public async setupGatt(requestMtu?: number): Promise<DbusGattRemote> {
+	public async setupGatt(requestMtu?: number): Promise<GattRemote> {
 		if (this.gatt) {
 			return this.gatt;
 		}

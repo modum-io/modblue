@@ -35,30 +35,23 @@ export abstract class GattRemote extends Gatt {
 		}
 		return [...this.services.values()];
 	}
-	protected abstract async doDiscoverServices(): Promise<GattServiceRemote[]>;
+	protected abstract doDiscoverServices(): Promise<GattServiceRemote[]>;
 
-	public abstract async discoverCharacteristics(serviceUUID: string): Promise<GattCharacteristicRemote[]>;
+	public abstract discoverCharacteristics(serviceUUID: string): Promise<GattCharacteristicRemote[]>;
 
-	public abstract async read(serviceUUID: string, characteristicUUID: string): Promise<Buffer>;
-	public abstract async write(
+	public abstract read(serviceUUID: string, characteristicUUID: string): Promise<Buffer>;
+	public abstract write(
 		serviceUUID: string,
 		characteristicUUID: string,
 		data: Buffer,
 		withoutResponse: boolean
 	): Promise<void>;
-	public abstract async broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): Promise<void>;
-	public abstract async notify(serviceUUID: string, characteristicUUID: string, notify: boolean): Promise<void>;
-	public abstract async discoverDescriptors(
-		serviceUUID: string,
-		characteristicUUID: string
-	): Promise<GattDescriptorRemote[]>;
+	public abstract broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): Promise<void>;
+	public abstract notify(serviceUUID: string, characteristicUUID: string, notify: boolean): Promise<void>;
+	public abstract discoverDescriptors(serviceUUID: string, characteristicUUID: string): Promise<GattDescriptorRemote[]>;
 
-	public abstract async readValue(
-		serviceUUID: string,
-		characteristicUUID: string,
-		descriptorUUID: string
-	): Promise<Buffer>;
-	public abstract async writeValue(
+	public abstract readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): Promise<Buffer>;
+	public abstract writeValue(
 		serviceUUID: string,
 		characteristicUUID: string,
 		descriptorUUID: string,
