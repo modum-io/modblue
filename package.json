@@ -1,6 +1,6 @@
 {
 	"name": "@modum/modblue",
-	"version": "2.0.2",
+	"version": "2.0.3",
 	"description": "BLE module using dbus or hci.",
 	"homepage": "https://github.com/modum-io/modblue#modblue",
 	"bugs": {
@@ -15,8 +15,9 @@
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
-		"release": "standard-version -a",
-		"build": "tsc"
+		"build": "tsc",
+		"docs": "typedoc",
+		"release": "standard-version -a"
 	},
 	"dependencies": {
 		"@abandonware/bluetooth-hci-socket": "0.5.3-6",
@@ -25,17 +26,24 @@
 	"devDependencies": {
 		"@types/node": "14.14.6",
 		"husky": "4.3.0",
+		"precise-commits": "1.0.2",
 		"prettier": "2.1.2",
-		"pretty-quick": "3.1.0",
 		"standard-version": "9.0.0",
 		"tslint": "6.1.3",
 		"tslint-config-prettier": "1.18.0",
+		"typedoc": "0.20.0-beta.8",
 		"typescript": "4.0.5",
 		"typestrict": "1.0.2"
 	},
 	"husky": {
 		"hooks": {
-			"pre-commit": "npm run build && pretty-quick --staged"
+			"pre-commit": "precise-commits"
+		}
+	},
+	"standard-version": {
+		"scripts": {
+			"postbump": "npm run build && npm run docs && git add docs/* && git add lib/*",
+			"postchangelog": "prettier --write CHANGELOG.md"
 		}
 	}
 }

@@ -47,7 +47,7 @@ export declare abstract class GattLocal extends Gatt {
     get maxMtu(): number;
     protected _deviceName: string;
     get deviceName(): string;
-    _serviceInputs: GattServiceInput[];
+    protected _serviceInputs: GattServiceInput[];
     get serviceInputs(): GattServiceInput[];
     constructor(adapter: Adapter, maxMtu?: number);
     toString(): string;

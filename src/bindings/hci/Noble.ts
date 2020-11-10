@@ -1,4 +1,4 @@
-import { Noble } from '../../models';
+import { Adapter, Noble } from '../../models';
 
 import { HciAdapter } from './Adapter';
 import { Hci } from './misc';
@@ -17,7 +17,7 @@ export class HciNoble extends Noble {
 		this.adapters = new Map();
 	}
 
-	public async getAdapters(): Promise<HciAdapter[]> {
+	public async getAdapters(): Promise<Adapter[]> {
 		const adapters = Hci.getDeviceList();
 		for (const rawAdapter of adapters) {
 			let adapter = this.adapters.get(rawAdapter.devId);

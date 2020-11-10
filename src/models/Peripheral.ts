@@ -50,8 +50,8 @@ export abstract class Peripheral {
 		});
 	}
 
-	public abstract async connect(): Promise<void>;
-	public abstract async disconnect(): Promise<void>;
+	public abstract connect(): Promise<void>;
+	public abstract disconnect(): Promise<void>;
 
-	public abstract async setupGatt(requestMtu?: number): Promise<GattRemote>;
+	public abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
 }

@@ -1,7 +1,6 @@
-import { Peripheral } from '../../models';
+import { GattRemote, Peripheral } from '../../models';
 import { AddressType } from '../../types';
 import { DbusAdapter } from './Adapter';
-import { DbusGattRemote } from './gatt';
 export declare class DbusPeripheral extends Peripheral {
     adapter: DbusAdapter;
     readonly path: string;
@@ -23,5 +22,5 @@ export declare class DbusPeripheral extends Peripheral {
     disconnect(): Promise<void>;
     private doneConnecting;
     private doneDisconnecting;
-    setupGatt(requestMtu?: number): Promise<DbusGattRemote>;
+    setupGatt(requestMtu?: number): Promise<GattRemote>;
 }

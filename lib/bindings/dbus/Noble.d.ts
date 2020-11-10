@@ -1,6 +1,5 @@
 import { MessageBus } from 'dbus-next';
-import { Noble } from '../../models';
-import { DbusAdapter } from './Adapter';
+import { Adapter, Noble } from '../../models';
 export declare class DbusNoble extends Noble {
     readonly dbus: MessageBus;
     private objManagerIface;
@@ -8,5 +7,5 @@ export declare class DbusNoble extends Noble {
     constructor();
     init(): Promise<void>;
     dispose(): Promise<void>;
-    getAdapters(): Promise<DbusAdapter[]>;
+    getAdapters(): Promise<Adapter[]>;
 }
