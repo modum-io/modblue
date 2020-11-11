@@ -17,14 +17,35 @@ export type GattCharacteristicProperty =
 	| 'writable-auxiliaries'
 	| 'authorize';
 
-export abstract class GattCharacteristic extends EventEmitter {
+/**
+ * Represents a GATT Characteristic.
+ */
+export abstract class GattCharacteristic {
+	/**
+	 * The GATT service that this characteristic belongs to.
+	 */
 	public readonly service: GattService;
 
+	/**
+	 * The UUID of this characteristic.
+	 */
 	public readonly uuid: string;
 
+	/**
+	 * A list of all the properties that are enabled/supported for this characteristic.
+	 */
 	public readonly properties: GattCharacteristicProperty[];
+	/**
+	 * The list of properties supported by this characteristic as a byte flag per the Bluetooth Core spec.
+	 */
 	public readonly propertyFlag: number;
+	/**
+	 * A list of all the properties on this characteristic that are secured.
+	 */
 	public readonly secure: GattCharacteristicProperty[];
+	/**
+	 * The list of all secured properties of this characteristic as a byte flag per the Bluetooth Core spec.
+	 */
 	public readonly secureFlag: number;
 
 	public constructor(
@@ -33,8 +54,6 @@ export abstract class GattCharacteristic extends EventEmitter {
 		propsOrFlag: number | GattCharacteristicProperty[],
 		secureOrFlag: number | GattCharacteristicProperty[]
 	) {
-		super();
-
 		this.service = service;
 
 		this.uuid = uuid;

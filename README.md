@@ -4,6 +4,49 @@ Trying to make the world better place by improving the bluetooth experience one 
 
 ## Getting started
 
+### Prerequisites
+
+#### OS X
+
+- Install [XCode](https://apps.apple.com/ca/app/xcode/id497799835)
+
+#### Linux
+
+- Give `net_cap_raw` to `node`
+
+   > **This command may not work if you're using [NVM](https://github.com/nvm-sh/nvm) or [asdf](https://github.com/asdf-vm/asdf)!  
+      Make sure to give the actual node binary the permission**
+
+   ```bash
+   sudo setcap cap_net_raw+eip $(eval readlink -f $(which node))
+   ```
+
+- Stop/Disable the bluetooth service if you're planning to **advertise** with the `hci` bindings:
+
+   > **Please note that this stops the `dbus` bindings from working properly!**
+
+   ```bash
+   sudo systemctl stop bluetooth
+   ```
+
+   You can also disable it permanently:
+
+   ```bash
+   sudo systemctl disable bluetooth
+   ```
+
+##### Debian flavours
+
+- ```bash
+   sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev
+   ```
+
+##### Fedora and other RPM-based distros
+
+- ```bash
+   sudo yum install bluez bluez-libs bluez-libs-devel
+   ```
+
 ### Installation
 
 ```bash

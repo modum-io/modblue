@@ -1,6 +1,6 @@
 {
 	"name": "@modum-io/modblue",
-	"version": "3.0.0",
+	"version": "4.0.0",
 	"description": "BLE module using dbus or hci.",
 	"homepage": "https://modum-io.github.io/modblue/",
 	"bugs": {
@@ -21,7 +21,8 @@
 	},
 	"dependencies": {
 		"@abandonware/bluetooth-hci-socket": "0.5.3-6",
-		"dbus-next": "0.9.1"
+		"dbus-next": "0.9.1",
+		"tiny-typed-emitter": "2.0.3"
 	},
 	"devDependencies": {
 		"@types/node": "14.14.6",

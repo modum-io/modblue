@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Noble | @modum-io/modblue - v3.0.0</title>
-	<meta name="description" content="Documentation for @modum-io/modblue - v3.0.0">
+	<title>Noble | @modum-io/modblue - v4.0.0</title>
+	<meta name="description" content="Documentation for @modum-io/modblue - v4.0.0">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
 	<script async src="../assets/js/search.js" id="search-script"></script>
@@ -23,7 +23,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">@modum-io/modblue - v3.0.0</a>
+					<a href="../index.html" class="title">@modum-io/modblue - v4.0.0</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -52,7 +52,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../modules.html">@modum-io/modblue - v3.0.0</a>
+					<a href="../modules.html">@modum-io/modblue - v4.0.0</a>
 				</li>
 				<li>
 					<a href="noble.html">Noble</a>
@@ -65,6 +65,14 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Main class to interface with BLE.
+						Scan for adapters and use an adapter to perform specific actions.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -108,9 +116,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Noble.ts#L5">src/models/Noble.ts:5</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/fdce43a/src/models/Noble.ts#L15">src/models/Noble.ts:15</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Dispose of these BLE bindings. Object should be considered unusable after this.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
@@ -119,16 +132,21 @@
 					<a name="getadapters" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> get<wbr>Adapters</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Adapters<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/adapter.html" class="tsd-signature-type">Adapter</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Adapters<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="adapter.html" class="tsd-signature-type">Adapter</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Noble.ts#L7">src/models/Noble.ts:7</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/fdce43a/src/models/Noble.ts#L20">src/models/Noble.ts:20</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/adapter.html" class="tsd-signature-type">Adapter</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>List all currenctly detected adapters.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="adapter.html" class="tsd-signature-type">Adapter</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -142,9 +160,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Noble.ts#L4">src/models/Noble.ts:4</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/fdce43a/src/models/Noble.ts#L11">src/models/Noble.ts:11</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Initialize the BLE bindings. Only has to be called once at the start.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
@@ -161,6 +184,9 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class">
+						<a href="adapter.html" class="tsd-kind-icon">Adapter</a>
+					</li>
 					<li class=" tsd-kind-class">
 						<a href="dbusnoble.html" class="tsd-kind-icon">Dbus<wbr>Noble</a>
 					</li>
@@ -225,9 +251,6 @@
 						<a href="peripheral.html" class="tsd-kind-icon">Peripheral</a>
 					</li>
 					<li class=" tsd-kind-interface">
-						<a href="../interfaces/adapter.html" class="tsd-kind-icon">Adapter</a>
-					</li>
-					<li class=" tsd-kind-interface">
 						<a href="../interfaces/gattcharacteristicinput.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Input</a>
 					</li>
 					<li class=" tsd-kind-interface">
@@ -237,7 +260,13 @@
 						<a href="../interfaces/gattserviceinput.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Input</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#addresstype" class="tsd-kind-icon">Address<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
 						<a href="../modules.html#gattcharacteristicproperty" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Property</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#peripheralstate" class="tsd-kind-icon">Peripheral<wbr>State</a>
 					</li>
 				</ul>
 			</nav>
@@ -260,7 +289,6 @@
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 		</div>
 	</div>

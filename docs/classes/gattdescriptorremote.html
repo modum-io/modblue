@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>GattDescriptorRemote | @modum-io/modblue - v3.0.0</title>
-	<meta name="description" content="Documentation for @modum-io/modblue - v3.0.0">
+	<title>GattDescriptorRemote | @modum-io/modblue - v4.0.0</title>
+	<meta name="description" content="Documentation for @modum-io/modblue - v4.0.0">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
 	<script async src="../assets/js/search.js" id="search-script"></script>
@@ -23,7 +23,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">@modum-io/modblue - v3.0.0</a>
+					<a href="../index.html" class="title">@modum-io/modblue - v4.0.0</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -52,7 +52,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../modules.html">@modum-io/modblue - v3.0.0</a>
+					<a href="../modules.html">@modum-io/modblue - v4.0.0</a>
 				</li>
 				<li>
 					<a href="gattdescriptorremote.html">GattDescriptorRemote</a>
@@ -65,6 +65,13 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Represents a descriptor of a remote GATT characterstic.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -119,7 +126,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="gattdescriptor.html">GattDescriptor</a>.<a href="gattdescriptor.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/Descriptor.ts#L6">src/models/gatt/Descriptor.ts:6</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/fdce43a/src/models/gatt/Descriptor.ts#L15">src/models/gatt/Descriptor.ts:15</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -145,9 +152,14 @@
 					<aside class="tsd-sources">
 						<p>Overrides <a href="gattdescriptor.html">GattDescriptor</a>.<a href="gattdescriptor.html#characteristic">characteristic</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/remote/Descriptor.ts#L6">src/models/gatt/remote/Descriptor.ts:6</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/fdce43a/src/models/gatt/remote/Descriptor.ts#L12">src/models/gatt/remote/Descriptor.ts:12</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The remote GATT characteristic that this descriptor belongs to.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="uuid" class="tsd-anchor"></a>
@@ -156,9 +168,14 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="gattdescriptor.html">GattDescriptor</a>.<a href="gattdescriptor.html#uuid">uuid</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/Descriptor.ts#L6">src/models/gatt/Descriptor.ts:6</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/fdce43a/src/models/gatt/Descriptor.ts#L15">src/models/gatt/Descriptor.ts:15</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The UUID of this descriptor.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -173,9 +190,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/remote/Descriptor.ts#L11">src/models/gatt/remote/Descriptor.ts:11</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/fdce43a/src/models/gatt/remote/Descriptor.ts#L20">src/models/gatt/remote/Descriptor.ts:20</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Read the current value of this descriptor.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
@@ -191,7 +213,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="gattdescriptor.html">GattDescriptor</a>.<a href="gattdescriptor.html#tostring">toString</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/Descriptor.ts#L14">src/models/gatt/Descriptor.ts:14</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/fdce43a/src/models/gatt/Descriptor.ts#L23">src/models/gatt/Descriptor.ts:23</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -208,13 +230,21 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/remote/Descriptor.ts#L14">src/models/gatt/remote/Descriptor.ts:14</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/fdce43a/src/models/gatt/remote/Descriptor.ts#L27">src/models/gatt/remote/Descriptor.ts:27</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Writes the specified data to this descriptor.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>data: <span class="tsd-signature-type">Buffer</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The data to write.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -233,6 +263,9 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class">
+						<a href="adapter.html" class="tsd-kind-icon">Adapter</a>
+					</li>
 					<li class=" tsd-kind-class">
 						<a href="dbusnoble.html" class="tsd-kind-icon">Dbus<wbr>Noble</a>
 					</li>
@@ -306,9 +339,6 @@
 						<a href="peripheral.html" class="tsd-kind-icon">Peripheral</a>
 					</li>
 					<li class=" tsd-kind-interface">
-						<a href="../interfaces/adapter.html" class="tsd-kind-icon">Adapter</a>
-					</li>
-					<li class=" tsd-kind-interface">
 						<a href="../interfaces/gattcharacteristicinput.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Input</a>
 					</li>
 					<li class=" tsd-kind-interface">
@@ -318,7 +348,13 @@
 						<a href="../interfaces/gattserviceinput.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Input</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#addresstype" class="tsd-kind-icon">Address<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
 						<a href="../modules.html#gattcharacteristicproperty" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Property</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#peripheralstate" class="tsd-kind-icon">Peripheral<wbr>State</a>
 					</li>
 				</ul>
 			</nav>
@@ -341,7 +377,6 @@
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 		</div>
 	</div>

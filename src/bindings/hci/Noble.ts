@@ -3,6 +3,9 @@ import { Adapter, Noble } from '../../models';
 import { HciAdapter } from './Adapter';
 import { Hci } from './misc';
 
+/**
+ * Use the HCI socket bindings to access BLE functions.
+ */
 export class HciNoble extends Noble {
 	private adapters: Map<number, HciAdapter> = new Map();
 
