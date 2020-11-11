@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## [3.0.0](https://github.com/modum-io/modblue/compare/v2.0.3...v3.0.0) (2020-11-10)
+## [4.0.0](https://github.com/modum-io/modblue/compare/v3.0.0...v4.0.0) (2020-11-11)
 
 ### ⚠ BREAKING CHANGES
 
-- **package:** Change package scope
+- Remove some obsolete functions
+- Remove characteristic inheritance of EventEmitter
+
+### Features
+
+- **adapter:** Add `scanFor` function ([c176742](https://github.com/modum-io/modblue/commit/c176742a6135dfa8df5d195c8af7fe115216608a))
+- **docs:** Add docs for most classes ([0e0d01d](https://github.com/modum-io/modblue/commit/0e0d01de338a8ac3abe4f7b3504262da939b0dd0))
+
+## [3.0.0](https://github.com/modum-io/modblue/compare/v2.0.3...v3.0.0) (2020-11-10)
+
+### ⚠ BREAKING CHANGES
 
 - **package:** Change scope ([35bd780](https://github.com/modum-io/modblue/commit/35bd780ca025b0dd247211a426a9dd02e9ec336c))
 
