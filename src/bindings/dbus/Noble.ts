@@ -5,6 +5,9 @@ import { Adapter, Noble } from '../../models';
 import { DbusAdapter } from './Adapter';
 import { I_BLUEZ_ADAPTER, I_OBJECT_MANAGER } from './misc';
 
+/**
+ * Use the DBUS Bluez bindings to access BLE functions.
+ */
 export class DbusNoble extends Noble {
 	public readonly dbus: MessageBus;
 

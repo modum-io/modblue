@@ -65,6 +65,13 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Represents a GATT service of a remote GATT server.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -119,7 +126,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="gattservice.html">GattService</a>.<a href="gattservice.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/Service.ts#L6">src/models/gatt/Service.ts:6</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/gatt/Service.ts#L15">src/models/gatt/Service.ts:15</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -144,9 +151,14 @@
 					<div class="tsd-signature tsd-kind-icon">characteristics<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="gattcharacteristicremote.html" class="tsd-signature-type">GattCharacteristicRemote</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = new Map()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/remote/Service.ts#L9">src/models/gatt/remote/Service.ts:9</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/gatt/remote/Service.ts#L18">src/models/gatt/remote/Service.ts:18</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A map of UUID to characteristic that were discovered during <a href="gattserviceremote.html#discovercharacteristics">discoverCharacteristics</a>.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-overwrite">
 					<a name="gatt" class="tsd-anchor"></a>
@@ -155,9 +167,14 @@
 					<aside class="tsd-sources">
 						<p>Overrides <a href="gattservice.html">GattService</a>.<a href="gattservice.html#gatt">gatt</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/remote/Service.ts#L7">src/models/gatt/remote/Service.ts:7</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/gatt/remote/Service.ts#L13">src/models/gatt/remote/Service.ts:13</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The remote GATT server that this service belongs to.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="uuid" class="tsd-anchor"></a>
@@ -166,9 +183,14 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="gattservice.html">GattService</a>.<a href="gattservice.html#uuid">uuid</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/Service.ts#L6">src/models/gatt/Service.ts:6</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/gatt/Service.ts#L15">src/models/gatt/Service.ts:15</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The UUID of this service, excluding dashes (-).</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -183,9 +205,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/remote/Service.ts#L11">src/models/gatt/remote/Service.ts:11</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/gatt/remote/Service.ts#L23">src/models/gatt/remote/Service.ts:23</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Discover all charactersitics of this service.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="gattcharacteristicremote.html" class="tsd-signature-type">GattCharacteristicRemote</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
@@ -201,7 +228,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="gattservice.html">GattService</a>.<a href="gattservice.html#tostring">toString</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/gatt/Service.ts#L14">src/models/gatt/Service.ts:14</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/gatt/Service.ts#L23">src/models/gatt/Service.ts:23</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -220,6 +247,9 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class">
+						<a href="adapter.html" class="tsd-kind-icon">Adapter</a>
+					</li>
 					<li class=" tsd-kind-class">
 						<a href="dbusnoble.html" class="tsd-kind-icon">Dbus<wbr>Noble</a>
 					</li>
@@ -293,9 +323,6 @@
 						<a href="peripheral.html" class="tsd-kind-icon">Peripheral</a>
 					</li>
 					<li class=" tsd-kind-interface">
-						<a href="../interfaces/adapter.html" class="tsd-kind-icon">Adapter</a>
-					</li>
-					<li class=" tsd-kind-interface">
 						<a href="../interfaces/gattcharacteristicinput.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Input</a>
 					</li>
 					<li class=" tsd-kind-interface">
@@ -305,7 +332,13 @@
 						<a href="../interfaces/gattserviceinput.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Input</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#addresstype" class="tsd-kind-icon">Address<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
 						<a href="../modules.html#gattcharacteristicproperty" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Property</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#peripheralstate" class="tsd-kind-icon">Peripheral<wbr>State</a>
 					</li>
 				</ul>
 			</nav>
@@ -328,7 +361,6 @@
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 		</div>
 	</div>

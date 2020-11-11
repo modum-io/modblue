@@ -65,6 +65,13 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Represents a peripheral that was found during scanning.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -118,25 +125,25 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Peripheral<span class="tsd-signature-symbol">(</span>adapter<span class="tsd-signature-symbol">: </span><a href="../interfaces/adapter.html" class="tsd-signature-type">Adapter</a>, uuid<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, addressType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">AddressType</span>, address<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, advertisement<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span>, rssi<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="peripheral.html" class="tsd-signature-type">Peripheral</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Peripheral<span class="tsd-signature-symbol">(</span>adapter<span class="tsd-signature-symbol">: </span><a href="adapter.html" class="tsd-signature-type">Adapter</a>, uuid<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, addressType<span class="tsd-signature-symbol">: </span><a href="../modules.html#addresstype" class="tsd-signature-type">AddressType</a>, address<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, advertisement<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span>, rssi<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="peripheral.html" class="tsd-signature-type">Peripheral</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L21">src/models/Peripheral.ts:21</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L48">src/models/Peripheral.ts:48</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>adapter: <a href="../interfaces/adapter.html" class="tsd-signature-type">Adapter</a></h5>
+									<h5>adapter: <a href="adapter.html" class="tsd-signature-type">Adapter</a></h5>
 								</li>
 								<li>
 									<h5>uuid: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>addressType: <span class="tsd-signature-type">AddressType</span></h5>
+									<h5>addressType: <a href="../modules.html#addresstype" class="tsd-signature-type">AddressType</a></h5>
 								</li>
 								<li>
 									<h5>address: <span class="tsd-signature-type">string</span></h5>
@@ -158,12 +165,17 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="adapter" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> adapter</h3>
-					<div class="tsd-signature tsd-kind-icon">adapter<span class="tsd-signature-symbol">:</span> <a href="../interfaces/adapter.html" class="tsd-signature-type">Adapter</a></div>
+					<div class="tsd-signature tsd-kind-icon">adapter<span class="tsd-signature-symbol">:</span> <a href="adapter.html" class="tsd-signature-type">Adapter</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L9">src/models/Peripheral.ts:9</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L18">src/models/Peripheral.ts:18</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The adapter that this peripheral was found by.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="address" class="tsd-anchor"></a>
@@ -171,19 +183,29 @@
 					<div class="tsd-signature tsd-kind-icon">address<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L13">src/models/Peripheral.ts:13</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L31">src/models/Peripheral.ts:31</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The MAC address of this peripheral.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="addresstype" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> address<wbr>Type</h3>
-					<div class="tsd-signature tsd-kind-icon">address<wbr>Type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">AddressType</span></div>
+					<div class="tsd-signature tsd-kind-icon">address<wbr>Type<span class="tsd-signature-symbol">:</span> <a href="../modules.html#addresstype" class="tsd-signature-type">AddressType</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L12">src/models/Peripheral.ts:12</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L27">src/models/Peripheral.ts:27</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The MAC address type of this peripheral.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="advertisement" class="tsd-anchor"></a>
@@ -191,9 +213,14 @@
 					<div class="tsd-signature tsd-kind-icon">advertisement<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L15">src/models/Peripheral.ts:15</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L36">src/models/Peripheral.ts:36</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Any advertisement data received from the peripheral. Usually a buffer.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="rssi" class="tsd-anchor"></a>
@@ -201,9 +228,14 @@
 					<div class="tsd-signature tsd-kind-icon">rssi<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L16">src/models/Peripheral.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L40">src/models/Peripheral.ts:40</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The current RSSI signal strength of the peripheral.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="uuid" class="tsd-anchor"></a>
@@ -211,9 +243,14 @@
 					<div class="tsd-signature tsd-kind-icon">uuid<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L11">src/models/Peripheral.ts:11</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L23">src/models/Peripheral.ts:23</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The unique identifier for this peripheral.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -222,16 +259,21 @@
 					<a name="state" class="tsd-anchor"></a>
 					<h3>state</h3>
 					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> state<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PeripheralState</span></li>
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> state<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../modules.html#peripheralstate" class="tsd-signature-type">PeripheralState</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L19">src/models/Peripheral.ts:19</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L46">src/models/Peripheral.ts:46</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PeripheralState</span></h4>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>The current state of the peripheral.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <a href="../modules.html#peripheralstate" class="tsd-signature-type">PeripheralState</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -248,9 +290,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L53">src/models/Peripheral.ts:53</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L83">src/models/Peripheral.ts:83</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Connect to this peripheral. Does nothing if already connected.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
@@ -265,9 +312,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L54">src/models/Peripheral.ts:54</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L87">src/models/Peripheral.ts:87</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Disconnect from this peripheral. Does nothing if not connected.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
@@ -282,13 +334,22 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L56">src/models/Peripheral.ts:56</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L94">src/models/Peripheral.ts:94</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Setup the local GATT server to send and receive data from the remote GATT server of the peripheral.
+									Requires an existing connection.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5><span class="tsd-flag ts-flagOptional">Optional</span> requestMtu: <span class="tsd-signature-type">number</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="gattremote.html" class="tsd-signature-type">GattRemote</a><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -305,7 +366,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/35bd780/src/models/Peripheral.ts#L42">src/models/Peripheral.ts:42</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/845069e/src/models/Peripheral.ts#L69">src/models/Peripheral.ts:69</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -324,6 +385,9 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class">
+						<a href="adapter.html" class="tsd-kind-icon">Adapter</a>
+					</li>
 					<li class=" tsd-kind-class">
 						<a href="dbusnoble.html" class="tsd-kind-icon">Dbus<wbr>Noble</a>
 					</li>
@@ -415,9 +479,6 @@
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-interface">
-						<a href="../interfaces/adapter.html" class="tsd-kind-icon">Adapter</a>
-					</li>
-					<li class=" tsd-kind-interface">
 						<a href="../interfaces/gattcharacteristicinput.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Input</a>
 					</li>
 					<li class=" tsd-kind-interface">
@@ -427,7 +488,13 @@
 						<a href="../interfaces/gattserviceinput.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Input</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#addresstype" class="tsd-kind-icon">Address<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
 						<a href="../modules.html#gattcharacteristicproperty" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Property</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#peripheralstate" class="tsd-kind-icon">Peripheral<wbr>State</a>
 					</li>
 				</ul>
 			</nav>
@@ -450,7 +517,6 @@
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 		</div>
 	</div>
