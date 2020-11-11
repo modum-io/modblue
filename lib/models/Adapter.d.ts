@@ -38,7 +38,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
      * Scans for a specific {@link Peripheral} using the specified matching function and returns the peripheral once found.
      * If the timeout is reached before finding a peripheral the returned promise will be rejected.
      * @param isTarget A function that returns `true` if the specified peripheral is the peripheral we're looking for.
-     * @param timeoutInSeconds The timeout in seconds. This function will reject once the timeout is reached.
+     * @param timeoutInSeconds The timeout in seconds. The returned promise will reject once the timeout is reached.
      * @param serviceUUIDs The UUIDs of the {@link GattServiceRemote}s that must be contained in the advertisement data.
      */
     scanFor(isTarget: (peripheral: Peripheral) => boolean, timeoutInSeconds?: number, serviceUUIDs?: []): Promise<Peripheral>;

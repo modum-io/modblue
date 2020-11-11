@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>@modum-io/modblue - v3.0.0</title>
-	<meta name="description" content="Documentation for @modum-io/modblue - v3.0.0">
+	<title>@modum-io/modblue - v4.0.0</title>
+	<meta name="description" content="Documentation for @modum-io/modblue - v4.0.0">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
 	<script async src="assets/js/search.js" id="search-script"></script>
@@ -23,7 +23,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="index.html" class="title">@modum-io/modblue - v3.0.0</a>
+					<a href="index.html" class="title">@modum-io/modblue - v4.0.0</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -50,7 +50,7 @@
 	</div>
 	<div class="tsd-page-title">
 		<div class="container">
-			<h1>Project @modum-io/modblue - v3.0.0</h1>
+			<h1>Project @modum-io/modblue - v4.0.0</h1>
 		</div>
 	</div>
 </header>
@@ -65,6 +65,49 @@
 				<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
 					<h2>Getting started</h2>
 				</a>
+				<a href="#prerequisites" id="prerequisites" style="color: inherit; text-decoration: none;">
+					<h3>Prerequisites</h3>
+				</a>
+				<a href="#os-x" id="os-x" style="color: inherit; text-decoration: none;">
+					<h4>OS X</h4>
+				</a>
+				<ul>
+					<li>Install <a href="https://apps.apple.com/ca/app/xcode/id497799835">XCode</a></li>
+				</ul>
+				<a href="#linux" id="linux" style="color: inherit; text-decoration: none;">
+					<h4>Linux</h4>
+				</a>
+				<ul>
+					<li><p>Give <code>net_cap_raw</code> to <code>node</code></p>
+						<blockquote>
+							<p>**This command may not work if you&#39;re using <a href="https://github.com/nvm-sh/nvm">NVM</a> or <a href="https://github.com/asdf-vm/asdf">asdf</a>!  </p>
+							<pre><code>Make sure to give the actual <span class="hljs-keyword">node</span> <span class="hljs-title">binary</span> the permission**</code></pre>
+						</blockquote>
+						<pre><code class="language-bash">sudo <span class="hljs-built_in">setcap</span> cap_net_raw+eip $(<span class="hljs-built_in">eval</span> readlink -f $(<span class="hljs-built_in">which</span> node))</code></pre>
+					</li>
+					<li><p>Stop/Disable the bluetooth service if you&#39;re planning to <strong>advertise</strong> with the <code>hci</code> bindings:</p>
+						<blockquote>
+							<p><strong>Please note that this stops the <code>dbus</code> bindings from working properly!</strong></p>
+						</blockquote>
+						<pre><code class="language-bash">sudo systemctl stop bluetooth</code></pre>
+						<p> You can also disable it permanently:</p>
+						<pre><code class="language-bash">sudo systemctl <span class="hljs-built_in">disable</span> bluetooth</code></pre>
+					</li>
+				</ul>
+				<a href="#debian-flavours" id="debian-flavours" style="color: inherit; text-decoration: none;">
+					<h5>Debian flavours</h5>
+				</a>
+				<ul>
+					<li><pre><code class="language-bash"> sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev</code></pre>
+					</li>
+				</ul>
+				<a href="#fedora-and-other-rpm-based-distros" id="fedora-and-other-rpm-based-distros" style="color: inherit; text-decoration: none;">
+					<h5>Fedora and other RPM-based distros</h5>
+				</a>
+				<ul>
+					<li><pre><code class="language-bash"> sudo yum install bluez bluez-libs bluez-libs-devel</code></pre>
+					</li>
+				</ul>
 				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
 					<h3>Installation</h3>
 				</a>
