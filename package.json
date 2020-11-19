@@ -24,6 +24,7 @@
 	},
 	"dependencies": {
 		"@abandonware/bluetooth-hci-socket": "0.5.3-6",
+		"async-mutex": "0.2.4",
 		"dbus-next": "0.9.1",
 		"tiny-typed-emitter": "2.0.3"
 	},

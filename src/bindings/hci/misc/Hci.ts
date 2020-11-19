@@ -1,3 +1,4 @@
+import { Mutex } from 'async-mutex';
 import { EventEmitter } from 'events';
 
 import { AddressType } from '../../../types';
@@ -40,6 +41,7 @@ const OCF_WRITE_LE_HOST_SUPPORTED = 0x006d;
 
 const OGF_INFO_PARAM = 0x04;
 const OCF_READ_LOCAL_VERSION = 0x0001;
+const OCF_READ_BUFER_SIZE = 0x0005;
 const OCF_READ_BD_ADDR = 0x0009;
 
 const OGF_STATUS_PARAM = 0x05;
@@ -68,6 +70,7 @@ const READ_LE_HOST_SUPPORTED_CMD = OCF_READ_LE_HOST_SUPPORTED | (OGF_HOST_CTL <<
 const WRITE_LE_HOST_SUPPORTED_CMD = OCF_WRITE_LE_HOST_SUPPORTED | (OGF_HOST_CTL << 10);
 
 const READ_LOCAL_VERSION_CMD = OCF_READ_LOCAL_VERSION | (OGF_INFO_PARAM << 10);
+const READ_BUFFER_SIZE_CMD = OCF_READ_BUFER_SIZE | (OGF_INFO_PARAM << 10);
 const READ_BD_ADDR_CMD = OCF_READ_BD_ADDR | (OGF_INFO_PARAM << 10);
 
 const READ_RSSI_CMD = OCF_READ_RSSI | (OGF_STATUS_PARAM << 10);
@@ -98,6 +101,12 @@ interface HciDevice {
 	address: string;
 }
 
+interface Handle {
+	id: number;
+	buffer: HandleBuffer;
+	aclPacketsInQueue: number;
+}
+
 interface HandleBuffer {
 	length: number;
 	cid: number;
@@ -110,6 +119,7 @@ interface HciCommand {
 	onResponse: (status: number, data: Buffer) => void;
 }
 
+type StateChangeListener = (newState: string) => void;
 type AclDataPacketListener = (handle: number, cid: number, data: Buffer) => void;
 
 type LeScanEnableListener = (enabled: boolean, filterDuplicates: boolean) => void;
@@ -136,6 +146,7 @@ type LeAdvertisingReportListener = (
 type LeAdvertiseEnableListener = (enabled: boolean) => void;
 
 export declare interface Hci {
+	on(event: 'stateChange', listener: StateChangeListener): this;
 	on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
 
 	on(event: 'leScanEnable', listener: LeScanEnableListener): this;
@@ -153,18 +164,33 @@ export class Hci extends EventEmitter {
 	public addressType: AddressType;
 	public address: string;
 
+	public hciVersion: number;
+	public hciRevision: number;
+
 	private socket: any;
-	private handleBuffers: Map<number, HandleBuffer>;
-	private cmds: Map<number, HciCommand>;
+	private socketTimer: NodeJS.Timer;
+	private isSocketUp: boolean;
+	private handles: Map<number, Handle>;
+
+	private cmdMutex: Mutex;
+	private pendingCmd: HciCommand;
+
+	private aclDataPacketLength: number;
+	private totalNumAclDataPackets: number;
+	private aclLeDataPacketLength: number;
+	private totalNumAclLeDataPackets: number;
+	private aclPacketQueue: { handle: Handle; pkt: Buffer }[] = [];
 
 	public constructor(deviceId?: number) {
 		super();
 
-		this.state = null;
+		this.state = 'poweredOff';
 		this.deviceId = deviceId;
 
-		this.handleBuffers = new Map();
-		this.cmds = new Map();
+		this.handles = new Map();
+
+		this.cmdMutex = new Mutex();
+		this.pendingCmd = null;
 	}
 
 	public static getDeviceList() {
@@ -180,55 +206,80 @@ export class Hci extends EventEmitter {
 		this.deviceId = this.socket.bindRaw(this.deviceId);
 		this.socket.start();
 
-		await new Promise<void>((resolve, reject) => {
-			if (this.socket.isDevUp()) {
-				return resolve();
+		await this.checkSocketState();
+		this.socketTimer = setInterval(this.checkSocketState, 1000);
+
+		for (let i = 0; i < 5; i++) {
+			if (this.isSocketUp) {
+				break;
 			}
 
-			let count = 0;
-			const timer = setInterval(() => {
-				if (this.socket.isDevUp()) {
-					clearInterval(timer);
-					return resolve();
-				}
-
-				count++;
-				if (count > 3) {
-					clearInterval(timer);
-					return reject(`Initializing socket timed out - Are you sure it's running?`);
-				}
-				// tslint:disable-next-line: align
-			}, 1000);
-		});
-
-		this.setSocketFilter();
-		await this.setEventMask();
-		await this.setLeEventMask();
-
-		if (this.state === 'unauthorized') {
-			throw new Error('Not authorized');
+			await new Promise((resolve) => setTimeout(resolve, 1000));
 		}
 
-		const { hciVer, hciRev } = await this.readLocalVersion();
-		if (hciVer < 0x06) {
-			throw new Error(`HCI version ${hciVer}.${hciRev} not supported`);
+		if (!this.isSocketUp) {
+			throw new Error(`Initializing socket timed out - Are you sure it's running?`);
 		}
-
-		try {
-			await this.setScanEnabled(false, true);
-		} catch {
-			// NO-OP
-		}
-
-		await this.writeLeHostSupported();
-		await this.readLeHostSupported();
-		await this.readBdAddr();
-		await this.readLeBufferSize();
-
-		this.state = 'poweredOn';
 	}
 
+	private checkSocketState = async () => {
+		const isUp = this.socket.isDevUp();
+
+		if (isUp !== this.isSocketUp) {
+			// If the hci socket state changed the initialize or cleanup our connection
+			this.isSocketUp = isUp;
+
+			if (isUp) {
+				// Socket is now up
+				this.setSocketFilter();
+
+				await this.reset();
+
+				if (this.state === 'unauthorized') {
+					throw new Error('Not authorized');
+				}
+
+				await this.setEventMask();
+				await this.setLeEventMask();
+
+				const { hciVer, hciRev } = await this.readLocalVersion();
+				this.hciVersion = hciVer;
+				this.hciRevision = hciRev;
+
+				if (hciVer < 0x06) {
+					throw new Error(`HCI version ${hciVer}.${hciRev} not supported`);
+				}
+
+				await this.writeLeHostSupported();
+				await this.readLeHostSupported();
+				await this.readBufferSize();
+				await this.readLeBufferSize();
+				await this.readBdAddr();
+
+				this.state = 'poweredOn';
+				this.emit('stateChange', this.state);
+			} else {
+				// Socket went down
+
+				// Cancel any pending commands
+				if (this.pendingCmd) {
+					this.pendingCmd.onStatus(0x03);
+					this.pendingCmd.onResponse(0x03, null);
+					this.pendingCmd = null;
+				}
+
+				this.state = 'poweredOff';
+				this.emit('stateChange', this.state);
+			}
+		}
+	};
+
 	public dispose() {
+		if (this.socketTimer) {
+			clearInterval(this.socketTimer);
+			this.socketTimer = null;
+		}
+
 		this.socket.stop();
 		this.socket.removeAllListeners();
 		this.socket = null;
@@ -237,27 +288,31 @@ export class Hci extends EventEmitter {
 	private async sendCommand(data: Buffer, onlyStatus?: false): Promise<Buffer>;
 	private async sendCommand(data: Buffer, onlyStatus?: true): Promise<void>;
 	private async sendCommand(data: Buffer, onlyStatus?: boolean): Promise<Buffer | void> {
-		const cmd = data.readUInt16LE(1);
-		if (this.cmds.has(cmd)) {
-			throw new Error(`${cmd} command already queued`);
+		const release = await this.cmdMutex.acquire();
+
+		if (!this.isSocketUp) {
+			release();
+			throw new Error('HCI socket not available');
 		}
 
 		return new Promise<Buffer>((resolve, reject) => {
-			this.cmds.set(cmd, {
+			const onDone = (status: number, responseData?: Buffer) => {
+				this.pendingCmd = null;
+				release();
+
+				if (status !== 0) {
+					reject(new Error(`HCI Command failed: ${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`));
+				} else {
+					resolve(responseData);
+				}
+			};
+
+			this.pendingCmd = {
 				data,
-				onStatus: (status) => {
-					if (onlyStatus) {
-						status !== 0
-							? reject(new Error(`Command ${cmd} status ${STATUS_MAPPER[status]} (0x${status.toString(16)})`))
-							: resolve();
-						this.cmds.delete(cmd);
-					}
-				},
-				onResponse: (status, responseData) =>
-					status !== 0
-						? reject(new Error(`Command ${cmd} response ${STATUS_MAPPER[status]} (0x${status.toString(16)})`))
-						: resolve(responseData)
-			});
+				onStatus: (status) => onlyStatus && onDone(status),
+				onResponse: (status, responseData) => onDone(status, responseData)
+			};
+
 			this.socket.write(data);
 		});
 	}
@@ -277,7 +332,7 @@ export class Hci extends EventEmitter {
 			const handler = (status: number, data: Buffer) => {
 				this.removeListener(`event_le_${metaEvent}`, handler);
 				if (status !== 0) {
-					reject(new Error(`Received LE error ${STATUS_MAPPER[status]} (0x${status.toString(16)})`));
+					reject(new Error(`Received LE error ${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`));
 				} else {
 					resolve(data);
 				}
@@ -333,9 +388,6 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt8(0x00, 3);
 
 		await this.sendCommand(cmd);
-
-		this.dispose();
-		await this.init();
 	}
 
 	private async readLocalVersion() {
@@ -513,7 +565,7 @@ export class Hci extends EventEmitter {
 				this.off('leConnComplete', onComplete);
 
 				if (status !== 0) {
-					reject(new Error(`Could not create le connection: ${STATUS_MAPPER[status]} (0x${status.toString(16)})`));
+					reject(new Error(`LE conn failed: ${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`));
 					return;
 				}
 
@@ -635,19 +687,78 @@ export class Hci extends EventEmitter {
 		return rssi;
 	}
 
-	public writeAclDataPkt(handle: number, cid: number, data: Buffer) {
-		const pkt = Buffer.alloc(9 + data.length);
+	public writeAclDataPkt(handleId: number, cid: number, data: Buffer) {
+		if (!this.isSocketUp) {
+			throw new Error('HCI socket not available');
+		}
+
+		let handle = this.handles.get(handleId);
+		if (!handle) {
+			handle = { id: handleId, aclPacketsInQueue: 0, buffer: null };
+			this.handles.set(handleId, handle);
+		}
+
+		let hf = handleId | (ACL_START_NO_FLUSH << 12);
+
+		// l2cap PDU may be fragmented on hci level
+		let l2capPdu = Buffer.alloc(4 + data.length);
+		l2capPdu.writeUInt16LE(data.length, 0);
+		l2capPdu.writeUInt16LE(cid, 2);
+		data.copy(l2capPdu, 4);
+
+		while (l2capPdu.length) {
+			const frag = l2capPdu.slice(0, this.aclLeDataPacketLength);
+			l2capPdu = l2capPdu.slice(frag.length);
+			const pkt = Buffer.alloc(5 + frag.length);
+
+			// hci header
+			pkt.writeUInt8(HCI_ACLDATA_PKT, 0);
+			pkt.writeUInt16LE(hf, 1);
+			hf |= ACL_CONT << 12;
+			pkt.writeUInt16LE(frag.length, 3); // hci pdu length
+
+			frag.copy(pkt, 5);
+
+			this.aclPacketQueue.push({ handle, pkt: pkt });
+		}
+
+		this.processAclPacketQueue();
+	}
+
+	private processAclPacketQueue() {
+		let inProgress = 0;
+		for (const handle of this.handles.values()) {
+			inProgress += handle.aclPacketsInQueue;
+		}
+
+		while (inProgress < this.totalNumAclLeDataPackets && this.aclPacketQueue.length > 0) {
+			const { handle, pkt } = this.aclPacketQueue.shift();
+			handle.aclPacketsInQueue++;
+			inProgress++;
+			this.socket.write(pkt);
+		}
+
+		if (this.aclPacketQueue.length > 0) {
+			console.log('Pending acl packets', this.aclPacketQueue.length);
+		}
+	}
+
+	public async readBufferSize() {
+		const cmd = Buffer.alloc(4);
 
 		// header
-		pkt.writeUInt8(HCI_ACLDATA_PKT, 0);
-		pkt.writeUInt16LE(handle | (ACL_START_NO_FLUSH << 12), 1);
-		pkt.writeUInt16LE(data.length + 4, 3); // data length 1
-		pkt.writeUInt16LE(data.length, 5); // data length 2
-		pkt.writeUInt16LE(cid, 7);
+		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(READ_BUFFER_SIZE_CMD, 1);
 
-		data.copy(pkt, 9);
+		// length
+		cmd.writeUInt8(0x0, 3);
 
-		this.socket.write(pkt);
+		const response = await this.sendCommand(cmd);
+
+		this.aclDataPacketLength = response.readUInt16LE(0);
+		// const syncDataPacketLength = response.readInt8(2);
+		this.totalNumAclDataPackets = response.readUInt16LE(3);
+		// const totalNumSyncDataPackets = response.readUInt16LE(5);
 	}
 
 	public async readLeBufferSize() {
@@ -660,7 +771,17 @@ export class Hci extends EventEmitter {
 		// length
 		cmd.writeUInt8(0x0, 3);
 
-		await this.sendCommand(cmd);
+		const response = await this.sendCommand(cmd);
+
+		this.aclLeDataPacketLength = response.readUInt16LE(0);
+		if (this.aclLeDataPacketLength === 0) {
+			this.aclLeDataPacketLength = this.aclDataPacketLength;
+		}
+
+		this.totalNumAclLeDataPackets = response.readUInt8(2);
+		if (this.totalNumAclLeDataPackets === 0) {
+			this.totalNumAclLeDataPackets = this.totalNumAclDataPackets;
+		}
 	}
 
 	public async setScanResponseData(data: Buffer) {
@@ -719,10 +840,6 @@ export class Hci extends EventEmitter {
 
 	private onSocketData = async (data: Buffer) => {
 		const eventType = data.readUInt8(0);
-		let handle;
-		let cmd;
-		let status;
-		let queuedCmd;
 
 		switch (eventType) {
 			case HCI_EVENT_PKT:
@@ -732,32 +849,61 @@ export class Hci extends EventEmitter {
 
 				switch (subEventType) {
 					case EVT_DISCONN_COMPLETE:
-						status = data.readUInt8(3);
-						const disconnHandle = data.readUInt16LE(4);
+						const disconnStatus = data.readUInt8(3);
+						const disconnHandleId = data.readUInt16LE(4);
 						const reason = data.readUInt8(6);
 
-						this.emit('disconnectComplete', status, disconnHandle, reason);
+						/* As per Bluetooth Core specs:
+							When the Host receives a Disconnection Complete, Disconnection Physical
+							Link Complete or Disconnection Logical Link Complete event, the Host shall
+							assume that all unacknowledged HCI Data Packets that have been sent to the
+							Controller for the returned Handle have been flushed, and that the
+							corresponding data buffers have been freed. */
+						this.handles.delete(disconnHandleId);
+						// Remove all pending packets for this handle from the queue
+						this.aclPacketQueue = this.aclPacketQueue.filter(({ handle }) => handle.id !== disconnHandleId);
+
+						this.emit('disconnectComplete', disconnStatus, disconnHandleId, reason);
+
+						// Process acl packet queue because we may have more space now
+						this.processAclPacketQueue();
 						break;
 
 					case EVT_CMD_COMPLETE:
-						cmd = data.readUInt16LE(4);
-						status = data.readUInt8(6);
+						// const numHciCommands = data.readUInt8(3);
+						const completeCmd = data.readUInt16LE(4);
+						const completeStatus = data.readUInt8(6);
 						const result = data.slice(7);
 
-						queuedCmd = this.cmds.get(cmd);
-						if (queuedCmd) {
-							queuedCmd.onResponse(status, result);
-							this.cmds.delete(cmd);
+						if (completeCmd === 0x00 && completeStatus === 0x00) {
+							// This event is generated when the controller was busy and is now ready to receive commands again
+							break;
+						}
+
+						if (this.pendingCmd) {
+							if (completeCmd !== this.pendingCmd.data.readUInt16LE(1)) {
+								throw new Error(`Received command complete for a command we didn't request`);
+							} else {
+								this.pendingCmd.onResponse(completeStatus, result);
+							}
 						}
 						break;
 
 					case EVT_CMD_STATUS:
-						status = data.readUInt8(3);
-						cmd = data.readUInt16LE(5);
+						const statusStatus = data.readUInt8(3);
+						// const numHciCommands = data.readUInt8(4);
+						const statusCmd = data.readUInt16LE(5);
 
-						queuedCmd = this.cmds.get(cmd);
-						if (queuedCmd) {
-							queuedCmd.onStatus(status);
+						if (statusStatus === 0x00 && statusCmd === 0x00) {
+							// This event is generated when the controller was busy and is now ready to receive commands again
+							break;
+						}
+
+						if (this.pendingCmd) {
+							// Only report if the status concerns the command we issued
+							if (statusCmd === this.pendingCmd.data.readUInt16LE(1)) {
+								this.pendingCmd.onStatus(statusStatus);
+							}
 						}
 						break;
 
@@ -775,6 +921,27 @@ export class Hci extends EventEmitter {
 						}
 						break;
 
+					case EVT_NUMBER_OF_COMPLETED_PACKETS:
+						const numHandles = data.readUInt8(3);
+
+						for (let i = 0; i < numHandles; i++) {
+							const targetHandleId = data.readUInt16LE(4 + i * 2);
+							const targetNumPackets = data.readUInt16LE(4 + numHandles * 2 + i * 2);
+
+							const targetHandle = this.handles.get(targetHandleId);
+							if (!targetHandle) {
+								continue;
+							}
+
+							// We may receive completed events for packets that were sent before our application was started
+							// so clamp the value to [0-inf)
+							targetHandle.aclPacketsInQueue = Math.max(0, targetHandle.aclPacketsInQueue - targetNumPackets);
+
+							// Process the packet queue because we may have more space now
+							this.processAclPacketQueue();
+						}
+						break;
+
 					default:
 						break;
 				}
@@ -782,7 +949,13 @@ export class Hci extends EventEmitter {
 
 			case HCI_ACLDATA_PKT:
 				const flags = data.readUInt16LE(1) >> 12;
-				handle = data.readUInt16LE(1) & 0x0fff;
+				const aclHandleId = data.readUInt16LE(1) & 0x0fff;
+
+				let aclHandle = this.handles.get(aclHandleId);
+				if (!aclHandle) {
+					aclHandle = { id: aclHandleId, aclPacketsInQueue: 0, buffer: null };
+					this.handles.set(aclHandleId, aclHandle);
+				}
 
 				if (ACL_START === flags) {
 					const cid = data.readUInt16LE(7);
@@ -791,16 +964,16 @@ export class Hci extends EventEmitter {
 					const pktData = data.slice(9);
 
 					if (length === pktData.length) {
-						this.emit('aclDataPkt', handle, cid, pktData);
+						this.emit('aclDataPkt', aclHandleId, cid, pktData);
 					} else {
-						this.handleBuffers.set(handle, {
+						aclHandle.buffer = {
 							length: length,
 							cid: cid,
 							data: pktData
-						});
+						};
 					}
 				} else if (ACL_CONT === flags) {
-					const buff = this.handleBuffers.get(handle);
+					const buff = aclHandle.buffer;
 
 					if (!buff || !buff.data) {
 						return;
@@ -809,15 +982,14 @@ export class Hci extends EventEmitter {
 					buff.data = Buffer.concat([buff.data, data.slice(5)]);
 
 					if (buff.data.length === buff.length) {
-						this.emit('aclDataPkt', handle, buff.cid, buff.data);
-
-						this.handleBuffers.delete(handle);
+						this.emit('aclDataPkt', aclHandleId, buff.cid, buff.data);
+						aclHandle.buffer = null;
 					}
 				}
 				break;
 
 			case HCI_COMMAND_PKT:
-				cmd = data.readUInt16LE(1);
+				const cmd = data.readUInt16LE(1);
 				// const len = data.readUInt8(3);
 
 				switch (cmd) {
@@ -847,13 +1019,14 @@ export class Hci extends EventEmitter {
 	private onSocketError = (error: any) => {
 		if (error.code === 'EPERM') {
 			this.state = 'unauthorized';
+			this.emit('stateChange', this.state);
 		} else if (error.message === 'Network is down') {
 			// no-op
 		}
 	};
 
 	private processLeConnComplete(status: number, data: Buffer) {
-		const handle = data.readUInt16LE(0);
+		const handleId = data.readUInt16LE(0);
 		const role = data.readUInt8(2);
 		const addressType = data.readUInt8(3) === 0x01 ? 'random' : 'public';
 		const address = data
@@ -868,10 +1041,14 @@ export class Hci extends EventEmitter {
 		const supervisionTimeout = data.readUInt16LE(14) * 10;
 		const masterClockAccuracy = data.readUInt8(16); // TODO: multiplier?
 
+		if (!this.handles.has(handleId)) {
+			this.handles.set(handleId, { id: handleId, aclPacketsInQueue: 0, buffer: null });
+		}
+
 		this.emit(
 			'leConnComplete',
 			status,
-			handle,
+			handleId,
 			role,
 			addressType,
 			address,
