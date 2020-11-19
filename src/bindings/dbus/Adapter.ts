@@ -178,6 +178,10 @@ export class DbusAdapter extends Adapter {
 		}
 	};
 
+	public async isAdvertising() {
+		return false;
+	}
+
 	public async startAdvertising(): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
