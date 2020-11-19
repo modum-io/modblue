@@ -1,3 +1,5 @@
+import { Mutex } from 'async-mutex';
+
 import { GattRemote, Peripheral } from '../../../../models';
 import { Hci } from '../../misc';
 import * as CONST from '../Constants';
@@ -8,8 +10,7 @@ import { HciGattServiceRemote } from './Service';
 
 interface GattCommand {
 	buffer: Buffer;
-	resolve: (data: Buffer) => void;
-	resolveOnWrite: () => void;
+	onResponse: (data: Buffer) => void;
 }
 
 export class HciGattRemote extends GattRemote {
@@ -17,9 +18,10 @@ export class HciGattRemote extends GattRemote {
 	private handle: number;
 
 	private security: string;
+	private mtuWasExchanged: boolean = false;
 
+	private mutex: Mutex;
 	private currentCommand: GattCommand = null;
-	private commandQueue: GattCommand[] = [];
 
 	public services: Map<string, HciGattServiceRemote> = new Map();
 
@@ -28,31 +30,34 @@ export class HciGattRemote extends GattRemote {
 
 		this.hci = hci;
 		this.hci.on('aclDataPkt', this.onAclStreamData);
+		this.hci.on('stateChange', this.onHciStateChange);
 
+		this.mutex = new Mutex();
 		this.handle = handle;
 	}
 
-	private processCommands() {
-		while (this.commandQueue.length) {
-			this.currentCommand = this.commandQueue.shift();
+	public dispose() {
+		if (this.currentCommand) {
+			this.currentCommand.onResponse(null);
+			this.currentCommand = null;
+		}
 
-			this.writeAtt(this.currentCommand.buffer);
+		this.hci.off('aclDataPkt', this.onAclStreamData);
+		this.hci.off('stateChange', this.onHciStateChange);
+		this.hci = null;
 
-			if (this.currentCommand.resolve) {
-				// If the command has a callback stop processing and wait for the callback
-				break;
-			} else if (this.currentCommand.resolveOnWrite) {
-				this.currentCommand.resolveOnWrite();
+		this.handle = null;
+	}
+
+	private onHciStateChange = async (newState: string) => {
+		// If the underlaying socket shuts down we're doomed
+		if (newState === 'poweredOff') {
+			if (this.currentCommand) {
+				this.currentCommand.onResponse(null);
 				this.currentCommand = null;
 			}
 		}
-	}
-
-	public dispose() {
-		this.hci.off('aclDataPkt', this.onAclStreamData);
-		this.hci = null;
-		this.handle = null;
-	}
+	};
 
 	private onAclStreamData = async (handle: number, cid: number, data: Buffer) => {
 		if (handle !== this.handle || cid !== CONST.ATT_CID) {
@@ -61,9 +66,10 @@ export class HciGattRemote extends GattRemote {
 
 		if (this.currentCommand && data.toString('hex') === this.currentCommand.buffer.toString('hex')) {
 			// NO-OP
+			// This is just a confirmation for the command we just sent?
 		} else if (data[0] % 2 === 0) {
 			// NO-OP
-			// This used to be noble multi role stuff
+			// This used to be noble multi role stuff - these are all commands meant for a central node
 		} else if (data[0] === CONST.ATT_OP_HANDLE_NOTIFY || data[0] === CONST.ATT_OP_HANDLE_IND) {
 			/*const valueHandle = data.readUInt16LE(1);
 			const valueData = data.slice(3);
@@ -96,10 +102,7 @@ export class HciGattRemote extends GattRemote {
 				return;
 			}
 
-			this.currentCommand.resolve(data);
-
-			this.currentCommand = null;
-			this.processCommands();
+			this.currentCommand.onResponse(data);
 		}
 	};
 
@@ -121,15 +124,30 @@ export class HciGattRemote extends GattRemote {
 	private async queueCommand(buffer: Buffer, resolveOnWrite: true): Promise<void>;
 	private async queueCommand(buffer: Buffer, resolveOnWrite: false): Promise<Buffer>;
 	private async queueCommand(buffer: Buffer, resolveOnWrite: boolean) {
-		return new Promise<any>((resolve) => {
-			this.commandQueue.push({
-				buffer: buffer,
-				resolve: !resolveOnWrite ? (data) => resolve(data) : undefined,
-				resolveOnWrite: resolveOnWrite ? () => resolve() : undefined
-			});
+		const release = await this.mutex.acquire();
 
-			if (!this.currentCommand) {
-				this.processCommands();
+		return new Promise<any>((resolve, reject) => {
+			const onDone = (data?: Buffer) => {
+				this.currentCommand = null;
+
+				release();
+
+				if (data === null) {
+					reject(`GATT command failed`);
+				} else {
+					resolve(data);
+				}
+			};
+
+			this.currentCommand = {
+				buffer: buffer,
+				onResponse: onDone
+			};
+
+			this.writeAtt(buffer);
+
+			if (resolveOnWrite) {
+				onDone();
 			}
 		});
 	}
@@ -239,12 +257,17 @@ export class HciGattRemote extends GattRemote {
 	}
 
 	public async exchangeMtu(mtu: number) {
+		if (this.mtuWasExchanged) {
+			return this.mtu;
+		}
+
 		const data = await this.queueCommand(this.mtuRequest(mtu), false);
 		const opcode = data[0];
 
 		if (opcode === CONST.ATT_OP_MTU_RESP) {
 			const newMtu = data.readUInt16LE(1);
 			this._mtu = Math.min(mtu, newMtu);
+			this.mtuWasExchanged = true;
 		} else {
 			throw new Error('Exchanging mtu failed');
 		}

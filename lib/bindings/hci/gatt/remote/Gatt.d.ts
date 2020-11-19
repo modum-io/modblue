@@ -8,12 +8,13 @@ export declare class HciGattRemote extends GattRemote {
     private hci;
     private handle;
     private security;
+    private mtuWasExchanged;
+    private mutex;
     private currentCommand;
-    private commandQueue;
     services: Map<string, HciGattServiceRemote>;
     constructor(peripheral: Peripheral, hci: Hci, handle: number);
-    private processCommands;
     dispose(): void;
+    private onHciStateChange;
     private onAclStreamData;
     private writeAtt;
     private errorResponse;
