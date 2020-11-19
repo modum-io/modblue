@@ -5,6 +5,7 @@ export declare class HciGattLocal extends GattLocal {
     private hci;
     private negotiatedMtus;
     constructor(adapter: HciAdapter, hci: Hci, maxMtu?: number);
+    private onHciDisconnect;
     private onAclStreamData;
     private errorResponse;
     private getMtu;
