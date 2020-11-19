@@ -51,6 +51,7 @@ export class HciPeripheral extends Peripheral {
 		this.hci = null;
 		this.handle = null;
 
+		this.mtuExchanged = false;
 		this._state = 'disconnected';
 	}
 

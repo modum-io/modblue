@@ -22,6 +22,7 @@ export declare class DbusAdapter extends Adapter {
     private onScanStop;
     private onDeviceFound;
     private updatePeripherals;
+    isAdvertising(): Promise<boolean>;
     startAdvertising(): Promise<void>;
     stopAdvertising(): Promise<void>;
     setupGatt(maxMtu?: number): Promise<GattLocal>;

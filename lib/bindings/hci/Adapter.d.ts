@@ -13,15 +13,16 @@ export declare class HciAdapter extends Adapter {
     private connectedDevices;
     private uuidToHandle;
     private handleToUUID;
-    getScannedPeripherals(): Promise<Peripheral[]>;
-    isScanning(): Promise<boolean>;
     private init;
     dispose(): void;
+    isScanning(): Promise<boolean>;
     startScanning(): Promise<void>;
     stopScanning(): Promise<void>;
+    getScannedPeripherals(): Promise<Peripheral[]>;
     private onDiscover;
     connect(peripheral: HciPeripheral): Promise<void>;
     disconnect(peripheral: HciPeripheral): Promise<void>;
+    isAdvertising(): Promise<boolean>;
     startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
     stopAdvertising(): Promise<void>;
     setupGatt(maxMtu?: number): Promise<GattLocal>;

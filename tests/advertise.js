@@ -73,9 +73,7 @@ const main = async () => {
 
 	await adapter.startAdvertising(NAME, ['48ee0000bf49460ca3d77ec7a512a4ce']);
 
-	console.log(adapter.address);
-
-	console.log('Advertising...');
+	console.log(`Advertising as ${adapter.address}...`);
 };
 
 main().catch((err) => {

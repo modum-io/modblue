@@ -21,14 +21,6 @@ export class HciAdapter extends Adapter {
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
 
-	public async getScannedPeripherals(): Promise<Peripheral[]> {
-		return [...this.peripherals.values()];
-	}
-
-	public async isScanning(): Promise<boolean> {
-		return this.scanning;
-	}
-
 	private async init() {
 		if (this.initialized) {
 			return;
@@ -65,6 +57,10 @@ export class HciAdapter extends Adapter {
 		this.gap = null;
 	}
 
+	public async isScanning(): Promise<boolean> {
+		return this.scanning;
+	}
+
 	public async startScanning(): Promise<void> {
 		await this.init();
 
@@ -85,6 +81,10 @@ export class HciAdapter extends Adapter {
 		await this.gap.stopScanning();
 
 		this.scanning = false;
+	}
+
+	public async getScannedPeripherals(): Promise<Peripheral[]> {
+		return [...this.peripherals.values()];
 	}
 
 	private onDiscover = (
@@ -110,6 +110,11 @@ export class HciAdapter extends Adapter {
 	};
 
 	public async connect(peripheral: HciPeripheral) {
+		// Advertising & connecting simultaneously is only supported with Bluetooth 4.2+
+		if (this.hci.hciVersion < 8 && this.advertising) {
+			throw new Error(`Advertising and connecting simultaneously is supported with Bluetooth 4.2+`);
+		}
+
 		const timeout = new Promise<void>((_, reject) =>
 			setTimeout(() => reject(new Error('Connecting timed out')), 10000)
 		);
@@ -152,6 +157,10 @@ export class HciAdapter extends Adapter {
 		}
 
 		await peripheral.onDisconnect();
+	}
+
+	public async isAdvertising(): Promise<boolean> {
+		return this.advertising;
 	}
 
 	public async startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void> {

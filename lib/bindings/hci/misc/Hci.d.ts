@@ -10,6 +10,7 @@ interface HciDevice {
     name: string;
     address: string;
 }
+declare type StateChangeListener = (newState: string) => void;
 declare type AclDataPacketListener = (handle: number, cid: number, data: Buffer) => void;
 declare type LeScanEnableListener = (enabled: boolean, filterDuplicates: boolean) => void;
 declare type LeConnCompleteListener = (status: number, handle: number, role: number, addressType: AddressType, address: string, interval: number, latency: number, supervisionTimeout: number, masterClockAccuracy: number) => void;
@@ -17,6 +18,7 @@ declare type DisconnectCompleteListener = (status: number, handle: number, reaso
 declare type LeAdvertisingReportListener = (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
 declare type LeAdvertiseEnableListener = (enabled: boolean) => void;
 export declare interface Hci {
+    on(event: 'stateChange', listener: StateChangeListener): this;
     on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
     on(event: 'leScanEnable', listener: LeScanEnableListener): this;
     on(event: 'leConnComplete', listener: LeConnCompleteListener): this;
@@ -29,12 +31,23 @@ export declare class Hci extends EventEmitter {
     deviceId: number;
     addressType: AddressType;
     address: string;
+    hciVersion: number;
+    hciRevision: number;
     private socket;
-    private handleBuffers;
-    private cmds;
+    private socketTimer;
+    private isSocketUp;
+    private handles;
+    private cmdMutex;
+    private pendingCmd;
+    private aclDataPacketLength;
+    private totalNumAclDataPackets;
+    private aclLeDataPacketLength;
+    private totalNumAclLeDataPackets;
+    private aclPacketQueue;
     constructor(deviceId?: number);
     static getDeviceList(): HciDevice[];
     init(): Promise<void>;
+    private checkSocketState;
     dispose(): void;
     private sendCommand;
     private waitForEvent;
@@ -55,7 +68,9 @@ export declare class Hci extends EventEmitter {
     startLeEncryption(handle: number, random: any, diversifier: Buffer, key: Buffer): void;
     disconnect(handle: number, reason?: number): Promise<void>;
     readRssi(handle: number): Promise<number>;
-    writeAclDataPkt(handle: number, cid: number, data: Buffer): void;
+    writeAclDataPkt(handleId: number, cid: number, data: Buffer): void;
+    private processAclPacketQueue;
+    readBufferSize(): Promise<void>;
     readLeBufferSize(): Promise<void>;
     setScanResponseData(data: Buffer): Promise<void>;
     setAdvertisingData(data: Buffer): Promise<void>;

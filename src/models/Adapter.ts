@@ -130,6 +130,11 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	public abstract getScannedPeripherals(): Promise<Peripheral[]>;
 
 	/**
+	 * Returns `true` if this adapter is currently advertising, `false` otherwise.
+	 */
+	public abstract isAdvertising(): Promise<boolean>;
+
+	/**
 	 * Start advertising on this adapter.
 	 * @param deviceName The device name that is included in the advertisement.
 	 * @param serviceUUIDs The UUIDs of the {@link GattServiceLocal}s that are included in the advertisement.

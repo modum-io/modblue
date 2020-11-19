@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.1.0](https://github.com/modum-io/modblue/compare/v4.0.0...v4.1.0) (2020-11-19)
+
+### Features
+
+- **adapter:** Add isAdvertising getter ([3a11903](https://github.com/modum-io/modblue/commit/3a11903086763489d0da28bc703854c384ff8535))
+- **hci:** Use command mutex ([a8b2899](https://github.com/modum-io/modblue/commit/a8b28990d9a26a22c33f01b7c7755823b0e80996))
+- **hci:** Use gatt command mutex ([f6c9644](https://github.com/modum-io/modblue/commit/f6c964466a65b9434c84a3d038ef1793cf27aa83))
+
+### Bug Fixes
+
+- **hci:** Fix not resetting mtu on disconnect ([f3226f6](https://github.com/modum-io/modblue/commit/f3226f6f00a979fbb3beb221a46688667b737259))
+
 ## [4.0.0](https://github.com/modum-io/modblue/compare/v3.0.0...v4.0.0) (2020-11-11)
 
 ### ⚠ BREAKING CHANGES

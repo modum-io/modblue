@@ -16,9 +16,15 @@ export class HciGattLocal extends GattLocal {
 
 		this.hci = hci;
 		this.hci.on('aclDataPkt', this.onAclStreamData);
+		this.hci.on('disconnectComplete', this.onHciDisconnect);
 
 		this.negotiatedMtus = new Map();
 	}
+
+	private onHciDisconnect = (status: number, handleId: number, reason: number) => {
+		// Reset MTU after a device disconnects
+		this.negotiatedMtus.delete(handleId);
+	};
 
 	private onAclStreamData = async (handle: number, cid: number, data: Buffer) => {
 		if (cid !== CONST.ATT_CID) {
