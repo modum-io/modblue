@@ -46,7 +46,7 @@ const main = async () => {
 	console.log('Waiting to scan a bit...');
 
 	// Scan for 3 seconds
-	await new Promise((resolve) => setTimeout(resolve, 5000));
+	await new Promise((resolve) => setTimeout(resolve, 3000));
 
 	await adapter.stopScanning();
 
@@ -110,6 +110,7 @@ const main = async () => {
 			success++;
 		} catch (err) {
 			console.error(err);
+			await new Promise((resolve) => setTimeout(() => resolve(), 1000));
 		}
 
 		total++;
