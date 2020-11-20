@@ -114,6 +114,7 @@ interface HandleBuffer {
 }
 
 interface HciCommand {
+	cmd: number;
 	data: Buffer;
 	onStatus: (status: number) => void;
 	onResponse: (status: number, data: Buffer) => void;
@@ -308,6 +309,7 @@ export class Hci extends EventEmitter {
 			};
 
 			this.pendingCmd = {
+				cmd: data.readUInt16LE(1),
 				data,
 				onStatus: (status) => onlyStatus && onDone(status),
 				onResponse: (status, responseData) => onDone(status, responseData)
@@ -881,9 +883,7 @@ export class Hci extends EventEmitter {
 						}
 
 						if (this.pendingCmd) {
-							if (completeCmd !== this.pendingCmd.data.readUInt16LE(1)) {
-								throw new Error(`Received command complete for a command we didn't request`);
-							} else {
+							if (completeCmd === this.pendingCmd.cmd) {
 								this.pendingCmd.onResponse(completeStatus, result);
 							}
 						}
@@ -901,7 +901,7 @@ export class Hci extends EventEmitter {
 
 						if (this.pendingCmd) {
 							// Only report if the status concerns the command we issued
-							if (statusCmd === this.pendingCmd.data.readUInt16LE(1)) {
+							if (statusCmd === this.pendingCmd.cmd) {
 								this.pendingCmd.onStatus(statusStatus);
 							}
 						}
