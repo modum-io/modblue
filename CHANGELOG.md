@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.1.1](https://github.com/modum-io/modblue/compare/v4.1.0...v4.1.1) (2020-11-20)
+
+### Bug Fixes
+
+- **gatt:** Fix gatt commands after dispose ([4cbc5c8](https://github.com/modum-io/modblue/commit/4cbc5c892cd5ecebc80eb2ef517468236df9a93b))
+- **hci:** Don't throw errors on unknown commands ([db1a49f](https://github.com/modum-io/modblue/commit/db1a49f82955e65230cfdad12b8de0aa5bc4c7c7))
+
 ## [4.1.0](https://github.com/modum-io/modblue/compare/v4.0.0...v4.1.0) (2020-11-19)
 
 ### Features
