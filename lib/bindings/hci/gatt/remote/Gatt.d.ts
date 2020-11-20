@@ -16,7 +16,6 @@ export declare class HciGattRemote extends GattRemote {
     dispose(): void;
     private onHciStateChange;
     private onAclStreamData;
-    private writeAtt;
     private errorResponse;
     private queueCommand;
     private mtuRequest;
