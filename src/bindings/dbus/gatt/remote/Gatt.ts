@@ -47,7 +47,7 @@ export class DbusGattRemote extends GattRemote {
 
 			const servicesResolved = (await propsIface.Get(I_BLUEZ_DEVICE, 'ServicesResolved')).value;
 			if (!servicesResolved) {
-				await new Promise(async (res) => {
+				await new Promise<void>(async (res) => {
 					const onPropertiesChanged = (iface: string, changedProps: any) => {
 						if (iface !== I_BLUEZ_DEVICE) {
 							return;
