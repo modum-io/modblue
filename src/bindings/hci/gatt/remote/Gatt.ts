@@ -106,10 +106,6 @@ export class HciGattRemote extends GattRemote {
 		}
 	};
 
-	private writeAtt(data: Buffer) {
-		this.hci.writeAclDataPkt(this.handle, CONST.ATT_CID, data);
-	}
-
 	private errorResponse(opcode: number, handle: number, status: number) {
 		const buf = Buffer.alloc(5);
 
@@ -126,6 +122,11 @@ export class HciGattRemote extends GattRemote {
 	private async queueCommand(buffer: Buffer, resolveOnWrite: boolean) {
 		const release = await this.mutex.acquire();
 
+		// We might have been waiting for the mutex and now we're already disposed
+		if (!this.hci) {
+			throw new Error(`Could not send GATT command. Already disposed.`);
+		}
+
 		return new Promise<any>((resolve, reject) => {
 			const onDone = (data?: Buffer) => {
 				this.currentCommand = null;
@@ -133,7 +134,7 @@ export class HciGattRemote extends GattRemote {
 				release();
 
 				if (data === null) {
-					reject(`GATT command failed`);
+					reject(new Error(`GATT disposed before receiving response.`));
 				} else {
 					resolve(data);
 				}
@@ -143,8 +144,7 @@ export class HciGattRemote extends GattRemote {
 				buffer: buffer,
 				onResponse: onDone
 			};
-
-			this.writeAtt(buffer);
+			this.hci.writeAclDataPkt(this.handle, CONST.ATT_CID, buffer);
 
 			if (resolveOnWrite) {
 				onDone();
