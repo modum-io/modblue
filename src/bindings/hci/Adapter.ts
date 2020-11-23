@@ -133,6 +133,11 @@ export class HciAdapter extends Adapter {
 		try {
 			await Promise.race([connet(), timeout]);
 		} catch (err) {
+			try {
+				await this.hci.cancelLeConn();
+			} catch {
+				// NO-OP
+			}
 			await peripheral.onDisconnect();
 			throw err;
 		}

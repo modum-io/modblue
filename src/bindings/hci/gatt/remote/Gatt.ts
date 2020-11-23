@@ -1,4 +1,4 @@
-import { Mutex } from 'async-mutex';
+import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 
 import { GattRemote, Peripheral } from '../../../../models';
 import { Hci } from '../../misc';
@@ -20,7 +20,7 @@ export class HciGattRemote extends GattRemote {
 	private security: string;
 	private mtuWasExchanged: boolean = false;
 
-	private mutex: Mutex;
+	private mutex: MutexInterface;
 	private currentCommand: GattCommand = null;
 
 	public services: Map<string, HciGattServiceRemote> = new Map();
@@ -32,7 +32,7 @@ export class HciGattRemote extends GattRemote {
 		this.hci.on('aclDataPkt', this.onAclStreamData);
 		this.hci.on('stateChange', this.onHciStateChange);
 
-		this.mutex = new Mutex();
+		this.mutex = withTimeout(new Mutex(), 30000, new Error(`GATT command mutex timeout`));
 		this.handle = handle;
 	}
 

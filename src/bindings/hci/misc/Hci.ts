@@ -1,4 +1,4 @@
-import { Mutex } from 'async-mutex';
+import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 import { EventEmitter } from 'events';
 
 import { AddressType } from '../../../types';
@@ -173,7 +173,7 @@ export class Hci extends EventEmitter {
 	private isSocketUp: boolean;
 	private handles: Map<number, Handle>;
 
-	private cmdMutex: Mutex;
+	private cmdMutex: MutexInterface;
 	private pendingCmd: HciCommand;
 
 	private aclDataPacketLength: number;
@@ -190,7 +190,7 @@ export class Hci extends EventEmitter {
 
 		this.handles = new Map();
 
-		this.cmdMutex = new Mutex();
+		this.cmdMutex = withTimeout(new Mutex(), 30000, new Error(`HCI command mutex timeout`));
 		this.pendingCmd = null;
 	}
 
