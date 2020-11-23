@@ -127,6 +127,9 @@ export class HciGattRemote extends GattRemote {
 			throw new Error(`Could not send GATT command. Already disposed.`);
 		}
 
+		// Create the error outside the promise to preserve the stack trace
+		const gattError = new Error(`GATT disposed before receiving response.`);
+
 		return new Promise<any>((resolve, reject) => {
 			const onDone = (data?: Buffer) => {
 				this.currentCommand = null;
@@ -134,7 +137,7 @@ export class HciGattRemote extends GattRemote {
 				release();
 
 				if (data === null) {
-					reject(new Error(`GATT disposed before receiving response.`));
+					reject(gattError);
 				} else {
 					resolve(data);
 				}

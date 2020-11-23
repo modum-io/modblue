@@ -296,13 +296,20 @@ export class Hci extends EventEmitter {
 			throw new Error('HCI socket not available');
 		}
 
+		const origScope = new Error();
+
 		return new Promise<Buffer>((resolve, reject) => {
 			const onDone = (status: number, responseData?: Buffer) => {
 				this.pendingCmd = null;
 				release();
 
+				resolve(responseData);
+
 				if (status !== 0) {
-					reject(new Error(`HCI Command failed: ${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`));
+					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					const err = new Error(`HCI Command failed: ${errStatus}`);
+					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+					reject(err);
 				} else {
 					resolve(responseData);
 				}
@@ -330,11 +337,16 @@ export class Hci extends EventEmitter {
 	}
 
 	private async waitForLeMetaEvent(metaEvent: number) {
+		const origScope = new Error();
+
 		return new Promise<Buffer>((resolve, reject) => {
 			const handler = (status: number, data: Buffer) => {
 				this.removeListener(`event_le_${metaEvent}`, handler);
 				if (status !== 0) {
-					reject(new Error(`Received LE error ${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`));
+					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					const err = new Error(`Received LE error ${errStatus}`);
+					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+					reject(err);
 				} else {
 					resolve(data);
 				}
@@ -558,6 +570,8 @@ export class Hci extends EventEmitter {
 
 		await this.sendCommand(cmd, true);
 
+		const origScope = new Error();
+
 		return new Promise<number>((resolve, reject) => {
 			const onComplete: LeConnCompleteListener = (status, handle, role, _addressType, _address) => {
 				if (_address !== address || _addressType !== addressType) {
@@ -567,12 +581,19 @@ export class Hci extends EventEmitter {
 				this.off('leConnComplete', onComplete);
 
 				if (status !== 0) {
-					reject(new Error(`LE conn failed: ${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`));
+					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					const err = new Error(`LE conn failed: ${errStatus}`);
+					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+
+					reject(err);
 					return;
 				}
 
 				if (role !== 0) {
-					reject(new Error(`Could not aquire le connection as master role`));
+					const err = new Error(`Could not aquire le connection as master role`);
+					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+
+					reject(err);
 					return;
 				}
 

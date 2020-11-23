@@ -90,8 +90,10 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 
 		await this.startScanning(serviceUUIDs, true);
 
+		// Create error outside scope to preserve stack trace
+		const timeoutErr = new Error(`Scan timed out`);
 		const timeout = new Promise<undefined>((_, reject) =>
-			setTimeout(() => reject(`Scan timed out`), timeoutInSeconds * 1000)
+			setTimeout(() => reject(timeoutErr), timeoutInSeconds * 1000)
 		);
 
 		try {

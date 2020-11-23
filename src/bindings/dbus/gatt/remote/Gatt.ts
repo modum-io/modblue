@@ -34,11 +34,14 @@ export class DbusGattRemote extends GattRemote {
 		const path = this.peripheral.path;
 		const dbus = this.peripheral.adapter.noble.dbus;
 
+		const timeoutError = new Error('Discovering timed out');
+
 		return new Promise<DbusGattServiceRemote[]>(async (resolve, reject) => {
 			let cancelled = false;
+
 			const onTimeout = () => {
 				cancelled = true;
-				reject(new Error('Discovering timed out'));
+				reject(timeoutError);
 			};
 			const timeout = setTimeout(onTimeout, DISCOVER_TIMEOUT * 1000);
 
