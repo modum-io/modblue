@@ -115,21 +115,12 @@ export class HciAdapter extends Adapter {
 			throw new Error(`Advertising and connecting simultaneously is supported with Bluetooth 4.2+`);
 		}
 
-		let timedOut = false;
 		// Create the error outside the scope to have the correct error stack
 		const timeoutError = new Error('Connecting timed out');
-		const timeout = new Promise<void>((_, reject) =>
-			setTimeout(() => {
-				timedOut = true;
-				reject(timeoutError);
-			}, 10000)
-		);
+		const timeout = new Promise<void>((_, reject) => setTimeout(() => reject(timeoutError), 10000));
 
 		const connet = async () => {
 			const handle = await this.hci.createLeConn(peripheral.address, peripheral.addressType);
-			if (timedOut) {
-				return;
-			}
 
 			this.uuidToHandle.set(peripheral.uuid, handle);
 			this.handleToUUID.set(handle, peripheral.uuid);

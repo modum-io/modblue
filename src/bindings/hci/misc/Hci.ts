@@ -585,13 +585,6 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(0x0004, 25); // min ce length
 		cmd.writeUInt16LE(0x0006, 27); // max ce length
 
-		try {
-			// Cancel any other connection requests before trying this one
-			await this.cancelLeConn();
-		} catch {
-			// NO-OP
-		}
-
 		const origScope = new Error();
 
 		return new Promise<number>(async (resolve, reject) => {

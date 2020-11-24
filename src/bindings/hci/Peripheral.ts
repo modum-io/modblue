@@ -17,6 +17,10 @@ export class HciPeripheral extends Peripheral {
 	private signaling: Signaling;
 
 	public async connect(): Promise<void> {
+		if (this._state === 'connected') {
+			return;
+		}
+
 		this._state = 'connecting';
 		await this.adapter.connect(this);
 	}
@@ -34,6 +38,10 @@ export class HciPeripheral extends Peripheral {
 	}
 
 	public async disconnect(): Promise<void> {
+		if (this._state === 'disconnected') {
+			return;
+		}
+
 		this._state = 'disconnecting';
 		await this.adapter.disconnect(this);
 	}
