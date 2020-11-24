@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.1.2](https://github.com/modum-io/modblue/compare/v4.1.1...v4.1.2) (2020-11-24)
+
+### Bug Fixes
+
+- **hci:** Add mutex timeouts ([9f59c08](https://github.com/modum-io/modblue/commit/9f59c08cf295537d0efa27bc8c092f65c1951f02))
+- **hci:** Fix concurrent connection issues ([355b912](https://github.com/modum-io/modblue/commit/355b912a85ef9356bc44fa8e8a98d6075f9eedca))
+- **hci:** Fix peripheral connects ([c6eea1c](https://github.com/modum-io/modblue/commit/c6eea1cbef8a722d4067df26a2fb226970969f4e))
+- **hci:** Preserve stack traces in callbacks ([c4eb2f3](https://github.com/modum-io/modblue/commit/c4eb2f3cff21af5b4cb8f5f442cf7637dc5e5bba))
+
 ### [4.1.1](https://github.com/modum-io/modblue/compare/v4.1.0...v4.1.1) (2020-11-20)
 
 ### Bug Fixes

@@ -1,5 +1,7 @@
 const { HciNoble, DbusNoble } = require('../lib');
 
+const MAC_ADDRESS = /(?:[0-9A-F]{2}:?){6}/i;
+
 const USAGE = `
 Usage:
 	node ./tests/connect.js <bindings> <loggers> <service> <characteristic>
@@ -11,7 +13,7 @@ Arguments:
 `;
 
 const BINDINGS = process.argv[2];
-const PERIPHERAL_ADDRESSES = (process.argv[3] || '').split(/[,|;]/g);
+const PERIPHERAL_ADDRESSES = (process.argv[3] || '').split(/[,|;]/g).filter((p) => !!p && MAC_ADDRESS.test(p));
 const SERVICE_UUID = process.argv[4];
 const CHAR_UUID = process.argv[5];
 
@@ -120,9 +122,7 @@ const main = async () => {
 	}
 };
 
-main()
-	.then(() => process.exit(0))
-	.catch((err) => {
-		console.error(err);
-		process.exit(1);
-	});
+main().catch((err) => {
+	console.error(err);
+	process.exit(1);
+});

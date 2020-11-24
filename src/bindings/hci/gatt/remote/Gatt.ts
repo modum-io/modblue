@@ -1,4 +1,4 @@
-import { Mutex } from 'async-mutex';
+import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 
 import { GattRemote, Peripheral } from '../../../../models';
 import { Hci } from '../../misc';
@@ -20,7 +20,7 @@ export class HciGattRemote extends GattRemote {
 	private security: string;
 	private mtuWasExchanged: boolean = false;
 
-	private mutex: Mutex;
+	private mutex: MutexInterface;
 	private currentCommand: GattCommand = null;
 
 	public services: Map<string, HciGattServiceRemote> = new Map();
@@ -32,7 +32,7 @@ export class HciGattRemote extends GattRemote {
 		this.hci.on('aclDataPkt', this.onAclStreamData);
 		this.hci.on('stateChange', this.onHciStateChange);
 
-		this.mutex = new Mutex();
+		this.mutex = withTimeout(new Mutex(), 10000, new Error(`GATT command mutex timeout`));
 		this.handle = handle;
 	}
 
@@ -124,17 +124,19 @@ export class HciGattRemote extends GattRemote {
 
 		// We might have been waiting for the mutex and now we're already disposed
 		if (!this.hci) {
-			throw new Error(`Could not send GATT command. Already disposed.`);
+			return;
 		}
+
+		// Create the error outside the promise to preserve the stack trace
+		const gattError = new Error(`GATT disposed before receiving response.`);
 
 		return new Promise<any>((resolve, reject) => {
 			const onDone = (data?: Buffer) => {
 				this.currentCommand = null;
-
 				release();
 
 				if (data === null) {
-					reject(new Error(`GATT disposed before receiving response.`));
+					reject(gattError);
 				} else {
 					resolve(data);
 				}

@@ -1,4 +1,4 @@
-import { Mutex } from 'async-mutex';
+import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 import { EventEmitter } from 'events';
 
 import { AddressType } from '../../../types';
@@ -173,7 +173,7 @@ export class Hci extends EventEmitter {
 	private isSocketUp: boolean;
 	private handles: Map<number, Handle>;
 
-	private cmdMutex: Mutex;
+	private cmdMutex: MutexInterface;
 	private pendingCmd: HciCommand;
 
 	private aclDataPacketLength: number;
@@ -190,7 +190,7 @@ export class Hci extends EventEmitter {
 
 		this.handles = new Map();
 
-		this.cmdMutex = new Mutex();
+		this.cmdMutex = withTimeout(new Mutex(), 10000, new Error(`HCI command mutex timeout`));
 		this.pendingCmd = null;
 	}
 
@@ -286,9 +286,17 @@ export class Hci extends EventEmitter {
 		this.socket = null;
 	}
 
-	private async sendCommand(data: Buffer, onlyStatus?: false): Promise<Buffer>;
-	private async sendCommand(data: Buffer, onlyStatus?: true): Promise<void>;
-	private async sendCommand(data: Buffer, onlyStatus?: boolean): Promise<Buffer | void> {
+	private async sendCommand(data: Buffer): Promise<Buffer>;
+	private async sendCommand(
+		data: Buffer,
+		onStatus: (status: number, done: () => void) => void,
+		onResponse?: (status: number, data: Buffer, done: () => void) => void
+	): Promise<void>;
+	private async sendCommand(
+		data: Buffer,
+		onStatus?: (status: number, done: () => void) => void,
+		onResponse?: (status: number, data: Buffer, done: () => void) => void
+	): Promise<Buffer | void> {
 		const release = await this.cmdMutex.acquire();
 
 		if (!this.isSocketUp) {
@@ -296,23 +304,46 @@ export class Hci extends EventEmitter {
 			throw new Error('HCI socket not available');
 		}
 
-		return new Promise<Buffer>((resolve, reject) => {
-			const onDone = (status: number, responseData?: Buffer) => {
+		const origScope = new Error();
+
+		return new Promise<Buffer | void>((resolve, reject) => {
+			const completePromise = (status: number, responseData?: Buffer) => {
 				this.pendingCmd = null;
 				release();
 
 				if (status !== 0) {
-					reject(new Error(`HCI Command failed: ${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`));
+					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					const err = new Error(`HCI Command failed: ${errStatus}`);
+					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+					reject(err);
 				} else {
 					resolve(responseData);
 				}
 			};
 
+			const done = () => {
+				this.pendingCmd = null;
+				release();
+				resolve();
+			};
+
 			this.pendingCmd = {
 				cmd: data.readUInt16LE(1),
 				data,
-				onStatus: (status) => onlyStatus && onDone(status),
-				onResponse: (status, responseData) => onDone(status, responseData)
+				onStatus: (status) => {
+					if (onStatus) {
+						onStatus(status, done);
+					} else if (!onResponse) {
+						completePromise(status);
+					}
+				},
+				onResponse: (status, responseData) => {
+					if (onResponse) {
+						onResponse(status, responseData, done);
+					} else if (!onStatus) {
+						completePromise(status, responseData);
+					}
+				}
 			};
 
 			this.socket.write(data);
@@ -330,11 +361,16 @@ export class Hci extends EventEmitter {
 	}
 
 	private async waitForLeMetaEvent(metaEvent: number) {
+		const origScope = new Error();
+
 		return new Promise<Buffer>((resolve, reject) => {
 			const handler = (status: number, data: Buffer) => {
 				this.removeListener(`event_le_${metaEvent}`, handler);
 				if (status !== 0) {
-					reject(new Error(`Received LE error ${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`));
+					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					const err = new Error(`Received LE error ${errStatus}`);
+					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+					reject(err);
 				} else {
 					resolve(data);
 				}
@@ -549,37 +585,50 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(0x0004, 25); // min ce length
 		cmd.writeUInt16LE(0x0006, 27); // max ce length
 
-		try {
-			// Cancel any other connection requests before trying this one
-			await this.cancelLeConn();
-		} catch {
-			// NO-OP
-		}
+		const origScope = new Error();
 
-		await this.sendCommand(cmd, true);
-
-		return new Promise<number>((resolve, reject) => {
-			const onComplete: LeConnCompleteListener = (status, handle, role, _addressType, _address) => {
-				if (_address !== address || _addressType !== addressType) {
+		return new Promise<number>(async (resolve, reject) => {
+			await this.sendCommand(cmd, (cmdStatus, done) => {
+				if (cmdStatus !== 0) {
+					const errStatus = `${STATUS_MAPPER[cmdStatus]} (0x${cmdStatus.toString(16).padStart(2, '0')})`;
+					const err = new Error(`Connection attempt failed: ${errStatus}`);
+					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+					done();
+					reject(err);
 					return;
 				}
 
-				this.off('leConnComplete', onComplete);
+				const onComplete: LeConnCompleteListener = (status, handle, role, _addressType, _address) => {
+					if (_address !== address || _addressType !== addressType) {
+						return;
+					}
 
-				if (status !== 0) {
-					reject(new Error(`LE conn failed: ${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`));
-					return;
-				}
+					this.off('leConnComplete', onComplete);
 
-				if (role !== 0) {
-					reject(new Error(`Could not aquire le connection as master role`));
-					return;
-				}
+					done();
 
-				resolve(handle);
-			};
+					if (status !== 0) {
+						const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+						const err = new Error(`LE conn failed: ${errStatus}`);
+						err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
 
-			this.on('leConnComplete', onComplete);
+						reject(err);
+						return;
+					}
+
+					if (role !== 0) {
+						const err = new Error(`Could not aquire le connection as master role`);
+						err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+
+						reject(err);
+						return;
+					}
+
+					resolve(handle);
+				};
+
+				this.on('leConnComplete', onComplete);
+			});
 		});
 	}
 
@@ -659,7 +708,43 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(handle, 4); // handle
 		cmd.writeUInt8(reason, 6); // reason
 
-		await this.sendCommand(cmd, true);
+		const origScope = new Error();
+
+		return new Promise<void>(async (resolve, reject) => {
+			await this.sendCommand(cmd, (cmdStatus, done) => {
+				if (cmdStatus !== 0) {
+					const errStatus = `${STATUS_MAPPER[cmdStatus]} (0x${cmdStatus.toString(16).padStart(2, '0')})`;
+					const err = new Error(`Disconnect attempt failed: ${errStatus}`);
+					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+					done();
+					reject(err);
+					return;
+				}
+
+				const onComplete: DisconnectCompleteListener = (status, _handle, _reason) => {
+					if (_handle !== handle) {
+						return;
+					}
+
+					this.off('disconnectComplete', onComplete);
+
+					done();
+
+					if (status !== 0) {
+						const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+						const err = new Error(`Disconnect failed: ${errStatus}`);
+						err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+
+						reject(err);
+						return;
+					}
+
+					resolve();
+				};
+
+				this.on('disconnectComplete', onComplete);
+			});
+		});
 
 		while (true) {
 			const data = await this.waitForEvent(EVT_DISCONN_COMPLETE);
