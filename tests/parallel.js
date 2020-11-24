@@ -78,6 +78,10 @@ const main = async () => {
 
 				await gatt.discoverServices();
 
+				console.log(targetAddress, 'Staying connected for a while...');
+
+				await new Promise((resolve) => setTimeout(resolve, 10000));
+
 				console.log(targetAddress, 'Disconnecting...');
 
 				await peripheral.disconnect();

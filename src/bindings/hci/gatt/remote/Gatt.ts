@@ -32,7 +32,7 @@ export class HciGattRemote extends GattRemote {
 		this.hci.on('aclDataPkt', this.onAclStreamData);
 		this.hci.on('stateChange', this.onHciStateChange);
 
-		this.mutex = withTimeout(new Mutex(), 30000, new Error(`GATT command mutex timeout`));
+		this.mutex = withTimeout(new Mutex(), 10000, new Error(`GATT command mutex timeout`));
 		this.handle = handle;
 	}
 
@@ -124,7 +124,7 @@ export class HciGattRemote extends GattRemote {
 
 		// We might have been waiting for the mutex and now we're already disposed
 		if (!this.hci) {
-			throw new Error(`Could not send GATT command. Already disposed.`);
+			return;
 		}
 
 		// Create the error outside the promise to preserve the stack trace
@@ -133,7 +133,6 @@ export class HciGattRemote extends GattRemote {
 		return new Promise<any>((resolve, reject) => {
 			const onDone = (data?: Buffer) => {
 				this.currentCommand = null;
-
 				release();
 
 				if (data === null) {

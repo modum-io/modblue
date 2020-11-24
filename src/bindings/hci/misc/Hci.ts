@@ -190,7 +190,7 @@ export class Hci extends EventEmitter {
 
 		this.handles = new Map();
 
-		this.cmdMutex = withTimeout(new Mutex(), 30000, new Error(`HCI command mutex timeout`));
+		this.cmdMutex = withTimeout(new Mutex(), 10000, new Error(`HCI command mutex timeout`));
 		this.pendingCmd = null;
 	}
 
@@ -286,9 +286,17 @@ export class Hci extends EventEmitter {
 		this.socket = null;
 	}
 
-	private async sendCommand(data: Buffer, onlyStatus?: false): Promise<Buffer>;
-	private async sendCommand(data: Buffer, onlyStatus?: true): Promise<void>;
-	private async sendCommand(data: Buffer, onlyStatus?: boolean): Promise<Buffer | void> {
+	private async sendCommand(data: Buffer): Promise<Buffer>;
+	private async sendCommand(
+		data: Buffer,
+		onStatus: (status: number, done: () => void) => void,
+		onResponse?: (status: number, data: Buffer, done: () => void) => void
+	): Promise<void>;
+	private async sendCommand(
+		data: Buffer,
+		onStatus?: (status: number, done: () => void) => void,
+		onResponse?: (status: number, data: Buffer, done: () => void) => void
+	): Promise<Buffer | void> {
 		const release = await this.cmdMutex.acquire();
 
 		if (!this.isSocketUp) {
@@ -298,12 +306,10 @@ export class Hci extends EventEmitter {
 
 		const origScope = new Error();
 
-		return new Promise<Buffer>((resolve, reject) => {
-			const onDone = (status: number, responseData?: Buffer) => {
+		return new Promise<Buffer | void>((resolve, reject) => {
+			const completePromise = (status: number, responseData?: Buffer) => {
 				this.pendingCmd = null;
 				release();
-
-				resolve(responseData);
 
 				if (status !== 0) {
 					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
@@ -315,11 +321,29 @@ export class Hci extends EventEmitter {
 				}
 			};
 
+			const done = () => {
+				this.pendingCmd = null;
+				release();
+				resolve();
+			};
+
 			this.pendingCmd = {
 				cmd: data.readUInt16LE(1),
 				data,
-				onStatus: (status) => onlyStatus && onDone(status),
-				onResponse: (status, responseData) => onDone(status, responseData)
+				onStatus: (status) => {
+					if (onStatus) {
+						onStatus(status, done);
+					} else if (!onResponse) {
+						completePromise(status);
+					}
+				},
+				onResponse: (status, responseData) => {
+					if (onResponse) {
+						onResponse(status, responseData, done);
+					} else if (!onStatus) {
+						completePromise(status, responseData);
+					}
+				}
 			};
 
 			this.socket.write(data);
@@ -568,39 +592,50 @@ export class Hci extends EventEmitter {
 			// NO-OP
 		}
 
-		await this.sendCommand(cmd, true);
-
 		const origScope = new Error();
 
-		return new Promise<number>((resolve, reject) => {
-			const onComplete: LeConnCompleteListener = (status, handle, role, _addressType, _address) => {
-				if (_address !== address || _addressType !== addressType) {
-					return;
-				}
-
-				this.off('leConnComplete', onComplete);
-
-				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					const err = new Error(`LE conn failed: ${errStatus}`);
+		return new Promise<number>(async (resolve, reject) => {
+			await this.sendCommand(cmd, (cmdStatus, done) => {
+				if (cmdStatus !== 0) {
+					const errStatus = `${STATUS_MAPPER[cmdStatus]} (0x${cmdStatus.toString(16).padStart(2, '0')})`;
+					const err = new Error(`Connection attempt failed: ${errStatus}`);
 					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
-
+					done();
 					reject(err);
 					return;
 				}
 
-				if (role !== 0) {
-					const err = new Error(`Could not aquire le connection as master role`);
-					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+				const onComplete: LeConnCompleteListener = (status, handle, role, _addressType, _address) => {
+					if (_address !== address || _addressType !== addressType) {
+						return;
+					}
 
-					reject(err);
-					return;
-				}
+					this.off('leConnComplete', onComplete);
 
-				resolve(handle);
-			};
+					done();
 
-			this.on('leConnComplete', onComplete);
+					if (status !== 0) {
+						const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+						const err = new Error(`LE conn failed: ${errStatus}`);
+						err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+
+						reject(err);
+						return;
+					}
+
+					if (role !== 0) {
+						const err = new Error(`Could not aquire le connection as master role`);
+						err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+
+						reject(err);
+						return;
+					}
+
+					resolve(handle);
+				};
+
+				this.on('leConnComplete', onComplete);
+			});
 		});
 	}
 
@@ -680,7 +715,43 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(handle, 4); // handle
 		cmd.writeUInt8(reason, 6); // reason
 
-		await this.sendCommand(cmd, true);
+		const origScope = new Error();
+
+		return new Promise<void>(async (resolve, reject) => {
+			await this.sendCommand(cmd, (cmdStatus, done) => {
+				if (cmdStatus !== 0) {
+					const errStatus = `${STATUS_MAPPER[cmdStatus]} (0x${cmdStatus.toString(16).padStart(2, '0')})`;
+					const err = new Error(`Disconnect attempt failed: ${errStatus}`);
+					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+					done();
+					reject(err);
+					return;
+				}
+
+				const onComplete: DisconnectCompleteListener = (status, _handle, _reason) => {
+					if (_handle !== handle) {
+						return;
+					}
+
+					this.off('disconnectComplete', onComplete);
+
+					done();
+
+					if (status !== 0) {
+						const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+						const err = new Error(`Disconnect failed: ${errStatus}`);
+						err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+
+						reject(err);
+						return;
+					}
+
+					resolve();
+				};
+
+				this.on('disconnectComplete', onComplete);
+			});
+		});
 
 		while (true) {
 			const data = await this.waitForEvent(EVT_DISCONN_COMPLETE);
