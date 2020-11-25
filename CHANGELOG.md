@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.1.3](https://github.com/modum-io/modblue/compare/v4.1.2...v4.1.3) (2020-11-25)
+
+### Bug Fixes
+
+- **hci:** Stability fixes for connect & disconnect ([2eada17](https://github.com/modum-io/modblue/commit/2eada1718e956a8a465c01b1d0dd7087dd2263f0))
+
 ### [4.1.2](https://github.com/modum-io/modblue/compare/v4.1.1...v4.1.2) (2020-11-24)
 
 ### Bug Fixes
