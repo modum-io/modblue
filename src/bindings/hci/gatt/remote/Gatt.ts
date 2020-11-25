@@ -8,6 +8,8 @@ import { HciGattCharacteristicRemote } from './Characteristic';
 import { HciGattDescriptorRemote } from './Descriptor';
 import { HciGattServiceRemote } from './Service';
 
+const GATT_CMD_TIMEOUT = 10000; // in milliseconds
+
 interface GattCommand {
 	buffer: Buffer;
 	onResponse: (data: Buffer) => void;
@@ -21,25 +23,29 @@ export class HciGattRemote extends GattRemote {
 	private mtuWasExchanged: boolean = false;
 
 	private mutex: MutexInterface;
-	private currentCommand: GattCommand = null;
+	private currentCmd: GattCommand = null;
+	private cmdTimeout: number;
 
 	public services: Map<string, HciGattServiceRemote> = new Map();
 
-	public constructor(peripheral: Peripheral, hci: Hci, handle: number) {
+	public constructor(peripheral: Peripheral, hci: Hci, handle: number, cmdTimeout?: number) {
 		super(peripheral);
+
+		this.handle = handle;
 
 		this.hci = hci;
 		this.hci.on('aclDataPkt', this.onAclStreamData);
 		this.hci.on('stateChange', this.onHciStateChange);
 
-		this.mutex = withTimeout(new Mutex(), 10000, new Error(`GATT command mutex timeout`));
-		this.handle = handle;
+		this.cmdTimeout = cmdTimeout || GATT_CMD_TIMEOUT;
+		this.mutex = withTimeout(new Mutex(), this.cmdTimeout, new Error(`GATT command mutex timeout`));
+		this.currentCmd = null;
 	}
 
 	public dispose() {
-		if (this.currentCommand) {
-			this.currentCommand.onResponse(null);
-			this.currentCommand = null;
+		if (this.currentCmd) {
+			this.currentCmd.onResponse(null);
+			this.currentCmd = null;
 		}
 
 		this.hci.off('aclDataPkt', this.onAclStreamData);
@@ -52,9 +58,9 @@ export class HciGattRemote extends GattRemote {
 	private onHciStateChange = async (newState: string) => {
 		// If the underlaying socket shuts down we're doomed
 		if (newState === 'poweredOff') {
-			if (this.currentCommand) {
-				this.currentCommand.onResponse(null);
-				this.currentCommand = null;
+			if (this.currentCmd) {
+				this.currentCmd.onResponse(null);
+				this.currentCmd = null;
 			}
 		}
 	};
@@ -64,7 +70,7 @@ export class HciGattRemote extends GattRemote {
 			return;
 		}
 
-		if (this.currentCommand && data.toString('hex') === this.currentCommand.buffer.toString('hex')) {
+		if (this.currentCmd && data.toString('hex') === this.currentCmd.buffer.toString('hex')) {
 			// NO-OP
 			// This is just a confirmation for the command we just sent?
 		} else if (data[0] % 2 === 0) {
@@ -77,7 +83,7 @@ export class HciGattRemote extends GattRemote {
 			// this.emit('handleNotify', valueHandle, valueData);*/
 
 			if (data[0] === CONST.ATT_OP_HANDLE_IND) {
-				await this.queueCommand(this.handleConfirmation(), true);
+				await this.handleConfirmation();
 				// this.emit('handleConfirmation', valueHandle);
 			}
 
@@ -88,7 +94,7 @@ export class HciGattRemote extends GattRemote {
 					}
 				}
 			}*/
-		} else if (!this.currentCommand) {
+		} else if (!this.currentCmd) {
 			// NO-OP
 		} else {
 			if (
@@ -102,7 +108,7 @@ export class HciGattRemote extends GattRemote {
 				return;
 			}
 
-			this.currentCommand.onResponse(data);
+			this.currentCmd.onResponse(data);
 		}
 	};
 
@@ -129,10 +135,29 @@ export class HciGattRemote extends GattRemote {
 
 		// Create the error outside the promise to preserve the stack trace
 		const gattError = new Error(`GATT disposed before receiving response.`);
+		const timeoutError = new Error(`GATT command timed out`);
 
 		return new Promise<any>((resolve, reject) => {
+			let isDone = false;
+			const onTimeout = () => {
+				if (isDone) {
+					return;
+				}
+				isDone = true;
+
+				this.currentCmd = null;
+				release();
+
+				reject(timeoutError);
+			};
+
 			const onDone = (data?: Buffer) => {
-				this.currentCommand = null;
+				if (isDone) {
+					return;
+				}
+				isDone = true;
+
+				this.currentCmd = null;
 				release();
 
 				if (data === null) {
@@ -142,11 +167,13 @@ export class HciGattRemote extends GattRemote {
 				}
 			};
 
-			this.currentCommand = {
+			this.currentCmd = {
 				buffer: buffer,
 				onResponse: onDone
 			};
 			this.hci.writeAclDataPkt(this.handle, CONST.ATT_CID, buffer);
+
+			setTimeout(onTimeout, this.cmdTimeout);
 
 			if (resolveOnWrite) {
 				onDone();
@@ -160,7 +187,7 @@ export class HciGattRemote extends GattRemote {
 		buf.writeUInt8(CONST.ATT_OP_MTU_REQ, 0);
 		buf.writeUInt16LE(mtu, 1);
 
-		return buf;
+		return this.queueCommand(buf, false);
 	}
 
 	public readByGroupRequest(startHandle: number, endHandle: number, groupUUID: number) {
@@ -171,7 +198,7 @@ export class HciGattRemote extends GattRemote {
 		buf.writeUInt16LE(endHandle, 3);
 		buf.writeUInt16LE(groupUUID, 5);
 
-		return buf;
+		return this.queueCommand(buf, false);
 	}
 
 	public readByTypeRequest(startHandle: number, endHandle: number, groupUUID: number) {
@@ -182,7 +209,7 @@ export class HciGattRemote extends GattRemote {
 		buf.writeUInt16LE(endHandle, 3);
 		buf.writeUInt16LE(groupUUID, 5);
 
-		return buf;
+		return this.queueCommand(buf, false);
 	}
 
 	public readRequest(handle: number) {
@@ -191,7 +218,7 @@ export class HciGattRemote extends GattRemote {
 		buf.writeUInt8(CONST.ATT_OP_READ_REQ, 0);
 		buf.writeUInt16LE(handle, 1);
 
-		return buf;
+		return this.queueCommand(buf, false);
 	}
 
 	public readBlobRequest(handle: number, offset: number) {
@@ -201,7 +228,7 @@ export class HciGattRemote extends GattRemote {
 		buf.writeUInt16LE(handle, 1);
 		buf.writeUInt16LE(offset, 3);
 
-		return buf;
+		return this.queueCommand(buf, false);
 	}
 
 	public findInfoRequest(startHandle: number, endHandle: number) {
@@ -211,10 +238,12 @@ export class HciGattRemote extends GattRemote {
 		buf.writeUInt16LE(startHandle, 1);
 		buf.writeUInt16LE(endHandle, 3);
 
-		return buf;
+		return this.queueCommand(buf, false);
 	}
 
-	public writeRequest(handle: number, data: Buffer, withoutResponse: boolean) {
+	public writeRequest(handle: number, data: Buffer, withoutResponse: false): Promise<Buffer>;
+	public writeRequest(handle: number, data: Buffer, withoutResponse: true): Promise<void>;
+	public writeRequest(handle: number, data: Buffer, withoutResponse: boolean): Promise<Buffer | void> {
 		const buf = Buffer.alloc(3 + data.length);
 
 		buf.writeUInt8(withoutResponse ? CONST.ATT_OP_WRITE_CMD : CONST.ATT_OP_WRITE_REQ, 0);
@@ -224,7 +253,11 @@ export class HciGattRemote extends GattRemote {
 			buf.writeUInt8(data.readUInt8(i), i + 3);
 		}
 
-		return buf;
+		if (withoutResponse) {
+			return this.queueCommand(buf, true);
+		} else {
+			return this.queueCommand(buf, false);
+		}
 	}
 
 	private prepareWriteRequest(handle: number, offset: number, data: Buffer) {
@@ -238,7 +271,7 @@ export class HciGattRemote extends GattRemote {
 			buf.writeUInt8(data.readUInt8(i), i + 5);
 		}
 
-		return buf;
+		return this.queueCommand(buf, false);
 	}
 
 	private executeWriteRequest(handle: number, cancelPreparedWrites?: boolean) {
@@ -247,7 +280,7 @@ export class HciGattRemote extends GattRemote {
 		buf.writeUInt8(CONST.ATT_OP_EXECUTE_WRITE_REQ, 0);
 		buf.writeUInt8(cancelPreparedWrites ? 0 : 1, 1);
 
-		return buf;
+		return this.queueCommand(buf, false);
 	}
 
 	private handleConfirmation() {
@@ -255,7 +288,7 @@ export class HciGattRemote extends GattRemote {
 
 		buf.writeUInt8(CONST.ATT_OP_HANDLE_CNF, 0);
 
-		return buf;
+		return this.queueCommand(buf, true);
 	}
 
 	public async exchangeMtu(mtu: number) {
@@ -263,7 +296,7 @@ export class HciGattRemote extends GattRemote {
 			return this.mtu;
 		}
 
-		const data = await this.queueCommand(this.mtuRequest(mtu), false);
+		const data = await this.mtuRequest(mtu);
 		const opcode = data[0];
 
 		if (opcode === CONST.ATT_OP_MTU_RESP) {
@@ -282,10 +315,7 @@ export class HciGattRemote extends GattRemote {
 		let startHandle = 0x0001;
 
 		while (true) {
-			const data = await this.queueCommand(
-				this.readByGroupRequest(startHandle, 0xffff, CONST.GATT_PRIM_SVC_UUID),
-				false
-			);
+			const data = await this.readByGroupRequest(startHandle, 0xffff, CONST.GATT_PRIM_SVC_UUID);
 
 			const opcode = data[0];
 
@@ -335,10 +365,7 @@ export class HciGattRemote extends GattRemote {
 		let startHandle = service.startHandle;
 
 		while (true) {
-			const data = await this.queueCommand(
-				this.readByTypeRequest(startHandle, service.endHandle, CONST.GATT_CHARAC_UUID),
-				false
-			);
+			const data = await this.readByTypeRequest(startHandle, service.endHandle, CONST.GATT_CHARAC_UUID);
 
 			const opcode = data[0];
 
@@ -415,7 +442,7 @@ export class HciGattRemote extends GattRemote {
 
 		let readData = Buffer.alloc(0);
 
-		let data = await this.queueCommand(this.readRequest(characteristic.valueHandle), false);
+		let data = await this.readRequest(characteristic.valueHandle);
 		let opcode = data[0];
 
 		while (true) {
@@ -429,7 +456,7 @@ export class HciGattRemote extends GattRemote {
 				return readData;
 			}
 
-			data = await this.queueCommand(this.readBlobRequest(characteristic.valueHandle, readData.length), false);
+			data = await this.readBlobRequest(characteristic.valueHandle, readData.length);
 			opcode = data[0];
 		}
 	}
@@ -446,11 +473,11 @@ export class HciGattRemote extends GattRemote {
 		}
 
 		if (withoutResponse) {
-			await this.queueCommand(this.writeRequest(characteristic.valueHandle, data, true), true);
+			await this.writeRequest(characteristic.valueHandle, data, true);
 		} else if (data.length + 3 > this.mtu) {
 			return this.longWrite(serviceUUID, characteristicUUID, data, withoutResponse);
 		} else {
-			const respData = await this.queueCommand(this.writeRequest(characteristic.valueHandle, data, false), false);
+			const respData = await this.writeRequest(characteristic.valueHandle, data, false);
 			const opcode = respData[0];
 
 			if (opcode !== CONST.ATT_OP_WRITE_RESP) {
@@ -479,10 +506,8 @@ export class HciGattRemote extends GattRemote {
 		while (offset < data.length) {
 			const end = offset + limit;
 			const chunk = data.slice(offset, end);
-			const chunkRespData = await this.queueCommand(
-				this.prepareWriteRequest(characteristic.valueHandle, offset, chunk),
-				false
-			);
+			const chunkRespData = await this.prepareWriteRequest(characteristic.valueHandle, offset, chunk);
+
 			const chunkOpcode = chunkRespData[0];
 
 			if (chunkOpcode !== CONST.ATT_OP_PREPARE_WRITE_RESP) {
@@ -499,7 +524,7 @@ export class HciGattRemote extends GattRemote {
 		}
 
 		/* queue the execute command with a callback to emit the write signal when done */
-		const respData = await this.queueCommand(this.executeWriteRequest(characteristic.valueHandle), false);
+		const respData = await this.executeWriteRequest(characteristic.valueHandle);
 		const opcode = respData[0];
 
 		if (opcode !== CONST.ATT_OP_EXECUTE_WRITE_RESP && !withoutResponse) {
@@ -518,9 +543,10 @@ export class HciGattRemote extends GattRemote {
 			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
-		const data = await this.queueCommand(
-			this.readByTypeRequest(characteristic.startHandle, characteristic.endHandle, CONST.GATT_SERVER_CHARAC_CFG_UUID),
-			false
+		const data = await this.readByTypeRequest(
+			characteristic.startHandle,
+			characteristic.endHandle,
+			CONST.GATT_SERVER_CHARAC_CFG_UUID
 		);
 
 		const opcode = data[0];
@@ -540,7 +566,7 @@ export class HciGattRemote extends GattRemote {
 		const valueBuffer = Buffer.alloc(2);
 		valueBuffer.writeUInt16LE(value, 0);
 
-		const moreData = await this.queueCommand(this.writeRequest(handle, valueBuffer, false), false);
+		const moreData = await this.writeRequest(handle, valueBuffer, false);
 		const moreOpcode = moreData[0];
 
 		if (moreOpcode !== CONST.ATT_OP_WRITE_RESP) {
@@ -559,9 +585,10 @@ export class HciGattRemote extends GattRemote {
 			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
-		const data = await this.queueCommand(
-			this.readByTypeRequest(characteristic.startHandle, characteristic.endHandle, CONST.GATT_CLIENT_CHARAC_CFG_UUID),
-			false
+		const data = await this.readByTypeRequest(
+			characteristic.startHandle,
+			characteristic.endHandle,
+			CONST.GATT_CLIENT_CHARAC_CFG_UUID
 		);
 
 		const opcode = data[0];
@@ -589,7 +616,7 @@ export class HciGattRemote extends GattRemote {
 			const valueBuffer = Buffer.alloc(2);
 			valueBuffer.writeUInt16LE(value, 0);
 
-			const moreData = await this.queueCommand(this.writeRequest(handle, valueBuffer, false), false);
+			const moreData = await this.writeRequest(handle, valueBuffer, false);
 			const moreOpcode = moreData[0];
 
 			if (moreOpcode !== CONST.ATT_OP_WRITE_RESP) {
@@ -617,7 +644,7 @@ export class HciGattRemote extends GattRemote {
 		let startHandle = characteristic.valueHandle + 1;
 
 		while (true) {
-			const data = await this.queueCommand(this.findInfoRequest(startHandle, characteristic.endHandle), false);
+			const data = await this.findInfoRequest(startHandle, characteristic.endHandle);
 			const opcode = data[0];
 
 			if (opcode === CONST.ATT_OP_FIND_INFO_RESP) {
@@ -662,7 +689,7 @@ export class HciGattRemote extends GattRemote {
 
 		let readData = Buffer.alloc(0);
 
-		let data = await this.queueCommand(this.readRequest(descriptor.handle), false);
+		let data = await this.readRequest(descriptor.handle);
 		let opcode = data[0];
 
 		while (true) {
@@ -676,7 +703,7 @@ export class HciGattRemote extends GattRemote {
 				return readData;
 			}
 
-			data = await this.queueCommand(this.readBlobRequest(descriptor.handle, readData.length), false);
+			data = await this.readBlobRequest(descriptor.handle, readData.length);
 			opcode = data[0];
 		}
 	}
@@ -699,7 +726,7 @@ export class HciGattRemote extends GattRemote {
 			);
 		}
 
-		const respData = await this.queueCommand(this.writeRequest(descriptor.handle, data, false), false);
+		const respData = await this.writeRequest(descriptor.handle, data, false);
 		const opcode = respData[0];
 
 		if (opcode !== CONST.ATT_OP_WRITE_RESP) {

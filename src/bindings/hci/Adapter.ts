@@ -115,25 +115,19 @@ export class HciAdapter extends Adapter {
 			throw new Error(`Advertising and connecting simultaneously is supported with Bluetooth 4.2+`);
 		}
 
-		// Create the error outside the scope to have the correct error stack
-		const timeoutError = new Error('Connecting timed out');
-		const timeout = new Promise<void>((_, reject) => setTimeout(() => reject(timeoutError), 10000));
-
-		const connet = async () => {
+		try {
 			const handle = await this.hci.createLeConn(peripheral.address, peripheral.addressType);
 
 			this.uuidToHandle.set(peripheral.uuid, handle);
 			this.handleToUUID.set(handle, peripheral.uuid);
 
 			await peripheral.onConnect(this.hci, handle);
-
-			return true;
-		};
-
-		try {
-			await Promise.race([connet(), timeout]);
 		} catch (err) {
+			// Dispose anything in case we got a partial setup/connection done
+			await this.hci.cancelLeConn();
 			await peripheral.onDisconnect();
+
+			// Rethrow
 			throw err;
 		}
 	}
@@ -141,22 +135,13 @@ export class HciAdapter extends Adapter {
 	public async disconnect(peripheral: HciPeripheral) {
 		const handle = this.uuidToHandle.get(peripheral.uuid);
 
-		// Create the error outside the scope to have the correct error stack
-		const timeoutError = new Error('Disconnecting timed out');
-		const timeout = new Promise<void>((_, reject) => setTimeout(() => reject(timeoutError), 10000));
-
-		const disconnect = async () => {
-			await this.hci.disconnect(handle);
-			return true;
-		};
-
 		try {
-			await Promise.race([disconnect(), timeout]);
+			await this.hci.disconnect(handle);
 		} catch {
 			// NO-OP
+		} finally {
+			await peripheral.onDisconnect();
 		}
-
-		await peripheral.onDisconnect();
 	}
 
 	public async isAdvertising(): Promise<boolean> {
