@@ -802,10 +802,6 @@ export class Hci extends EventEmitter {
 			inProgress++;
 			this.socket.write(pkt);
 		}
-
-		if (this.aclPacketQueue.length > 0) {
-			console.log('Pending acl packets', this.aclPacketQueue.length);
-		}
 	}
 
 	public async readBufferSize() {
