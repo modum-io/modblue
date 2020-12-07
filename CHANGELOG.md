@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.1.4](https://github.com/modum-io/modblue/compare/v4.1.3...v4.1.4) (2020-12-07)
+
+### Bug Fixes
+
+- **hci:** Improve concurrent stability ([44eb87b](https://github.com/modum-io/modblue/commit/44eb87bb67fc3c96baf4712cad9db079c3fc734e))
+- **hci:** Remove console log ([1768fc0](https://github.com/modum-io/modblue/commit/1768fc028a37136bf306879364158858c082cc9e))
+
 ### [4.1.3](https://github.com/modum-io/modblue/compare/v4.1.2...v4.1.3) (2020-11-25)
 
 ### Bug Fixes
