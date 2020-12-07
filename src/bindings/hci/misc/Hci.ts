@@ -20,6 +20,7 @@ const ACL_START = 0x02;
 
 const EVT_DISCONN_COMPLETE = 0x05;
 const EVT_ENCRYPT_CHANGE = 0x08;
+const EVT_QOS_COMPLETE = 0x0d;
 const EVT_CMD_COMPLETE = 0x0e;
 const EVT_CMD_STATUS = 0x0f;
 const EVT_NUMBER_OF_COMPLETED_PACKETS = 0x13;
@@ -118,8 +119,6 @@ interface HandleBuffer {
 interface HciCommand {
 	cmd: number;
 	data: Buffer;
-	onStatus: (status: number) => void;
-	onResponse: (status: number, data: Buffer) => void;
 }
 
 type StateChangeListener = (newState: string) => void;
@@ -148,6 +147,9 @@ type LeAdvertisingReportListener = (
 ) => void;
 type LeAdvertiseEnableListener = (enabled: boolean) => void;
 
+type CmdStatusListener = (status: number) => void;
+type CmdCompleteListener = (status: number, data: Buffer) => void;
+
 export declare interface Hci {
 	on(event: 'stateChange', listener: StateChangeListener): this;
 	on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
@@ -158,6 +160,9 @@ export declare interface Hci {
 
 	on(event: 'leAdvertiseEnable', listener: LeAdvertiseEnableListener): this;
 	on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
+
+	on(event: 'cmdStatus', listner: CmdStatusListener): this;
+	on(event: 'cmdComplete', listner: CmdCompleteListener): this;
 }
 
 export class Hci extends EventEmitter {
@@ -190,6 +195,10 @@ export class Hci extends EventEmitter {
 
 		this.state = 'poweredOff';
 		this.deviceId = deviceId;
+
+		// We attach about 6 listeners per connected device
+		// 5 connected devices + 10 spare
+		this.setMaxListeners(40);
 
 		this.handles = new Map();
 
@@ -268,8 +277,8 @@ export class Hci extends EventEmitter {
 
 				// Cancel any pending commands
 				if (this.currentCmd) {
-					this.currentCmd.onStatus(0x03);
-					this.currentCmd.onResponse(0x03, null);
+					this.emit('cmdStatus', 0x03);
+					this.emit('cmdComplete', 0x03, null);
 					this.currentCmd = null;
 				}
 
@@ -290,38 +299,34 @@ export class Hci extends EventEmitter {
 		this.socket = null;
 	}
 
-	private async sendCommand<T = Buffer>(data: Buffer): Promise<T>;
-	private async sendCommand<T>(
-		data: Buffer,
-		onStatus: (status: number, resolve: (response?: T) => void, reject: (error?: any) => void) => void,
-		onResponse?: (status: number, data: Buffer, resolve: (response?: T) => void, reject: (error?: any) => void) => void
-	): Promise<T>;
-	private async sendCommand<T>(
-		data: Buffer,
-		onStatus?: (status: number, resolve: (response?: T) => void, reject: (error?: any) => void) => void,
-		onResponse?: (status: number, data: Buffer, resolve: (response?: T) => void, reject: (error?: any) => void) => void
-	): Promise<T> {
-		const release = await this.mutex.acquire();
+	private async sendCommand(data: Buffer, statusOnly?: false, customMutex?: boolean): Promise<Buffer>;
+	private async sendCommand(data: Buffer, statusOnly?: true, customMutex?: boolean): Promise<void>;
+	private async sendCommand(data: Buffer, statusOnly?: boolean, customMutex?: boolean): Promise<Buffer | void> {
+		const release = customMutex ? null : await this.mutex.acquire();
 
 		if (!this.isSocketUp) {
-			release();
+			if (release) {
+				release();
+			}
 			throw new Error('HCI socket not available');
 		}
 
 		const origScope = new Error();
 		const timeoutError = new Error(`HCI command timed out`);
 
-		return new Promise<T>((resolve, reject) => {
+		return new Promise<Buffer | void>((resolve, reject) => {
 			let isDone = false;
 
-			const resolveHandler = (response?: T) => {
+			const resolveHandler = (response?: Buffer) => {
 				if (isDone) {
 					return;
 				}
 				isDone = true;
 
 				this.currentCmd = null;
-				release();
+				if (release) {
+					release();
+				}
 
 				resolve(response);
 			};
@@ -333,7 +338,9 @@ export class Hci extends EventEmitter {
 				isDone = true;
 
 				this.currentCmd = null;
-				release();
+				if (release) {
+					release();
+				}
 
 				reject(error);
 			};
@@ -341,34 +348,23 @@ export class Hci extends EventEmitter {
 			const onComplete = (status: number, responseData?: Buffer) => {
 				if (status !== 0) {
 					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					const err = new Error(`HCI Command failed: ${errStatus}`);
+					const err = new Error(`HCI Command ${this.currentCmd.cmd} failed: ${errStatus}`);
 					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
 
 					rejectHandler(err);
 				} else {
-					resolveHandler(responseData as any);
+					resolveHandler(responseData);
 				}
 			};
 
-			this.currentCmd = {
-				cmd: data.readUInt16LE(1),
-				data,
-				onStatus: (status) => {
-					if (onStatus) {
-						onStatus(status, resolveHandler, rejectHandler);
-					} else if (!onResponse) {
-						onComplete(status);
-					}
-				},
-				onResponse: (status, responseData) => {
-					if (onResponse) {
-						onResponse(status, responseData, resolveHandler, rejectHandler);
-					} else if (!onStatus) {
-						onComplete(status, responseData);
-					}
-				}
-			};
+			this.currentCmd = { cmd: data.readUInt16LE(1), data };
+			if (statusOnly) {
+				this.once('cmdStatus', onComplete);
+			} else {
+				this.once('cmdComplete', onComplete);
+			}
 
+			// console.log('->', 'hci', data);
 			this.socket.write(data);
 
 			setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
@@ -583,15 +579,15 @@ export class Hci extends EventEmitter {
 
 		const origScope = new Error();
 
-		return this.sendCommand<number>(cmd, (cmdStatus, resolve, reject) => {
-			if (cmdStatus !== 0) {
-				const errStatus = `${STATUS_MAPPER[cmdStatus]} (0x${cmdStatus.toString(16).padStart(2, '0')})`;
-				const err = new Error(`Connection attempt failed: ${errStatus}`);
-				err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
-				reject(err);
-				return;
-			}
+		const release = await this.mutex.acquire();
 
+		try {
+			await this.cancelLeConn(true);
+		} catch {
+			// NO-OP
+		}
+
+		return new Promise<number>((resolve, reject) => {
 			const onComplete: LeConnCompleteListener = (status, handle, role, _addressType, _address) => {
 				if (_address !== address || _addressType !== addressType) {
 					return;
@@ -604,6 +600,7 @@ export class Hci extends EventEmitter {
 					const err = new Error(`LE conn failed: ${errStatus}`);
 					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
 
+					release();
 					reject(err);
 					return;
 				}
@@ -612,18 +609,25 @@ export class Hci extends EventEmitter {
 					const err = new Error(`Could not aquire le connection as master role`);
 					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
 
+					release();
 					reject(err);
 					return;
 				}
 
+				release();
 				resolve(handle);
 			};
 
 			this.on('leConnComplete', onComplete);
+
+			this.sendCommand(cmd, true, true).catch((err) => {
+				release();
+				reject(err);
+			});
 		});
 	}
 
-	public async cancelLeConn() {
+	public async cancelLeConn(customMutex?: boolean) {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -633,7 +637,7 @@ export class Hci extends EventEmitter {
 		// length
 		cmd.writeUInt8(0x00, 3);
 
-		await this.sendCommand(cmd);
+		await this.sendCommand(cmd, false, customMutex);
 	}
 
 	public connUpdateLe(
@@ -701,15 +705,7 @@ export class Hci extends EventEmitter {
 
 		const origScope = new Error();
 
-		await this.sendCommand(cmd, (cmdStatus, resolve, reject) => {
-			if (cmdStatus !== 0) {
-				const errStatus = `${STATUS_MAPPER[cmdStatus]} (0x${cmdStatus.toString(16).padStart(2, '0')})`;
-				const err = new Error(`Disconnect attempt failed: ${errStatus}`);
-				err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
-				reject(err);
-				return;
-			}
-
+		return new Promise<void>((resolve, reject) => {
 			const onComplete: DisconnectCompleteListener = (status, _handle, _reason) => {
 				if (_handle !== handle) {
 					return;
@@ -730,6 +726,8 @@ export class Hci extends EventEmitter {
 			};
 
 			this.on('disconnectComplete', onComplete);
+
+			this.sendCommand(cmd, true).catch((err) => reject(err));
 		});
 	}
 
@@ -800,6 +798,8 @@ export class Hci extends EventEmitter {
 			const { handle, pkt } = this.aclPacketQueue.shift();
 			handle.aclPacketsInQueue++;
 			inProgress++;
+
+			// console.log('->', 'acl', pkt);
 			this.socket.write(pkt);
 		}
 	}
@@ -906,6 +906,8 @@ export class Hci extends EventEmitter {
 			case HCI_EVENT_PKT:
 				const subEventType = data.readUInt8(1);
 
+				// console.log('<-', 'hci', data);
+
 				this.emit(`event_${subEventType}`, data);
 
 				switch (subEventType) {
@@ -941,10 +943,8 @@ export class Hci extends EventEmitter {
 							break;
 						}
 
-						if (this.currentCmd) {
-							if (completeCmd === this.currentCmd.cmd) {
-								this.currentCmd.onResponse(completeStatus, result);
-							}
+						if (this.currentCmd && this.currentCmd.cmd === completeCmd) {
+							this.emit('cmdComplete', completeStatus, result);
 						}
 						break;
 
@@ -958,11 +958,9 @@ export class Hci extends EventEmitter {
 							break;
 						}
 
-						if (this.currentCmd) {
+						if (this.currentCmd && this.currentCmd.cmd === statusCmd) {
 							// Only report if the status concerns the command we issued
-							if (statusCmd === this.currentCmd.cmd) {
-								this.currentCmd.onStatus(statusStatus);
-							}
+							this.emit('cmdStatus', statusStatus);
 						}
 						break;
 
@@ -995,10 +993,10 @@ export class Hci extends EventEmitter {
 							// We may receive completed events for packets that were sent before our application was started
 							// so clamp the value to [0-inf)
 							targetHandle.aclPacketsInQueue = Math.max(0, targetHandle.aclPacketsInQueue - targetNumPackets);
-
-							// Process the packet queue because we may have more space now
-							this.processAclPacketQueue();
 						}
+
+						// Process the packet queue because we may have more space now
+						this.processAclPacketQueue();
 						break;
 
 					default:
@@ -1007,6 +1005,8 @@ export class Hci extends EventEmitter {
 				break;
 
 			case HCI_ACLDATA_PKT:
+				// console.log('<-', 'acl', data);
+
 				const flags = data.readUInt16LE(1) >> 12;
 				const aclHandleId = data.readUInt16LE(1) & 0x0fff;
 

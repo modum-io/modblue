@@ -16,6 +16,7 @@ export declare class HciGattRemote extends GattRemote {
     constructor(peripheral: Peripheral, hci: Hci, handle: number, cmdTimeout?: number);
     dispose(): void;
     private onHciStateChange;
+    private onHciDisconnect;
     private onAclStreamData;
     private errorResponse;
     private queueCommand;
