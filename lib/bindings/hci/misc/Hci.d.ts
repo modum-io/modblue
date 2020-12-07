@@ -17,6 +17,8 @@ declare type LeConnCompleteListener = (status: number, handle: number, role: num
 declare type DisconnectCompleteListener = (status: number, handle: number, reason: number) => void;
 declare type LeAdvertisingReportListener = (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
 declare type LeAdvertiseEnableListener = (enabled: boolean) => void;
+declare type CmdStatusListener = (status: number) => void;
+declare type CmdCompleteListener = (status: number, data: Buffer) => void;
 export declare interface Hci {
     on(event: 'stateChange', listener: StateChangeListener): this;
     on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
@@ -25,6 +27,8 @@ export declare interface Hci {
     on(event: 'disconnectComplete', listener: DisconnectCompleteListener): this;
     on(event: 'leAdvertiseEnable', listener: LeAdvertiseEnableListener): this;
     on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
+    on(event: 'cmdStatus', listner: CmdStatusListener): this;
+    on(event: 'cmdComplete', listner: CmdCompleteListener): this;
 }
 export declare class Hci extends EventEmitter {
     state: string;
@@ -62,7 +66,7 @@ export declare class Hci extends EventEmitter {
     setScanParameters(): Promise<void>;
     setScanEnabled(enabled: boolean, filterDuplicates: boolean): Promise<void>;
     createLeConn(address: string, addressType: AddressType): Promise<number>;
-    cancelLeConn(): Promise<void>;
+    cancelLeConn(customMutex?: boolean): Promise<void>;
     connUpdateLe(handle: number, minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number): void;
     startLeEncryption(handle: number, random: any, diversifier: Buffer, key: Buffer): void;
     disconnect(handle: number, reason?: number): Promise<void>;

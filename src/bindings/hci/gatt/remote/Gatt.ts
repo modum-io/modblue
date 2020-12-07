@@ -36,9 +36,14 @@ export class HciGattRemote extends GattRemote {
 		this.hci = hci;
 		this.hci.on('aclDataPkt', this.onAclStreamData);
 		this.hci.on('stateChange', this.onHciStateChange);
+		this.hci.on('disconnectComplete', this.onHciDisconnect);
 
 		this.cmdTimeout = cmdTimeout || GATT_CMD_TIMEOUT;
-		this.mutex = withTimeout(new Mutex(), this.cmdTimeout, new Error(`GATT command mutex timeout`));
+		this.mutex = withTimeout(
+			new Mutex(),
+			this.cmdTimeout,
+			new Error(`${peripheral.address} - GATT command mutex timeout`)
+		);
 		this.currentCmd = null;
 	}
 
@@ -48,9 +53,12 @@ export class HciGattRemote extends GattRemote {
 			this.currentCmd = null;
 		}
 
-		this.hci.off('aclDataPkt', this.onAclStreamData);
-		this.hci.off('stateChange', this.onHciStateChange);
-		this.hci = null;
+		if (this.hci) {
+			this.hci.off('aclDataPkt', this.onAclStreamData);
+			this.hci.off('stateChange', this.onHciStateChange);
+			this.hci.off('disconnectComplete', this.onHciDisconnect);
+			this.hci = null;
+		}
 
 		this.handle = null;
 	}
@@ -58,11 +66,16 @@ export class HciGattRemote extends GattRemote {
 	private onHciStateChange = async (newState: string) => {
 		// If the underlaying socket shuts down we're doomed
 		if (newState === 'poweredOff') {
-			if (this.currentCmd) {
-				this.currentCmd.onResponse(null);
-				this.currentCmd = null;
-			}
+			this.dispose();
 		}
+	};
+
+	private onHciDisconnect = async (status: number, handle: number, reason: number) => {
+		if (handle !== this.handle) {
+			return;
+		}
+
+		this.dispose();
 	};
 
 	private onAclStreamData = async (handle: number, cid: number, data: Buffer) => {
@@ -134,8 +147,8 @@ export class HciGattRemote extends GattRemote {
 		}
 
 		// Create the error outside the promise to preserve the stack trace
-		const gattError = new Error(`GATT disposed before receiving response.`);
-		const timeoutError = new Error(`GATT command timed out`);
+		const gattError = new Error(`${this.peripheral.address} - GATT disposed before receiving response.`);
+		const timeoutError = new Error(`${this.peripheral.address} - GATT command timed out`);
 
 		return new Promise<any>((resolve, reject) => {
 			let isDone = false;
@@ -557,11 +570,13 @@ export class HciGattRemote extends GattRemote {
 		const handle = data.readUInt16LE(2);
 		let value = data.readUInt16LE(4);
 
+		// tslint:disable: no-bitwise
 		if (broadcast) {
 			value |= 0x0001;
 		} else {
 			value &= 0xfffe;
 		}
+		// tslint:enable: no-bitwise
 
 		const valueBuffer = Buffer.alloc(2);
 		valueBuffer.writeUInt16LE(value, 0);
@@ -599,6 +614,7 @@ export class HciGattRemote extends GattRemote {
 			const useNotify = characteristic.properties.includes('notify');
 			const useIndicate = characteristic.properties.includes('indicate');
 
+			// tslint:disable: no-bitwise
 			if (notify) {
 				if (useNotify) {
 					value |= 0x0001;
@@ -612,6 +628,7 @@ export class HciGattRemote extends GattRemote {
 					value &= 0xfffd;
 				}
 			}
+			// tslint:enable: no-bitwise
 
 			const valueBuffer = Buffer.alloc(2);
 			valueBuffer.writeUInt16LE(value, 0);
