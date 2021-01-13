@@ -1,4 +1,4 @@
-const { HciNoble, DbusNoble } = require('../lib');
+const { HciMODblue, DbusMODblue } = require('../lib');
 
 const MAC_ADDRESS = /(?:[0-9A-F]{2}:?){6}/i;
 
@@ -24,16 +24,16 @@ const main = async () => {
 		throw new Error(printUsage());
 	}
 
-	console.log('Initializing noble...');
+	console.log('Initializing MODblue...');
 
-	const noble = BINDINGS === 'hci' ? new HciNoble() : BINDINGS === 'dbus' ? new DbusNoble() : null;
-	if (!noble) {
+	const modblue = BINDINGS === 'hci' ? new HciMODblue() : BINDINGS === 'dbus' ? new DbusMODblue() : null;
+	if (!modblue) {
 		throw new Error(`Could not find requested bindings ${BINDINGS}`);
 	}
 
 	console.log('Getting adapters...');
 
-	const adapters = await noble.getAdapters();
+	const adapters = await modblue.getAdapters();
 	if (adapters.length === 0) {
 		throw new Error('No adapters found');
 	}
@@ -55,7 +55,9 @@ const main = async () => {
 	console.log('Getting peripherals...');
 
 	const peripherals = await adapter.getScannedPeripherals();
-	const missing = PERIPHERAL_ADDRESSES.filter((address) => !peripherals.some((p) => p.address === address));
+	const missing = PERIPHERAL_ADDRESSES.filter(
+		(address) => !peripherals.some((p) => p.address === address.toUpperCase())
+	);
 	if (missing.length > 0) {
 		throw new Error(
 			`Could not find peripherals.\nAvailable: ${peripherals.map((p) => p.address)}\nMissing: ${missing}`
@@ -67,7 +69,7 @@ const main = async () => {
 	let success = 0;
 
 	while (true) {
-		const targetAddress = PERIPHERAL_ADDRESSES[total % PERIPHERAL_ADDRESSES.length];
+		const targetAddress = PERIPHERAL_ADDRESSES[total % PERIPHERAL_ADDRESSES.length].toUpperCase();
 
 		console.log(`Using peripheral ${targetAddress}`);
 

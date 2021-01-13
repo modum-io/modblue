@@ -1,4 +1,4 @@
-import { Adapter, Noble } from '../../models';
+import { Adapter, MODblue } from '../../models';
 
 import { HciAdapter } from './Adapter';
 import { Hci } from './misc';
@@ -6,12 +6,8 @@ import { Hci } from './misc';
 /**
  * Use the HCI socket bindings to access BLE functions.
  */
-export class HciNoble extends Noble {
+export class HciMODblue extends MODblue {
 	private adapters: Map<number, HciAdapter> = new Map();
-
-	public async init() {
-		// NO-OP
-	}
 
 	public async dispose() {
 		for (const adapter of this.adapters.values()) {

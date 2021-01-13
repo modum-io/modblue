@@ -124,7 +124,6 @@ export class HciAdapter extends Adapter {
 			await peripheral.onConnect(this.hci, handle);
 		} catch (err) {
 			// Dispose anything in case we got a partial setup/connection done
-			await this.hci.cancelLeConn();
 			await peripheral.onDisconnect();
 
 			// Rethrow
@@ -213,7 +212,7 @@ export class HciAdapter extends Adapter {
 		this.emit('connect', peripheral);
 	};
 
-	private onDisconnectComplete = async (status: number, handle: number, reason: number) => {
+	private onDisconnectComplete = async (status: number, handle: number, reason?: string) => {
 		if (status !== 0) {
 			return;
 		}

@@ -21,7 +21,7 @@ export class HciGattLocal extends GattLocal {
 		this.negotiatedMtus = new Map();
 	}
 
-	private onHciDisconnect = (status: number, handleId: number, reason: number) => {
+	private onHciDisconnect = (status: number, handleId: number, reason?: string) => {
 		// Reset MTU after a device disconnects
 		this.negotiatedMtus.delete(handleId);
 	};

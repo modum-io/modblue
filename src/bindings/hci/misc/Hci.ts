@@ -136,7 +136,7 @@ type LeConnCompleteListener = (
 	supervisionTimeout: number,
 	masterClockAccuracy: number
 ) => void;
-type DisconnectCompleteListener = (status: number, handle: number, reason: number) => void;
+type DisconnectCompleteListener = (status: number, handle: number, reason: string) => void;
 
 type LeAdvertisingReportListener = (
 	type: number,
@@ -588,7 +588,7 @@ export class Hci extends EventEmitter {
 		}
 
 		return new Promise<number>((resolve, reject) => {
-			const onComplete: LeConnCompleteListener = (status, handle, role, _addressType, _address) => {
+			const onComplete: LeConnCompleteListener = async (status, handle, role, _addressType, _address) => {
 				if (_address !== address || _addressType !== addressType) {
 					return;
 				}
@@ -926,7 +926,8 @@ export class Hci extends EventEmitter {
 						// Remove all pending packets for this handle from the queue
 						this.aclPacketQueue = this.aclPacketQueue.filter(({ handle }) => handle.id !== disconnHandleId);
 
-						this.emit('disconnectComplete', disconnStatus, disconnHandleId, reason);
+						const reasonStr = `${STATUS_MAPPER[reason]} (0x${reason.toString(16).padStart(2, '0')})`;
+						this.emit('disconnectComplete', disconnStatus, disconnHandleId, reasonStr);
 
 						// Process acl packet queue because we may have more space now
 						this.processAclPacketQueue();
@@ -1137,8 +1138,8 @@ export class Hci extends EventEmitter {
 
 				data = data.slice(eirLength + 10);
 			}
-		} catch (e) {
-			console.warn(`processLeAdvertisingReport: Caught illegal packet: ${e}`);
+		} catch {
+			// TODO
 		}
 	}
 }

@@ -14,7 +14,7 @@ declare type StateChangeListener = (newState: string) => void;
 declare type AclDataPacketListener = (handle: number, cid: number, data: Buffer) => void;
 declare type LeScanEnableListener = (enabled: boolean, filterDuplicates: boolean) => void;
 declare type LeConnCompleteListener = (status: number, handle: number, role: number, addressType: AddressType, address: string, interval: number, latency: number, supervisionTimeout: number, masterClockAccuracy: number) => void;
-declare type DisconnectCompleteListener = (status: number, handle: number, reason: number) => void;
+declare type DisconnectCompleteListener = (status: number, handle: number, reason: string) => void;
 declare type LeAdvertisingReportListener = (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
 declare type LeAdvertiseEnableListener = (enabled: boolean) => void;
 declare type CmdStatusListener = (status: number) => void;

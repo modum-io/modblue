@@ -32,7 +32,7 @@ export class DbusGattRemote extends GattRemote {
 
 	protected async doDiscoverServices(): Promise<DbusGattServiceRemote[]> {
 		const path = this.peripheral.path;
-		const dbus = this.peripheral.adapter.noble.dbus;
+		const dbus = this.peripheral.adapter.modblue.dbus;
 
 		const timeoutError = new Error('Discovering timed out');
 
@@ -106,7 +106,7 @@ export class DbusGattRemote extends GattRemote {
 			throw new Error(`Service ${serviceUUID} not found`);
 		}
 
-		const objManager = await this.peripheral.adapter.noble.dbus.getProxyObject(`org.bluez`, '/');
+		const objManager = await this.peripheral.adapter.modblue.dbus.getProxyObject(`org.bluez`, '/');
 		const objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
 
 		const objs = await objManagerIface.GetManagedObjects();
@@ -151,7 +151,7 @@ export class DbusGattRemote extends GattRemote {
 			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
-		const obj = await this.peripheral.adapter.noble.dbus.getProxyObject('org.bluez', characteristic.path);
+		const obj = await this.peripheral.adapter.modblue.dbus.getProxyObject('org.bluez', characteristic.path);
 		const iface = obj.getInterface(I_BLUEZ_CHARACTERISTIC);
 
 		return iface.ReadValue({
@@ -174,7 +174,7 @@ export class DbusGattRemote extends GattRemote {
 			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
-		const obj = await this.peripheral.adapter.noble.dbus.getProxyObject('org.bluez', characteristic.path);
+		const obj = await this.peripheral.adapter.modblue.dbus.getProxyObject('org.bluez', characteristic.path);
 		const iface = obj.getInterface(I_BLUEZ_CHARACTERISTIC);
 
 		await iface.WriteValue([...data], {

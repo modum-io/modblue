@@ -1,7 +1,7 @@
 import { Adapter, GattLocal, Peripheral } from '../../models';
-import { DbusNoble } from './Noble';
+import { DbusMODblue } from './MODblue';
 export declare class DbusAdapter extends Adapter {
-    noble: DbusNoble;
+    modblue: DbusMODblue;
     readonly path: string;
     private objManagerIface;
     private adapterIface;
@@ -11,7 +11,7 @@ export declare class DbusAdapter extends Adapter {
     private requestScanStop;
     private updateTimer;
     private peripherals;
-    constructor(noble: DbusNoble, path: string, name: string, address: string);
+    constructor(modblue: DbusMODblue, path: string, name: string, address: string);
     private init;
     private prop;
     getScannedPeripherals(): Promise<Peripheral[]>;

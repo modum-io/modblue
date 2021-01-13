@@ -1,6 +1,6 @@
 import { ClientInterface, MessageBus, systemBus } from 'dbus-next';
 
-import { Adapter, Noble } from '../../models';
+import { Adapter, MODblue } from '../../models';
 
 import { DbusAdapter } from './Adapter';
 import { I_BLUEZ_ADAPTER, I_OBJECT_MANAGER } from './misc';
@@ -8,7 +8,7 @@ import { I_BLUEZ_ADAPTER, I_OBJECT_MANAGER } from './misc';
 /**
  * Use the DBUS Bluez bindings to access BLE functions.
  */
-export class DbusNoble extends Noble {
+export class DbusMODblue extends MODblue {
 	public readonly dbus: MessageBus;
 
 	private objManagerIface: ClientInterface;
@@ -18,10 +18,6 @@ export class DbusNoble extends Noble {
 		super();
 
 		this.dbus = systemBus();
-	}
-
-	public async init() {
-		// NO-OP
 	}
 
 	public async dispose() {

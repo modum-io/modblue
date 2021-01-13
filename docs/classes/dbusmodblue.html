@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Noble | @modum-io/modblue - v4.1.4</title>
+	<title>DbusMODblue | @modum-io/modblue - v4.1.4</title>
 	<meta name="description" content="Documentation for @modum-io/modblue - v4.1.4">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,10 +55,10 @@
 					<a href="../modules.html">@modum-io/modblue - v4.1.4</a>
 				</li>
 				<li>
-					<a href="noble.html">Noble</a>
+					<a href="dbusmodblue.html">DbusMODblue</a>
 				</li>
 			</ul>
-			<h1>Class Noble</h1>
+			<h1>Class DbusMODblue</h1>
 		</div>
 	</div>
 </header>
@@ -68,8 +68,7 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Main class to interface with BLE.
-						Scan for adapters and use an adapter to perform specific actions.</p>
+						<p>Use the DBUS Bluez bindings to access BLE functions.</p>
 					</div>
 				</div>
 			</section>
@@ -77,13 +76,10 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Noble</span>
+						<a href="modblue.html" class="tsd-signature-type" data-tsd-kind="Class">MODblue</a>
 						<ul class="tsd-hierarchy">
 							<li>
-								<a href="hcinoble.html" class="tsd-signature-type">HciNoble</a>
-							</li>
-							<li>
-								<a href="dbusnoble.html" class="tsd-signature-type">DbusNoble</a>
+								<span class="target">DbusMODblue</span>
 							</li>
 						</ul>
 					</li>
@@ -94,81 +90,96 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><a href="dbusmodblue.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="dbusmodblue.html#dbus" class="tsd-kind-icon">dbus</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="noble.html#dispose" class="tsd-kind-icon">dispose</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="noble.html#getadapters" class="tsd-kind-icon">get<wbr>Adapters</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="noble.html#init" class="tsd-kind-icon">init</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite"><a href="dbusmodblue.html#dispose" class="tsd-kind-icon">dispose</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite"><a href="dbusmodblue.html#getadapters" class="tsd-kind-icon">get<wbr>Adapters</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>DbusMODblue<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="dbusmodblue.html" class="tsd-signature-type" data-tsd-kind="Class">DbusMODblue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Inherited from <a href="modblue.html">MODblue</a>.<a href="modblue.html#constructor">constructor</a></p>
+								<ul>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/d63387c/src/bindings/dbus/MODblue.ts#L15">src/bindings/dbus/MODblue.ts:15</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="dbusmodblue.html" class="tsd-signature-type" data-tsd-kind="Class">DbusMODblue</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="dbus" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> dbus</h3>
+					<div class="tsd-signature tsd-kind-icon">dbus<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">MessageBus</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/d63387c/src/bindings/dbus/MODblue.ts#L12">src/bindings/dbus/MODblue.ts:12</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
 					<a name="dispose" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> dispose</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+					<h3>dispose</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
 						<li class="tsd-signature tsd-kind-icon">dispose<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
+								<p>Overrides <a href="modblue.html">MODblue</a>.<a href="modblue.html#dispose">dispose</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/e9b95b6/src/models/Noble.ts#L15">src/models/Noble.ts:15</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/d63387c/src/bindings/dbus/MODblue.ts#L23">src/bindings/dbus/MODblue.ts:23</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Dispose of these BLE bindings. Object should be considered unusable after this.</p>
-								</div>
-							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
 					<a name="getadapters" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> get<wbr>Adapters</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Adapters<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="adapter.html" class="tsd-signature-type">Adapter</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
+					<h3>get<wbr>Adapters</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Adapters<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="adapter.html" class="tsd-signature-type" data-tsd-kind="Class">Adapter</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
+								<p>Overrides <a href="modblue.html">MODblue</a>.<a href="modblue.html#getadapters">getAdapters</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/e9b95b6/src/models/Noble.ts#L20">src/models/Noble.ts:20</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/d63387c/src/bindings/dbus/MODblue.ts#L27">src/bindings/dbus/MODblue.ts:27</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>List all currenctly detected adapters.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="adapter.html" class="tsd-signature-type">Adapter</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="init" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> init</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">init<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/e9b95b6/src/models/Noble.ts#L11">src/models/Noble.ts:11</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Initialize the BLE bindings. Only has to be called once at the start.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="adapter.html" class="tsd-signature-type" data-tsd-kind="Class">Adapter</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -187,9 +198,27 @@
 					<li class=" tsd-kind-class">
 						<a href="adapter.html" class="tsd-kind-icon">Adapter</a>
 					</li>
-					<li class=" tsd-kind-class">
-						<a href="dbusnoble.html" class="tsd-kind-icon">Dbus<wbr>Noble</a>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class">
+						<a href="dbusmodblue.html" class="tsd-kind-icon">DbusMODblue</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited">
+								<a href="dbusmodblue.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="dbusmodblue.html#dbus" class="tsd-kind-icon">dbus</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
+								<a href="dbusmodblue.html#dispose" class="tsd-kind-icon">dispose</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
+								<a href="dbusmodblue.html#getadapters" class="tsd-kind-icon">get<wbr>Adapters</a>
+							</li>
+						</ul>
 					</li>
+				</ul>
+				<ul class="after-current">
 					<li class=" tsd-kind-class">
 						<a href="gatt.html" class="tsd-kind-icon">Gatt</a>
 					</li>
@@ -227,26 +256,11 @@
 						<a href="gattserviceremote.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Remote</a>
 					</li>
 					<li class=" tsd-kind-class">
-						<a href="hcinoble.html" class="tsd-kind-icon">Hci<wbr>Noble</a>
+						<a href="hcimodblue.html" class="tsd-kind-icon">HciMODblue</a>
 					</li>
-				</ul>
-				<ul class="current">
-					<li class="current tsd-kind-class">
-						<a href="noble.html" class="tsd-kind-icon">Noble</a>
-						<ul>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="noble.html#dispose" class="tsd-kind-icon">dispose</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="noble.html#getadapters" class="tsd-kind-icon">get<wbr>Adapters</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="noble.html#init" class="tsd-kind-icon">init</a>
-							</li>
-						</ul>
+					<li class=" tsd-kind-class">
+						<a href="modblue.html" class="tsd-kind-icon">MODblue</a>
 					</li>
-				</ul>
-				<ul class="after-current">
 					<li class=" tsd-kind-class">
 						<a href="peripheral.html" class="tsd-kind-icon">Peripheral</a>
 					</li>
