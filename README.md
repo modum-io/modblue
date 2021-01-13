@@ -60,19 +60,18 @@ Currently there are the following bindings available:
 - `hci` (using [bluetooth-hci-socket](https://github.com/abandonware/node-bluetooth-hci-socket))
 - `dbus` (using [dbus-next](https://github.com/dbusjs/node-dbus-next))
 
-Create a new `Noble` object to get started (all bindings have the same interface)
+Create a new `MODblue` object to get started (all bindings have the same interface)
 
 ```ts
-import { HciNoble, DbusNoble } from '@modum-io/modblue';
+import { HciMODblue, DbusMODblue } from '@modum-io/modblue';
 
-const noble = new HciNoble();    // or: new DbusNoble()
-await noble.init();              // Initialize for use, only needed once
+const modblue = new HciMODblue();    // or: new DbusMODblue()
 ```
 
 Now you can scan & use one or multiple of the adapters:
 
 ```ts
-const adapters = await noble.getAdapters();
+const adapters = await modblue.getAdapters();
 const adapter = adapters[0];
 ```
 
