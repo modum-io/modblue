@@ -1,6 +1,6 @@
 {
 	"name": "@modum-io/modblue",
-	"version": "4.1.4",
+	"version": "5.0.0",
 	"description": "BLE module using dbus or hci.",
 	"homepage": "https://modum-io.github.io/modblue/",
 	"bugs": {

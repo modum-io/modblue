@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.0.0](https://github.com/modum-io/modblue/compare/v4.1.4...v5.0.0) (2021-01-13)
+
+### ⚠ BREAKING CHANGES
+
+- Rename "Noble" class to "MODblue"
+
+### Features
+
+- Rename "Noble" to "MODblue" ([d63387c](https://github.com/modum-io/modblue/commit/d63387cc575207c1e6ca1cb095d84889e7a10eda))
+
+### Bug Fixes
+
+- Replace doc refs of "Noble" with "MODblue" ([daf594b](https://github.com/modum-io/modblue/commit/daf594b4afa927287fed5df192fbc77717274762))
+- **hci** Fix deadlock issue in GATT ([d63387c](https://github.com/modum-io/modblue/commit/d63387cc575207c1e6ca1cb095d84889e7a10eda))
+- **hci** Show proper disconnect reason ([d63387c](https://github.com/modum-io/modblue/commit/d63387cc575207c1e6ca1cb095d84889e7a10eda))
+
 ### [4.1.4](https://github.com/modum-io/modblue/compare/v4.1.3...v4.1.4) (2020-12-07)
 
 ### Bug Fixes
