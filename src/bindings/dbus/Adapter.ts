@@ -4,13 +4,13 @@ import { Adapter, GattLocal, Peripheral } from '../../models';
 import { AddressType } from '../../types';
 
 import { buildTypedValue, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE, I_OBJECT_MANAGER, I_PROPERTIES } from './misc';
-import { DbusNoble } from './Noble';
+import { DbusMODblue } from './MODblue';
 import { DbusPeripheral } from './Peripheral';
 
 const UPDATE_INTERVAL = 5; // in seconds
 
 export class DbusAdapter extends Adapter {
-	public noble: DbusNoble;
+	public modblue: DbusMODblue;
 	public readonly path: string;
 
 	private objManagerIface: ClientInterface;
@@ -24,8 +24,8 @@ export class DbusAdapter extends Adapter {
 
 	private peripherals: Map<string, Peripheral> = new Map();
 
-	public constructor(noble: DbusNoble, path: string, name: string, address: string) {
-		super(noble, path.replace(`/org/bluez/`, ''));
+	public constructor(modblue: DbusMODblue, path: string, name: string, address: string) {
+		super(modblue, path.replace(`/org/bluez/`, ''));
 
 		this.path = path;
 		this._name = name;
@@ -39,7 +39,7 @@ export class DbusAdapter extends Adapter {
 
 		this.initialized = true;
 
-		const objManager = await this.noble.dbus.getProxyObject(`org.bluez`, '/');
+		const objManager = await this.modblue.dbus.getProxyObject(`org.bluez`, '/');
 		this.objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
 		this.objManagerIface.on('InterfacesAdded', (path: string, data: any) => {
 			if (!path.startsWith(`${this.path}/`)) {
@@ -56,7 +56,7 @@ export class DbusAdapter extends Adapter {
 			}
 		});
 
-		const obj = await this.noble.dbus.getProxyObject(`org.bluez`, this.path);
+		const obj = await this.modblue.dbus.getProxyObject(`org.bluez`, this.path);
 		this.adapterIface = obj.getInterface(I_BLUEZ_ADAPTER);
 		this.propsIface = obj.getInterface(I_PROPERTIES);
 

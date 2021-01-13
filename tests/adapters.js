@@ -1,21 +1,21 @@
-const { HciNoble, DbusNoble } = require('../lib');
+const { HciMODblue, DbusMODblue } = require('../lib');
 
 const main = async () => {
-	console.log('Initializing noble...');
+	console.log('Initializing MODblue...');
 
-	const hciNoble = new HciNoble();
-	const dbusNoble = new DbusNoble();
+	const hciMODblue = new HciMODblue();
+	const dbusMODblue = new DbusMODblue();
 
 	console.log('Getting hci adapters...');
 
-	const hciAdapters = await hciNoble.getAdapters();
+	const hciAdapters = await hciMODblue.getAdapters();
 	for (const adapter of hciAdapters) {
 		console.log(`${adapter}`);
 	}
 
 	console.log('Getting dbus adapters...');
 
-	const dbusAdapaters = await dbusNoble.getAdapters();
+	const dbusAdapaters = await dbusMODblue.getAdapters();
 	for (const adapter of dbusAdapaters) {
 		console.log(`${adapter}`);
 	}

@@ -52,7 +52,7 @@ export class Signaling {
 		}
 	};
 
-	private onHciDisconnect = async (status: number, handle: number, reason: number) => {
+	private onHciDisconnect = async (status: number, handle: number, reason?: string) => {
 		if (handle !== this.handle) {
 			return;
 		}
@@ -66,7 +66,7 @@ export class Signaling {
 		const latency = data.readUInt16LE(4);
 		const supervisionTimeout = data.readUInt16LE(6) * 10;
 
-		if (os.platform() !== 'linux' || process.env.HCI_CHANNEL_USER) {
+		if (os.platform() !== 'linux') {
 			const response = Buffer.alloc(6);
 
 			response.writeUInt8(CONNECTION_PARAMETER_UPDATE_RESPONSE, 0); // code

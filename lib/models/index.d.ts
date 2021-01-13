@@ -1,4 +1,4 @@
 export { Adapter } from './Adapter';
-export { Noble } from './Noble';
+export { MODblue } from './MODblue';
 export { Peripheral, PeripheralState } from './Peripheral';
 export * from './gatt';

@@ -1,5 +1,5 @@
 export { HciAdapter } from './Adapter';
-export { HciNoble } from './Noble';
+export { HciMODblue } from './MODblue';
 export { HciPeripheral } from './Peripheral';
 
 export {

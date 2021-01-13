@@ -27,8 +27,6 @@ export class HciPeripheral extends Peripheral {
 	public async onConnect(hci: Hci, handle: number) {
 		this.hci = hci;
 		this.handle = handle;
-
-		this.hci = hci;
 		this.signaling = new Signaling(this.hci, this.handle);
 
 		this.gatt = new HciGattRemote(this, hci, handle);

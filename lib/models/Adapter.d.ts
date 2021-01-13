@@ -1,18 +1,18 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
 import { AddressType } from '../types';
 import { GattLocal } from './gatt';
-import { Noble } from './Noble';
+import { MODblue } from './MODblue';
 import { Peripheral } from './Peripheral';
 export interface AdapterEvents {
     discover: (peripheral: Peripheral) => void;
     connect: (peripheral: Peripheral) => void;
-    disconnect: (peripheral: Peripheral, reason?: number) => void;
+    disconnect: (peripheral: Peripheral, reason?: string) => void;
 }
 export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
     /**
-     * The instance of noble that this adapter was found by.
+     * The instance of MODblue that this adapter was found by.
      */
-    readonly noble: Noble;
+    readonly modblue: MODblue;
     /**
      * The unique identifier of this adapter.
      */
@@ -32,7 +32,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
      * The MAC address of this adapter.
      */
     get address(): string;
-    constructor(noble: Noble, id: string, name?: string, address?: string);
+    constructor(modblue: MODblue, id: string, name?: string, address?: string);
     toString(): string;
     /**
      * Scans for a specific {@link Peripheral} using the specified matching function and returns the peripheral once found.

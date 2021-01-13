@@ -3,20 +3,20 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 import { AddressType } from '../types';
 
 import { GattLocal } from './gatt';
-import { Noble } from './Noble';
+import { MODblue } from './MODblue';
 import { Peripheral } from './Peripheral';
 
 export interface AdapterEvents {
 	discover: (peripheral: Peripheral) => void;
 	connect: (peripheral: Peripheral) => void;
-	disconnect: (peripheral: Peripheral, reason?: number) => void;
+	disconnect: (peripheral: Peripheral, reason?: string) => void;
 }
 
 export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
-	 * The instance of noble that this adapter was found by.
+	 * The instance of MODblue that this adapter was found by.
 	 */
-	public readonly noble: Noble;
+	public readonly modblue: MODblue;
 
 	/**
 	 * The unique identifier of this adapter.
@@ -47,10 +47,10 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		return this._address;
 	}
 
-	public constructor(noble: Noble, id: string, name?: string, address?: string) {
+	public constructor(modblue: MODblue, id: string, name?: string, address?: string) {
 		super();
 
-		this.noble = noble;
+		this.modblue = modblue;
 		this.id = id;
 		this._name = name || `hci${id.replace('hci', '')}`;
 		this._address = address;

@@ -1,14 +1,13 @@
 import { MessageBus } from 'dbus-next';
-import { Adapter, Noble } from '../../models';
+import { Adapter, MODblue } from '../../models';
 /**
  * Use the DBUS Bluez bindings to access BLE functions.
  */
-export declare class DbusNoble extends Noble {
+export declare class DbusMODblue extends MODblue {
     readonly dbus: MessageBus;
     private objManagerIface;
     private adapters;
     constructor();
-    init(): Promise<void>;
     dispose(): Promise<void>;
     getAdapters(): Promise<Adapter[]>;
 }

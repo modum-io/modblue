@@ -1,10 +1,9 @@
-import { Adapter, Noble } from '../../models';
+import { Adapter, MODblue } from '../../models';
 /**
  * Use the HCI socket bindings to access BLE functions.
  */
-export declare class HciNoble extends Noble {
+export declare class HciMODblue extends MODblue {
     private adapters;
-    init(): Promise<void>;
     dispose(): Promise<void>;
     getAdapters(): Promise<Adapter[]>;
 }

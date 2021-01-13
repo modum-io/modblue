@@ -12,7 +12,7 @@ const GATT_CMD_TIMEOUT = 10000; // in milliseconds
 
 interface GattCommand {
 	buffer: Buffer;
-	onResponse: (data: Buffer) => void;
+	onResponse: (data: Buffer, error?: string) => void;
 }
 
 export class HciGattRemote extends GattRemote {
@@ -49,7 +49,7 @@ export class HciGattRemote extends GattRemote {
 
 	public dispose() {
 		if (this.currentCmd) {
-			this.currentCmd.onResponse(null);
+			this.currentCmd.onResponse(null, 'GATT disposed');
 			this.currentCmd = null;
 		}
 
@@ -70,9 +70,14 @@ export class HciGattRemote extends GattRemote {
 		}
 	};
 
-	private onHciDisconnect = async (status: number, handle: number, reason: number) => {
+	private onHciDisconnect = async (status: number, handle: number, reason?: string) => {
 		if (handle !== this.handle) {
 			return;
+		}
+
+		if (this.currentCmd) {
+			this.currentCmd.onResponse(null, reason);
+			this.currentCmd = null;
 		}
 
 		this.dispose();
@@ -88,7 +93,7 @@ export class HciGattRemote extends GattRemote {
 			// This is just a confirmation for the command we just sent?
 		} else if (data[0] % 2 === 0) {
 			// NO-OP
-			// This used to be noble multi role stuff - these are all commands meant for a central node
+			// This used to be MODblue multi role stuff - these are all commands meant for a central node
 		} else if (data[0] === CONST.ATT_OP_HANDLE_NOTIFY || data[0] === CONST.ATT_OP_HANDLE_IND) {
 			/*const valueHandle = data.readUInt16LE(1);
 			const valueData = data.slice(3);
@@ -143,11 +148,12 @@ export class HciGattRemote extends GattRemote {
 
 		// We might have been waiting for the mutex and now we're already disposed
 		if (!this.hci) {
-			return;
+			release();
+			throw new Error(`${this.peripheral.address} - GATT already disposed`);
 		}
 
 		// Create the error outside the promise to preserve the stack trace
-		const gattError = new Error(`${this.peripheral.address} - GATT disposed before receiving response.`);
+		const gattError = new Error(`${this.peripheral.address} - `); // Actual error will be appended
 		const timeoutError = new Error(`${this.peripheral.address} - GATT command timed out`);
 
 		return new Promise<any>((resolve, reject) => {
@@ -164,7 +170,7 @@ export class HciGattRemote extends GattRemote {
 				reject(timeoutError);
 			};
 
-			const onDone = (data?: Buffer) => {
+			const onDone = (data?: Buffer, error?: string) => {
 				if (isDone) {
 					return;
 				}
@@ -174,6 +180,7 @@ export class HciGattRemote extends GattRemote {
 				release();
 
 				if (data === null) {
+					gattError.message += error;
 					reject(gattError);
 				} else {
 					resolve(data);

@@ -1,4 +1,4 @@
-const { HciNoble, DbusNoble } = require('../lib');
+const { HciMODblue, DbusMODblue } = require('../lib');
 
 const USAGE = `
 Usage:
@@ -18,16 +18,16 @@ const main = async () => {
 		throw new Error(printUsage());
 	}
 
-	console.log('Initializing noble...');
+	console.log('Initializing MODblue...');
 
-	const noble = BINDINGS === 'hci' ? new HciNoble() : BINDINGS === 'dbus' ? new DbusNoble() : null;
-	if (!noble) {
+	const modblue = BINDINGS === 'hci' ? new HciMODblue() : BINDINGS === 'dbus' ? new DbusMODblue() : null;
+	if (!modblue) {
 		throw new Error(`Could not find requested bindings ${BINDINGS}`);
 	}
 
 	console.log('Getting adapters...');
 
-	const adapters = await noble.getAdapters();
+	const adapters = await modblue.getAdapters();
 	if (adapters.length === 0) {
 		throw new Error('No adapters found');
 	}

@@ -4,11 +4,7 @@ import { Adapter } from './Adapter';
  * Main class to interface with BLE.
  * Scan for adapters and use an adapter to perform specific actions.
  */
-export abstract class Noble {
-	/**
-	 * Initialize the BLE bindings. Only has to be called once at the start.
-	 */
-	public abstract init(): Promise<void>;
+export abstract class MODblue {
 	/**
 	 * Dispose of these BLE bindings. Object should be considered unusable after this.
 	 */

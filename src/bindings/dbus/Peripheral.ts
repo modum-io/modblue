@@ -47,7 +47,7 @@ export class DbusPeripheral extends Peripheral {
 			return;
 		}
 
-		const obj = await this.adapter.noble.dbus.getProxyObject('org.bluez', this.path);
+		const obj = await this.adapter.modblue.dbus.getProxyObject('org.bluez', this.path);
 		this.propsIface = obj.getInterface(I_PROPERTIES);
 		this.deviceIface = obj.getInterface(I_BLUEZ_DEVICE);
 
