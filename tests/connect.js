@@ -112,9 +112,7 @@ const main = async () => {
 		} finally {
 			console.log('Disconnecting...');
 
-			try {
-				await peripheral.disconnect();
-			} catch {}
+			await peripheral.disconnect();
 
 			console.log('Disconnected');
 		}

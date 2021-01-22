@@ -69,11 +69,20 @@ export abstract class Peripheral {
 	}
 
 	/**
-	 * Connect to this peripheral. Does nothing if already connected.
+	 * Connect to this peripheral. Throws an error when connecting fails.
 	 */
 	public abstract connect(): Promise<void>;
 	/**
-	 * Disconnect from this peripheral. Does nothing if not connected.
+	 * Disconnect from this peripheral. Does nothing if not connected. This method **never** throws an error.
+	 * When connecting to a peripheral you should always wrap your calls in try-catch and call this method at the end.
+	 * ```
+	 * try {
+	 *   peripheral.connect()
+	 * } catch (err) {
+	 *   ...
+	 * } finally {
+	 *   peripheral.disconnect();
+	 * }```
 	 */
 	public abstract disconnect(): Promise<void>;
 
