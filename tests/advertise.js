@@ -33,6 +33,8 @@ const main = async () => {
 	}
 
 	const adapter = adapters[0];
+	adapter.on('connect', (p) => console.log(p.address, 'connected'));
+	adapter.on('disconnect', (p) => console.log(p.address, 'disconnected'));
 	console.log(`Using adapter ${adapter.id}`);
 
 	const gatt = await adapter.setupGatt();
