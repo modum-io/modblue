@@ -232,7 +232,9 @@ export class Hci extends EventEmitter {
 		}
 
 		if (!this.isSocketUp) {
-			throw new Error(`Initializing socket timed out - Are you sure it's running?`);
+			throw new Error(
+				`Initializing socket timed out - Are you sure it's running? On unix try \`sudo hciconfig hci${this.deviceId} up\``
+			);
 		}
 	}
 
@@ -799,7 +801,6 @@ export class Hci extends EventEmitter {
 			handle.aclPacketsInQueue++;
 			inProgress++;
 
-			// console.log('->', 'acl', pkt);
 			this.socket.write(pkt);
 		}
 	}
@@ -1006,8 +1007,6 @@ export class Hci extends EventEmitter {
 				break;
 
 			case HCI_ACLDATA_PKT:
-				// console.log('<-', 'acl', data);
-
 				const flags = data.readUInt16LE(1) >> 12;
 				const aclHandleId = data.readUInt16LE(1) & 0x0fff;
 

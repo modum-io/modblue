@@ -1,4 +1,28 @@
+import { inspect, InspectOptionsStylized } from 'util';
+
 /**
  * A local or remote GATT server.
  */
-export abstract class Gatt {}
+export abstract class Gatt {
+	public toString() {
+		return JSON.stringify(this.toJSON());
+	}
+
+	public toJSON(): {} {
+		return {};
+	}
+
+	public [inspect.custom](depth: number, options: InspectOptionsStylized) {
+		const name = this.constructor.name;
+
+		if (depth < 0) {
+			return options.stylize(`[${name}]`, 'special');
+		}
+
+		const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1 };
+
+		const padding = ' '.repeat(name.length + 1);
+		const inner = inspect(this.toJSON(), newOptions).replace(/\n/g, `\n${padding}`);
+		return `${options.stylize(name, 'special')} ${inner}`;
+	}
+}

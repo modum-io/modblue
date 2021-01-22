@@ -1,6 +1,6 @@
 import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 
-import { GattRemote, Peripheral } from '../../../../models';
+import { GattError, GattRemote, Peripheral } from '../../../../models';
 import { Hci } from '../../misc';
 import * as CONST from '../Constants';
 
@@ -149,12 +149,12 @@ export class HciGattRemote extends GattRemote {
 		// We might have been waiting for the mutex and now we're already disposed
 		if (!this.hci) {
 			release();
-			throw new Error(`${this.peripheral.address} - GATT already disposed`);
+			throw new GattError(this.peripheral, 'GATT already disposed');
 		}
 
 		// Create the error outside the promise to preserve the stack trace
-		const gattError = new Error(`${this.peripheral.address} - `); // Actual error will be appended
-		const timeoutError = new Error(`${this.peripheral.address} - GATT command timed out`);
+		const gattError = new GattError(this.peripheral, 'GATT Error'); // Actual error will be appended
+		const timeoutError = new GattError(this.peripheral, 'GATT command timed out');
 
 		return new Promise<any>((resolve, reject) => {
 			let isDone = false;
@@ -180,7 +180,7 @@ export class HciGattRemote extends GattRemote {
 				release();
 
 				if (data === null) {
-					gattError.message += error;
+					gattError.message = error;
 					reject(gattError);
 				} else {
 					resolve(data);
@@ -324,7 +324,7 @@ export class HciGattRemote extends GattRemote {
 			this._mtu = Math.min(mtu, newMtu);
 			this.mtuWasExchanged = true;
 		} else {
-			throw new Error('Exchanging mtu failed');
+			throw new GattError(this.peripheral, 'Exchanging mtu failed');
 		}
 
 		return this.mtu;
@@ -377,7 +377,7 @@ export class HciGattRemote extends GattRemote {
 	public async discoverCharacteristics(serviceUUID: string): Promise<HciGattCharacteristicRemote[]> {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
-			throw new Error(`Service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
 		}
 
 		const newChars: HciGattCharacteristicRemote[] = [];
@@ -452,12 +452,12 @@ export class HciGattRemote extends GattRemote {
 	public async read(serviceUUID: string, characteristicUUID: string) {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
-			throw new Error(`Service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
 		}
 
 		const characteristic = service.characteristics.get(characteristicUUID);
 		if (!characteristic) {
-			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
 		let readData = Buffer.alloc(0);
@@ -484,12 +484,12 @@ export class HciGattRemote extends GattRemote {
 	public async write(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean) {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
-			throw new Error(`Service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
 		}
 
 		const characteristic = service.characteristics.get(characteristicUUID);
 		if (!characteristic) {
-			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
 		if (withoutResponse) {
@@ -501,7 +501,7 @@ export class HciGattRemote extends GattRemote {
 			const opcode = respData[0];
 
 			if (opcode !== CONST.ATT_OP_WRITE_RESP) {
-				throw new Error(`Write error, opcode ${opcode}`);
+				throw new GattError(this.peripheral, `Write error, opcode ${opcode}`);
 			}
 		}
 	}
@@ -510,12 +510,12 @@ export class HciGattRemote extends GattRemote {
 	private async longWrite(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean) {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
-			throw new Error(`Service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
 		}
 
 		const characteristic = service.characteristics.get(characteristicUUID);
 		if (!characteristic) {
-			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
 		const limit = this.mtu - 5;
@@ -531,13 +531,13 @@ export class HciGattRemote extends GattRemote {
 			const chunkOpcode = chunkRespData[0];
 
 			if (chunkOpcode !== CONST.ATT_OP_PREPARE_WRITE_RESP) {
-				throw new Error(`Long write chunk failed, invalid opcode ${chunkOpcode}`);
+				throw new GattError(this.peripheral, `Long write chunk failed, invalid opcode ${chunkOpcode}`);
 			} else {
 				const expectedLength = chunk.length + 5;
 
 				if (chunkRespData.length !== expectedLength) {
 					/* the response should contain the data packet echoed back to the caller */
-					throw new Error(`Long write chunk failed, received invalid response length`);
+					throw new GattError(this.peripheral, `Long write chunk failed, received invalid response length`);
 				}
 			}
 			offset = end;
@@ -548,19 +548,19 @@ export class HciGattRemote extends GattRemote {
 		const opcode = respData[0];
 
 		if (opcode !== CONST.ATT_OP_EXECUTE_WRITE_RESP && !withoutResponse) {
-			throw new Error(`Long write failed, invalid opcode ${opcode}`);
+			throw new GattError(this.peripheral, `Long write failed, invalid opcode ${opcode}`);
 		}
 	}
 
 	public async broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean) {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
-			throw new Error(`Service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
 		}
 
 		const characteristic = service.characteristics.get(characteristicUUID);
 		if (!characteristic) {
-			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
 		const data = await this.readByTypeRequest(
@@ -571,7 +571,7 @@ export class HciGattRemote extends GattRemote {
 
 		const opcode = data[0];
 		if (opcode !== CONST.ATT_OP_READ_BY_TYPE_RESP) {
-			throw new Error(`Broadcast error, opcode ${opcode}`);
+			throw new GattError(this.peripheral, `Broadcast error, opcode ${opcode}`);
 		}
 
 		const handle = data.readUInt16LE(2);
@@ -592,19 +592,19 @@ export class HciGattRemote extends GattRemote {
 		const moreOpcode = moreData[0];
 
 		if (moreOpcode !== CONST.ATT_OP_WRITE_RESP) {
-			throw new Error(`Broadcast error, opcode ${opcode}`);
+			throw new GattError(this.peripheral, `Broadcast error, opcode ${opcode}`);
 		}
 	}
 
 	public async notify(serviceUUID: string, characteristicUUID: string, notify: boolean) {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
-			throw new Error(`Service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
 		}
 
 		const characteristic = service.characteristics.get(characteristicUUID);
 		if (!characteristic) {
-			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
 		const data = await this.readByTypeRequest(
@@ -644,7 +644,7 @@ export class HciGattRemote extends GattRemote {
 			const moreOpcode = moreData[0];
 
 			if (moreOpcode !== CONST.ATT_OP_WRITE_RESP) {
-				throw new Error(`Notify error, opcode ${opcode}`);
+				throw new GattError(this.peripheral, `Notify error, opcode ${opcode}`);
 			}
 		}
 	}
@@ -655,12 +655,12 @@ export class HciGattRemote extends GattRemote {
 	): Promise<HciGattDescriptorRemote[]> {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
-			throw new Error(`Service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
 		}
 
 		const characteristic = service.characteristics.get(characteristicUUID);
 		if (!characteristic) {
-			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
 		const newDescs: HciGattDescriptorRemote[] = [];
@@ -696,17 +696,18 @@ export class HciGattRemote extends GattRemote {
 	public async readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string) {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
-			throw new Error(`Service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
 		}
 
 		const characteristic = service.characteristics.get(characteristicUUID);
 		if (!characteristic) {
-			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
 		const descriptor = characteristic.descriptors.get(descriptorUUID);
 		if (!descriptor) {
-			throw new Error(
+			throw new GattError(
+				this.peripheral,
 				`Descriptor ${descriptorUUID} in characteristic ${characteristicUUID} in service ${serviceUUID} not found`
 			);
 		}
@@ -735,17 +736,18 @@ export class HciGattRemote extends GattRemote {
 	public async writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer) {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
-			throw new Error(`Service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
 		}
 
 		const characteristic = service.characteristics.get(characteristicUUID);
 		if (!characteristic) {
-			throw new Error(`Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
+			throw new GattError(this.peripheral, `Characteristic ${characteristicUUID} in service ${serviceUUID} not found`);
 		}
 
 		const descriptor = characteristic.descriptors.get(descriptorUUID);
 		if (!descriptor) {
-			throw new Error(
+			throw new GattError(
+				this.peripheral,
 				`Descriptor ${descriptorUUID} in characteristic ${characteristicUUID} in service ${serviceUUID} not found`
 			);
 		}
@@ -754,7 +756,7 @@ export class HciGattRemote extends GattRemote {
 		const opcode = respData[0];
 
 		if (opcode !== CONST.ATT_OP_WRITE_RESP) {
-			throw new Error(`WriteValue error, opcode ${opcode}`);
+			throw new GattError(this.peripheral, `WriteValue error, opcode ${opcode}`);
 		}
 	}
 }
