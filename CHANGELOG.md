@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.0.1](https://github.com/modum-io/modblue/compare/v5.0.0...v5.0.1) (2021-01-22)
+
+### Bug Fixes
+
+- **gatt:** Improve error messages ([d74649e](https://github.com/modum-io/modblue/commit/d74649edcb25f16a2e5bd1b1063567f735de1dd6))
+- **hci:** Fix possible deadlock when connecting ([4b3fc99](https://github.com/modum-io/modblue/commit/4b3fc996b4cf4f3b6657b3012b566a5e232e6447))
+
 ## [5.0.0](https://github.com/modum-io/modblue/compare/v4.1.4...v5.0.0) (2021-01-13)
 
 ### ⚠ BREAKING CHANGES
