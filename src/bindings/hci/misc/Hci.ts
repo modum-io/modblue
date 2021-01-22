@@ -232,7 +232,9 @@ export class Hci extends EventEmitter {
 		}
 
 		if (!this.isSocketUp) {
-			throw new Error(`Initializing socket timed out - Are you sure it's running?`);
+			throw new Error(
+				`Initializing socket timed out - Are you sure it's running? On unix try \`sudo hciconfig hci${this.deviceId} up\``
+			);
 		}
 	}
 
@@ -315,37 +317,38 @@ export class Hci extends EventEmitter {
 		const timeoutError = new Error(`HCI command timed out`);
 
 		return new Promise<Buffer | void>((resolve, reject) => {
-			let isDone = false;
+			let timeout: NodeJS.Timeout;
+			let onComplete: (status: number, responseData?: Buffer) => void;
 
-			const resolveHandler = (response?: Buffer) => {
-				if (isDone) {
-					return;
+			const cleanup = () => {
+				if (statusOnly) {
+					this.off('cmdStatus', onComplete);
+				} else {
+					this.off('cmdComplete', onComplete);
 				}
-				isDone = true;
+
+				if (timeout) {
+					clearTimeout(timeout);
+					timeout = null;
+				}
 
 				this.currentCmd = null;
 				if (release) {
 					release();
 				}
+			};
 
+			const resolveHandler = (response?: Buffer) => {
+				cleanup();
 				resolve(response);
 			};
 
 			const rejectHandler = (error?: any) => {
-				if (isDone) {
-					return;
-				}
-				isDone = true;
-
-				this.currentCmd = null;
-				if (release) {
-					release();
-				}
-
+				cleanup();
 				reject(error);
 			};
 
-			const onComplete = (status: number, responseData?: Buffer) => {
+			onComplete = (status: number, responseData?: Buffer) => {
 				if (status !== 0) {
 					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
 					const err = new Error(`HCI Command ${this.currentCmd.cmd} failed: ${errStatus}`);
@@ -364,10 +367,10 @@ export class Hci extends EventEmitter {
 				this.once('cmdComplete', onComplete);
 			}
 
+			timeout = setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
+
 			// console.log('->', 'hci', data);
 			this.socket.write(data);
-
-			setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
 		});
 	}
 
@@ -577,8 +580,6 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(0x0004, 25); // min ce length
 		cmd.writeUInt16LE(0x0006, 27); // max ce length
 
-		const origScope = new Error();
-
 		const release = await this.mutex.acquire();
 
 		try {
@@ -588,7 +589,32 @@ export class Hci extends EventEmitter {
 		}
 
 		return new Promise<number>((resolve, reject) => {
-			const onComplete: LeConnCompleteListener = async (status, handle, role, _addressType, _address) => {
+			const origScope = new Error();
+			let timeout: NodeJS.Timeout;
+			let onComplete: LeConnCompleteListener;
+
+			const cleanup = () => {
+				this.off('leConnComplete', onComplete);
+
+				if (timeout) {
+					clearTimeout(timeout);
+					timeout = null;
+				}
+
+				release();
+			};
+
+			const resolveHandler = (handle: number) => {
+				cleanup();
+				resolve(handle);
+			};
+
+			const rejectHandler = (error?: any) => {
+				cleanup();
+				reject(error);
+			};
+
+			onComplete = async (status, handle, role, _addressType, _address) => {
 				if (_address !== address || _addressType !== addressType) {
 					return;
 				}
@@ -600,8 +626,7 @@ export class Hci extends EventEmitter {
 					const err = new Error(`LE conn failed: ${errStatus}`);
 					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
 
-					release();
-					reject(err);
+					rejectHandler(err);
 					return;
 				}
 
@@ -609,21 +634,19 @@ export class Hci extends EventEmitter {
 					const err = new Error(`Could not aquire le connection as master role`);
 					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
 
-					release();
-					reject(err);
+					rejectHandler(err);
 					return;
 				}
 
-				release();
-				resolve(handle);
+				resolveHandler(handle);
 			};
 
 			this.on('leConnComplete', onComplete);
 
-			this.sendCommand(cmd, true, true).catch((err) => {
-				release();
-				reject(err);
-			});
+			const timeoutError = new Error(`Creating connection timed out`);
+			timeout = setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
+
+			this.sendCommand(cmd, true, true).catch((err) => rejectHandler(err));
 		});
 	}
 
@@ -799,7 +822,6 @@ export class Hci extends EventEmitter {
 			handle.aclPacketsInQueue++;
 			inProgress++;
 
-			// console.log('->', 'acl', pkt);
 			this.socket.write(pkt);
 		}
 	}
@@ -1006,8 +1028,6 @@ export class Hci extends EventEmitter {
 				break;
 
 			case HCI_ACLDATA_PKT:
-				// console.log('<-', 'acl', data);
-
 				const flags = data.readUInt16LE(1) >> 12;
 				const aclHandleId = data.readUInt16LE(1) & 0x0fff;
 

@@ -76,6 +76,7 @@
 			"check-separator",
 			"check-type",
 			"check-typecast"
-		]
+		],
+		"no-inferred-empty-object-type": false
 	}
 }

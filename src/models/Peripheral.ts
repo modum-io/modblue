@@ -1,3 +1,5 @@
+import { inspect, InspectOptionsStylized } from 'util';
+
 import { AddressType } from '../types';
 
 import { Adapter } from './Adapter';
@@ -66,23 +68,21 @@ export abstract class Peripheral {
 		this._state = 'disconnected';
 	}
 
-	public toString() {
-		return JSON.stringify({
-			uuid: this.uuid,
-			address: this.address,
-			addressType: this.addressType,
-			advertisement: this.advertisement,
-			rssi: this.rssi,
-			state: this._state
-		});
-	}
-
 	/**
-	 * Connect to this peripheral. Does nothing if already connected.
+	 * Connect to this peripheral. Throws an error when connecting fails.
 	 */
 	public abstract connect(): Promise<void>;
 	/**
-	 * Disconnect from this peripheral. Does nothing if not connected.
+	 * Disconnect from this peripheral. Does nothing if not connected. This method **never** throws an error.
+	 * When connecting to a peripheral you should always wrap your calls in try-catch and call this method at the end.
+	 * ```
+	 * try {
+	 *   peripheral.connect()
+	 * } catch (err) {
+	 *   ...
+	 * } finally {
+	 *   peripheral.disconnect();
+	 * }```
 	 */
 	public abstract disconnect(): Promise<void>;
 
@@ -92,4 +92,33 @@ export abstract class Peripheral {
 	 * @param requestMtu The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.
 	 */
 	public abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
+
+	public toString() {
+		return JSON.stringify(this.toJSON());
+	}
+
+	public toJSON() {
+		return {
+			uuid: this.uuid,
+			address: this.address,
+			addressType: this.addressType,
+			rssi: this.rssi,
+			state: this._state,
+			adapter: this.adapter
+		};
+	}
+
+	public [inspect.custom](depth: number, options: InspectOptionsStylized) {
+		const name = this.constructor.name;
+
+		if (depth < 0) {
+			return options.stylize(`[${name}]`, 'special');
+		}
+
+		const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1 };
+
+		const padding = ' '.repeat(name.length + 1);
+		const inner = inspect(this.toJSON(), newOptions).replace(/\n/g, `\n${padding}`);
+		return `${options.stylize(name, 'special')} ${inner}`;
+	}
 }

@@ -1,3 +1,5 @@
+/// <reference types="node" />
+import { inspect, InspectOptionsStylized } from 'util';
 import { AddressType } from '../types';
 import { Adapter } from './Adapter';
 import { GattRemote } from './gatt';
@@ -39,13 +41,21 @@ export declare abstract class Peripheral {
      */
     get state(): PeripheralState;
     constructor(adapter: Adapter, uuid: string, addressType: AddressType, address: string, advertisement?: any, rssi?: number);
-    toString(): string;
     /**
-     * Connect to this peripheral. Does nothing if already connected.
+     * Connect to this peripheral. Throws an error when connecting fails.
      */
     abstract connect(): Promise<void>;
     /**
-     * Disconnect from this peripheral. Does nothing if not connected.
+     * Disconnect from this peripheral. Does nothing if not connected. This method **never** throws an error.
+     * When connecting to a peripheral you should always wrap your calls in try-catch and call this method at the end.
+     * ```
+     * try {
+     *   peripheral.connect()
+     * } catch (err) {
+     *   ...
+     * } finally {
+     *   peripheral.disconnect();
+     * }```
      */
     abstract disconnect(): Promise<void>;
     /**
@@ -54,4 +64,14 @@ export declare abstract class Peripheral {
      * @param requestMtu The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.
      */
     abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
+    toString(): string;
+    toJSON(): {
+        uuid: string;
+        address: string;
+        addressType: AddressType;
+        rssi: number;
+        state: PeripheralState;
+        adapter: Adapter;
+    };
+    [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }

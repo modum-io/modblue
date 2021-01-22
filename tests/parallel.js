@@ -107,9 +107,7 @@ const main = async () => {
 		} finally {
 			console.log(targetAddress, 'Disconnecting...');
 
-			try {
-				await peripheral.disconnect();
-			} catch {}
+			await peripheral.disconnect();
 
 			console.log(targetAddress, 'Disconnected');
 		}

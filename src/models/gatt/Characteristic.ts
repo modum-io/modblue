@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { inspect, InspectOptionsStylized } from 'util';
 
 import { GattService } from './Service';
 
@@ -164,11 +164,29 @@ export abstract class GattCharacteristic {
 	}
 
 	public toString() {
-		return JSON.stringify({
-			serviceUUID: this.service.uuid,
+		return JSON.stringify(this.toJSON());
+	}
+
+	public toJSON() {
+		return {
 			uuid: this.uuid,
 			properties: this.properties,
-			secure: this.secure
-		});
+			secure: this.secure,
+			service: this.service
+		};
+	}
+
+	public [inspect.custom](depth: number, options: InspectOptionsStylized) {
+		const name = this.constructor.name;
+
+		if (depth < 0) {
+			return options.stylize(`[${name}]`, 'special');
+		}
+
+		const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1 };
+
+		const padding = ' '.repeat(name.length + 1);
+		const inner = inspect(this.toJSON(), newOptions).replace(/\n/g, `\n${padding}`);
+		return `${options.stylize(name, 'special')} ${inner}`;
 	}
 }

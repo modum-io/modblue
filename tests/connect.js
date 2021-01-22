@@ -72,9 +72,9 @@ const main = async () => {
 		const targetAddress = PERIPHERAL_ADDRESSES[total % PERIPHERAL_ADDRESSES.length].toUpperCase();
 
 		console.log(`Using peripheral ${targetAddress}`);
+		const peripheral = peripherals.find((p) => p.address === targetAddress);
 
 		try {
-			const peripheral = peripherals.find((p) => p.address === targetAddress);
 			console.log(`Connecting ${total}...`);
 
 			await peripheral.connect();
@@ -105,16 +105,16 @@ const main = async () => {
 
 			console.log(`Data: ${data.toString(`hex`)}`);
 
+			success++;
+		} catch (err) {
+			console.error(err);
+			await new Promise((resolve) => setTimeout(() => resolve(), 1000));
+		} finally {
 			console.log('Disconnecting...');
 
 			await peripheral.disconnect();
 
 			console.log('Disconnected');
-
-			success++;
-		} catch (err) {
-			console.error(err);
-			await new Promise((resolve) => setTimeout(() => resolve(), 1000));
 		}
 
 		total++;

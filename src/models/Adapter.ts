@@ -1,4 +1,5 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
+import { inspect, InspectOptionsStylized } from 'util';
 
 import { AddressType } from '../types';
 
@@ -54,14 +55,6 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		this.id = id;
 		this._name = name || `hci${id.replace('hci', '')}`;
 		this._address = address;
-	}
-
-	public toString() {
-		return JSON.stringify({
-			id: this.id,
-			name: this.name,
-			address: this.address
-		});
 	}
 
 	/**
@@ -152,4 +145,30 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	 * @param maxMtu The maximum MTU that will be negotiated in case the remote peripheral starts an MTU negotation.
 	 */
 	public abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
+
+	public toString() {
+		return JSON.stringify(this.toJSON());
+	}
+
+	public toJSON() {
+		return {
+			id: this.id,
+			name: this.name,
+			address: this.address
+		};
+	}
+
+	public [inspect.custom](depth: number, options: InspectOptionsStylized) {
+		const name = this.constructor.name;
+
+		if (depth < 0) {
+			return options.stylize(`[${name}]`, 'special');
+		}
+
+		const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1 };
+
+		const padding = ' '.repeat(name.length + 1);
+		const inner = inspect(this.toJSON(), newOptions).replace(/\n/g, `\n${padding}`);
+		return `${options.stylize(name, 'special')} ${inner}`;
+	}
 }

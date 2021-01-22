@@ -1,3 +1,5 @@
+import { inspect, InspectOptions } from 'util';
+
 import { Adapter } from '../../Adapter';
 import { GattCharacteristicProperty } from '../Characteristic';
 import { Gatt } from '../Gatt';
@@ -72,13 +74,6 @@ export abstract class GattLocal extends Gatt {
 		this.adapter = adapter;
 		this._maxMtu = maxMtu;
 		this.handles = [];
-	}
-
-	public toString() {
-		return JSON.stringify({
-			mtu: this.maxMtu,
-			adapterId: this.adapter.id
-		});
 	}
 
 	public setData(deviceName: string, services: GattServiceInput[]): void {
@@ -215,5 +210,13 @@ export abstract class GattLocal extends Gatt {
 		}
 
 		this.handles = handles;
+	}
+
+	public toJSON() {
+		return {
+			...super.toJSON(),
+			maxMtu: this.maxMtu,
+			adapter: this.adapter
+		};
 	}
 }

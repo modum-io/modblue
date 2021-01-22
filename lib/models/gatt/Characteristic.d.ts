@@ -1,3 +1,5 @@
+/// <reference types="node" />
+import { inspect, InspectOptionsStylized } from 'util';
 import { GattService } from './Service';
 export declare type GattCharacteristicProperty = 'broadcast' | 'read' | 'write-without-response' | 'write' | 'notify' | 'indicate' | 'authenticated-signed-writes' | 'extended-properties' | 'reliable-write' | 'writable-auxiliaries' | 'authorize';
 /**
@@ -30,4 +32,11 @@ export declare abstract class GattCharacteristic {
     readonly secureFlag: number;
     constructor(service: GattService, uuid: string, propsOrFlag: number | GattCharacteristicProperty[], secureOrFlag: number | GattCharacteristicProperty[]);
     toString(): string;
+    toJSON(): {
+        uuid: string;
+        properties: GattCharacteristicProperty[];
+        secure: GattCharacteristicProperty[];
+        service: GattService;
+    };
+    [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }

@@ -33,13 +33,6 @@ export abstract class GattRemote extends Gatt {
 		this.peripheral = peripheral;
 	}
 
-	public toString() {
-		return JSON.stringify({
-			mtu: this.mtu,
-			peripheralUUID: this.peripheral.uuid
-		});
-	}
-
 	/**
 	 * Discover all services of this GATT server.
 	 */
@@ -112,4 +105,12 @@ export abstract class GattRemote extends Gatt {
 		descriptorUUID: string,
 		data: Buffer
 	): Promise<void>;
+
+	public toJSON() {
+		return {
+			...super.toJSON(),
+			mtu: this.mtu,
+			peripheral: this.peripheral
+		};
+	}
 }
