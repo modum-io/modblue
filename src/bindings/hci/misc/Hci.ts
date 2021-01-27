@@ -4,6 +4,7 @@ import { EventEmitter } from 'events';
 import { AddressType } from '../../../types';
 
 import STATUS_MAPPER from './hci-status.json';
+import { HciError } from './HciError';
 
 // tslint:disable-next-line: variable-name
 const BluetoothHciSocket = require('@abandonware/bluetooth-hci-socket');
@@ -181,6 +182,7 @@ export class Hci extends EventEmitter {
 	private handles: Map<number, Handle>;
 
 	private mutex: MutexInterface;
+	private mutexStack: Error;
 	private currentCmd: HciCommand;
 	private cmdTimeout: number;
 
@@ -305,7 +307,13 @@ export class Hci extends EventEmitter {
 	private async sendCommand(data: Buffer, statusOnly?: false, customMutex?: boolean): Promise<Buffer>;
 	private async sendCommand(data: Buffer, statusOnly?: true, customMutex?: boolean): Promise<void>;
 	private async sendCommand(data: Buffer, statusOnly?: boolean, customMutex?: boolean): Promise<Buffer | void> {
-		const release = customMutex ? null : await this.mutex.acquire();
+		const release = customMutex ? null : await this.mutex.acquire().catch(() => null);
+		if (!customMutex) {
+			if (!release) {
+				throw new HciError(`Could not aquire HCI command mutex`, this.mutexStack?.stack);
+			}
+			this.mutexStack = new Error();
+		}
 
 		if (!this.isSocketUp) {
 			if (release) {
@@ -327,6 +335,8 @@ export class Hci extends EventEmitter {
 				} else {
 					this.off('cmdComplete', onComplete);
 				}
+
+				this.mutexStack = null;
 
 				if (timeout) {
 					clearTimeout(timeout);

@@ -42,6 +42,7 @@ export declare class Hci extends EventEmitter {
     private isSocketUp;
     private handles;
     private mutex;
+    private mutexStack;
     private currentCmd;
     private cmdTimeout;
     private aclDataPacketLength;
