@@ -279,6 +279,7 @@ export class Hci extends EventEmitter {
 
 				// Cancel any pending commands
 				if (this.currentCmd) {
+					// 0x03 means "Hardware failure"
 					this.emit('cmdStatus', 0x03);
 					this.emit('cmdComplete', 0x03, null);
 					this.currentCmd = null;
@@ -588,8 +589,9 @@ export class Hci extends EventEmitter {
 			// NO-OP
 		}
 
+		const origScope = new Error();
+
 		return new Promise<number>((resolve, reject) => {
-			const origScope = new Error();
 			let timeout: NodeJS.Timeout;
 			let onComplete: LeConnCompleteListener;
 
@@ -729,7 +731,29 @@ export class Hci extends EventEmitter {
 		const origScope = new Error();
 
 		return new Promise<void>((resolve, reject) => {
-			const onComplete: DisconnectCompleteListener = (status, _handle, _reason) => {
+			let timeout: NodeJS.Timeout;
+			let onComplete: DisconnectCompleteListener;
+
+			const cleanup = () => {
+				this.off('disconnectComplete', onComplete);
+
+				if (timeout) {
+					clearTimeout(timeout);
+					timeout = null;
+				}
+			};
+
+			const resolveHandler = () => {
+				cleanup();
+				resolve();
+			};
+
+			const rejectHandler = (error?: any) => {
+				cleanup();
+				reject(error);
+			};
+
+			onComplete = (status, _handle, _reason) => {
 				if (_handle !== handle) {
 					return;
 				}
@@ -741,16 +765,16 @@ export class Hci extends EventEmitter {
 					const err = new Error(`Disconnect failed: ${errStatus}`);
 					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
 
-					reject(err);
+					rejectHandler(err);
 					return;
 				}
 
-				resolve();
+				resolveHandler();
 			};
 
 			this.on('disconnectComplete', onComplete);
 
-			this.sendCommand(cmd, true).catch((err) => reject(err));
+			this.sendCommand(cmd, true).catch((err) => rejectHandler(err));
 		});
 	}
 
@@ -924,11 +948,11 @@ export class Hci extends EventEmitter {
 	private onSocketData = async (data: Buffer) => {
 		const eventType = data.readUInt8(0);
 
+		// console.log('<-', 'hci', data);
+
 		switch (eventType) {
 			case HCI_EVENT_PKT:
 				const subEventType = data.readUInt8(1);
-
-				// console.log('<-', 'hci', data);
 
 				this.emit(`event_${subEventType}`, data);
 
