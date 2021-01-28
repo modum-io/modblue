@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.0.2](https://github.com/modum-io/modblue/compare/v5.0.1...v5.0.2) (2021-01-28)
+
+### Bug Fixes
+
+- **hci:** Add better errors and error stacks ([d9ae0b9](https://github.com/modum-io/modblue/commit/d9ae0b94f9ed7ecb4a4f219e542f49635adb8a0a))
+- **hci:** Add info about lock holder on timeout ([c80e3f6](https://github.com/modum-io/modblue/commit/c80e3f6e626913d42b4dcbf34c646370b0df82d6))
+- **hci:** Fix possible deadlock when disconnecting ([db6c57e](https://github.com/modum-io/modblue/commit/db6c57e331af3be596d48e520cdc5d9f1178c1ab))
+
 ### [5.0.1](https://github.com/modum-io/modblue/compare/v5.0.0...v5.0.1) (2021-01-22)
 
 ### Bug Fixes
