@@ -42,6 +42,7 @@ export declare class Hci extends EventEmitter {
     private isSocketUp;
     private handles;
     private mutex;
+    private mutexStack;
     private currentCmd;
     private cmdTimeout;
     private aclDataPacketLength;
@@ -51,6 +52,7 @@ export declare class Hci extends EventEmitter {
     private aclPacketQueue;
     constructor(deviceId?: number, cmdTimeout?: number);
     static getDeviceList(): HciDevice[];
+    private acquireMutex;
     init(): Promise<void>;
     private checkSocketState;
     dispose(): void;
