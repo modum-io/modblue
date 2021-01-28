@@ -10,10 +10,12 @@ export declare class HciGattRemote extends GattRemote {
     private security;
     private mtuWasExchanged;
     private mutex;
+    private mutexStack;
     private currentCmd;
     private cmdTimeout;
     services: Map<string, HciGattServiceRemote>;
     constructor(peripheral: Peripheral, hci: Hci, handle: number, cmdTimeout?: number);
+    private acquireMutex;
     dispose(): void;
     private onHciStateChange;
     private onHciDisconnect;

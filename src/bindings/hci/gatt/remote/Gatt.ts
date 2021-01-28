@@ -23,6 +23,7 @@ export class HciGattRemote extends GattRemote {
 	private mtuWasExchanged: boolean = false;
 
 	private mutex: MutexInterface;
+	private mutexStack: Error;
 	private currentCmd: GattCommand = null;
 	private cmdTimeout: number;
 
@@ -39,12 +40,18 @@ export class HciGattRemote extends GattRemote {
 		this.hci.on('disconnectComplete', this.onHciDisconnect);
 
 		this.cmdTimeout = cmdTimeout || GATT_CMD_TIMEOUT;
-		this.mutex = withTimeout(
-			new Mutex(),
-			this.cmdTimeout,
-			new Error(`${peripheral.address} - GATT command mutex timeout`)
-		);
+		this.mutex = withTimeout(new Mutex(), this.cmdTimeout, new GattError(peripheral, 'GATT command mutex timeout'));
 		this.currentCmd = null;
+	}
+
+	private async acquireMutex() {
+		try {
+			const release = await this.mutex.acquire();
+			this.mutexStack = new Error();
+			return release;
+		} catch {
+			throw new GattError(this.peripheral, `Could not acquire GATT command mutex`, this.mutexStack?.stack);
+		}
 	}
 
 	public dispose() {
@@ -144,7 +151,7 @@ export class HciGattRemote extends GattRemote {
 	private async queueCommand(buffer: Buffer, resolveOnWrite: true): Promise<void>;
 	private async queueCommand(buffer: Buffer, resolveOnWrite: false): Promise<Buffer>;
 	private async queueCommand(buffer: Buffer, resolveOnWrite: boolean) {
-		const release = await this.mutex.acquire();
+		const release = await this.acquireMutex();
 
 		// We might have been waiting for the mutex and now we're already disposed
 		if (!this.hci) {

@@ -205,13 +205,23 @@ export class Hci extends EventEmitter {
 		this.handles = new Map();
 
 		this.cmdTimeout = cmdTimeout || HCI_CMD_TIMEOUT;
-		this.mutex = withTimeout(new Mutex(), this.cmdTimeout, new Error(`HCI command mutex timeout`));
+		this.mutex = withTimeout(new Mutex(), 0.5 * this.cmdTimeout, new Error(`HCI command mutex timeout`));
 		this.currentCmd = null;
 	}
 
 	public static getDeviceList() {
 		const socket = new BluetoothHciSocket();
 		return socket.getDeviceList() as HciDevice[];
+	}
+
+	private async acquireMutex() {
+		try {
+			const release = await this.mutex.acquire();
+			this.mutexStack = new Error();
+			return release;
+		} catch {
+			throw new HciError(`Could not acquire HCI command mutex`, this.mutexStack?.stack);
+		}
 	}
 
 	public async init() {
@@ -307,13 +317,7 @@ export class Hci extends EventEmitter {
 	private async sendCommand(data: Buffer, statusOnly?: false, customMutex?: boolean): Promise<Buffer>;
 	private async sendCommand(data: Buffer, statusOnly?: true, customMutex?: boolean): Promise<void>;
 	private async sendCommand(data: Buffer, statusOnly?: boolean, customMutex?: boolean): Promise<Buffer | void> {
-		const release = customMutex ? null : await this.mutex.acquire().catch(() => null);
-		if (!customMutex) {
-			if (!release) {
-				throw new HciError(`Could not aquire HCI command mutex`, this.mutexStack?.stack);
-			}
-			this.mutexStack = new Error();
-		}
+		const release = customMutex ? null : await this.acquireMutex();
 
 		if (!this.isSocketUp) {
 			if (release) {
@@ -323,7 +327,6 @@ export class Hci extends EventEmitter {
 		}
 
 		const origScope = new Error();
-		const timeoutError = new Error(`HCI command timed out`);
 
 		return new Promise<Buffer | void>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
@@ -354,7 +357,10 @@ export class Hci extends EventEmitter {
 				resolve(response);
 			};
 
-			const rejectHandler = (error?: any) => {
+			const rejectHandler = (error?: Error) => {
+				if (error) {
+					error.stack = error.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+				}
 				cleanup();
 				reject(error);
 			};
@@ -362,10 +368,7 @@ export class Hci extends EventEmitter {
 			onComplete = (status: number, responseData?: Buffer) => {
 				if (status !== 0) {
 					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					const err = new Error(`HCI Command ${this.currentCmd.cmd} failed: ${errStatus}`);
-					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
-
-					rejectHandler(err);
+					rejectHandler(new Error(`HCI Command ${this.currentCmd.cmd} failed: ${errStatus}`));
 				} else {
 					resolveHandler(responseData);
 				}
@@ -378,6 +381,7 @@ export class Hci extends EventEmitter {
 				this.once('cmdComplete', onComplete);
 			}
 
+			const timeoutError = new Error(`HCI command timed out`);
 			timeout = setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
 
 			// console.log('->', 'hci', data);
@@ -591,7 +595,7 @@ export class Hci extends EventEmitter {
 		cmd.writeUInt16LE(0x0004, 25); // min ce length
 		cmd.writeUInt16LE(0x0006, 27); // max ce length
 
-		const release = await this.mutex.acquire();
+		const release = await this.acquireMutex();
 
 		try {
 			await this.cancelLeConn(true);
@@ -621,7 +625,10 @@ export class Hci extends EventEmitter {
 				resolve(handle);
 			};
 
-			const rejectHandler = (error?: any) => {
+			const rejectHandler = (error?: Error) => {
+				if (error) {
+					error.stack = error.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+				}
 				cleanup();
 				reject(error);
 			};
@@ -635,18 +642,12 @@ export class Hci extends EventEmitter {
 
 				if (status !== 0) {
 					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					const err = new Error(`LE conn failed: ${errStatus}`);
-					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
-
-					rejectHandler(err);
+					rejectHandler(new Error(`LE conn failed: ${errStatus}`));
 					return;
 				}
 
 				if (role !== 0) {
-					const err = new Error(`Could not aquire le connection as master role`);
-					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
-
-					rejectHandler(err);
+					rejectHandler(new Error(`Could not acquire le connection as master role`));
 					return;
 				}
 
@@ -758,7 +759,10 @@ export class Hci extends EventEmitter {
 				resolve();
 			};
 
-			const rejectHandler = (error?: any) => {
+			const rejectHandler = (error?: Error) => {
+				if (error) {
+					error.stack = error.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
+				}
 				cleanup();
 				reject(error);
 			};
@@ -772,10 +776,7 @@ export class Hci extends EventEmitter {
 
 				if (status !== 0) {
 					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					const err = new Error(`Disconnect failed: ${errStatus}`);
-					err.stack = err.stack.split('\n').slice(0, 2).join('\n') + '\n' + origScope.stack;
-
-					rejectHandler(err);
+					rejectHandler(new Error(`Disconnect failed: ${errStatus}`));
 					return;
 				}
 

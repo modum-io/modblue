@@ -1,5 +1,6 @@
 import { Peripheral } from '../Peripheral';
 export declare class GattError extends Error {
     readonly peripheral: Peripheral;
-    constructor(peripheral: Peripheral, message: string);
+    readonly details?: string;
+    constructor(peripheral: Peripheral, message: string, details?: string);
 }
