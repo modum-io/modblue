@@ -430,7 +430,7 @@ export class Hci extends EventEmitter {
 
 		// header
 		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(OCF_RESET | (OGF_HOST_CTL << 10), 1);
+		cmd.writeUInt16LE(RESET_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x00, 3);
