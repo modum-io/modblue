@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.1.1](https://github.com/modum-io/modblue/compare/v5.1.0...v5.1.1) (2021-02-05)
+
+### Bug Fixes
+
+- **hci:** BLE 4.2 Fixes ([d70ab0b](https://github.com/modum-io/modblue/commit/d70ab0bdb585ffc636e5d23e5a3b5367af2eacb6))
+- **hci:** Concurrent slave & master connections ([766b5c8](https://github.com/modum-io/modblue/commit/766b5c82d8f10eebc3c78512deb227ba8d3dce93))
+- **hci:** Fix connect & advertise issues ([dc7205c](https://github.com/modum-io/modblue/commit/dc7205cdbf139297c15320fef8dd08d2d2788c6e))
+- **hci:** Fix disconnect issues ([7f56cd3](https://github.com/modum-io/modblue/commit/7f56cd31561aa0ff38e790bb686ac8ca4012be76))
+- **hci:** Fix incorrect advertising states ([e01b9a6](https://github.com/modum-io/modblue/commit/e01b9a659823372d978b1da67285d774b871d334))
+- **hci:** Reenable advertising after disconnect ([418eb2e](https://github.com/modum-io/modblue/commit/418eb2ea9f2a9b09275c1dec7eb8ded090ebdbbd))
+
 ## [5.1.0](https://github.com/modum-io/modblue/compare/v5.0.2...v5.1.0) (2021-02-05)
 
 ### Features
