@@ -45,14 +45,14 @@ export class Signaling {
 		}
 	};
 
-	private onHciStateChange = async (newState: string) => {
+	private onHciStateChange = (newState: string) => {
 		// If the underlaying socket shuts down we're doomed
 		if (newState === 'poweredOff') {
 			this.dispose();
 		}
 	};
 
-	private onHciDisconnect = async (status: number, handle: number, reason?: string) => {
+	private onHciDisconnect = (status: number, handle: number, reason?: string) => {
 		if (handle !== this.handle) {
 			return;
 		}

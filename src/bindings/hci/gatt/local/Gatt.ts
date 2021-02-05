@@ -34,54 +34,58 @@ export class HciGattLocal extends GattLocal {
 		const requestType = data[0];
 		let response: Buffer = null;
 
-		switch (requestType) {
-			case CONST.ATT_OP_MTU_REQ:
-				response = this.handleMtuRequest(handle, cid, data);
-				break;
+		try {
+			switch (requestType) {
+				case CONST.ATT_OP_MTU_REQ:
+					response = await this.handleMtuRequest(handle, cid, data);
+					break;
 
-			case CONST.ATT_OP_FIND_INFO_REQ:
-				response = this.handleFindInfoRequest(handle, cid, data);
-				break;
+				case CONST.ATT_OP_FIND_INFO_REQ:
+					response = await this.handleFindInfoRequest(handle, cid, data);
+					break;
 
-			case CONST.ATT_OP_FIND_BY_TYPE_REQ:
-				response = this.handleFindByTypeRequest(handle, cid, data);
-				break;
+				case CONST.ATT_OP_FIND_BY_TYPE_REQ:
+					response = await this.handleFindByTypeRequest(handle, cid, data);
+					break;
 
-			case CONST.ATT_OP_READ_BY_TYPE_REQ:
-				response = await this.handleReadByTypeRequest(handle, cid, data);
-				break;
+				case CONST.ATT_OP_READ_BY_TYPE_REQ:
+					response = await this.handleReadByTypeRequest(handle, cid, data);
+					break;
 
-			case CONST.ATT_OP_READ_REQ:
-			case CONST.ATT_OP_READ_BLOB_REQ:
-				response = await this.handleReadOrReadBlobRequest(handle, cid, data);
-				break;
+				case CONST.ATT_OP_READ_REQ:
+				case CONST.ATT_OP_READ_BLOB_REQ:
+					response = await this.handleReadOrReadBlobRequest(handle, cid, data);
+					break;
 
-			case CONST.ATT_OP_READ_BY_GROUP_REQ:
-				response = this.handleReadByGroupRequest(handle, cid, data);
-				break;
+				case CONST.ATT_OP_READ_BY_GROUP_REQ:
+					response = await this.handleReadByGroupRequest(handle, cid, data);
+					break;
 
-			case CONST.ATT_OP_WRITE_REQ:
-			case CONST.ATT_OP_WRITE_CMD:
-				response = await this.handleWriteRequestOrCommand(handle, cid, data);
-				break;
+				case CONST.ATT_OP_WRITE_REQ:
+				case CONST.ATT_OP_WRITE_CMD:
+					response = await this.handleWriteRequestOrCommand(handle, cid, data);
+					break;
 
-			case CONST.ATT_OP_PREPARE_WRITE_REQ:
-				response = this.handlePrepareWriteRequest(handle, cid, data);
-				break;
+				case CONST.ATT_OP_PREPARE_WRITE_REQ:
+					response = await this.handlePrepareWriteRequest(handle, cid, data);
+					break;
 
-			case CONST.ATT_OP_EXECUTE_WRITE_REQ:
-				response = this.handleExecuteWriteRequest(handle, cid, data);
-				break;
+				case CONST.ATT_OP_EXECUTE_WRITE_REQ:
+					response = await this.handleExecuteWriteRequest(handle, cid, data);
+					break;
 
-			case CONST.ATT_OP_HANDLE_CNF:
-				response = this.handleConfirmation(handle, cid, data);
-				break;
+				case CONST.ATT_OP_HANDLE_CNF:
+					response = await this.handleConfirmation(handle, cid, data);
+					break;
 
-			default:
-			case CONST.ATT_OP_READ_MULTI_REQ:
-			case CONST.ATT_OP_SIGNED_WRITE_CMD:
-				response = this.errorResponse(requestType, 0x0000, CONST.ATT_ECODE_REQ_NOT_SUPP);
-				break;
+				default:
+				case CONST.ATT_OP_READ_MULTI_REQ:
+				case CONST.ATT_OP_SIGNED_WRITE_CMD:
+					response = this.errorResponse(requestType, 0x0000, CONST.ATT_ECODE_REQ_NOT_SUPP);
+					break;
+			}
+		} catch {
+			// TODO: How should errors thrown inside possibly user-defined functions be propagated?
 		}
 
 		if (response) {
@@ -104,7 +108,7 @@ export class HciGattLocal extends GattLocal {
 		return this.negotiatedMtus.get(handle) || 23;
 	}
 
-	private handleMtuRequest(_handle: number, _cid: number, request: Buffer) {
+	private async handleMtuRequest(_handle: number, _cid: number, request: Buffer) {
 		let mtu = request.readUInt16LE(1);
 
 		mtu = Math.max(23, Math.min(mtu, this.maxMtu));
@@ -118,7 +122,7 @@ export class HciGattLocal extends GattLocal {
 		return response;
 	}
 
-	private handleFindInfoRequest(_handle: number, _cid: number, request: Buffer) {
+	private async handleFindInfoRequest(_handle: number, _cid: number, request: Buffer) {
 		let response: Buffer = null;
 
 		const startHandle = Math.max(request.readUInt16LE(1), 1);
@@ -191,7 +195,7 @@ export class HciGattLocal extends GattLocal {
 		return response;
 	}
 
-	private handleFindByTypeRequest(_handle: number, _cid: number, request: Buffer) {
+	private async handleFindByTypeRequest(_handle: number, _cid: number, request: Buffer) {
 		let response: Buffer = null;
 
 		const startHandle = Math.max(request.readUInt16LE(1), 1);
@@ -245,7 +249,7 @@ export class HciGattLocal extends GattLocal {
 		return response;
 	}
 
-	private handleReadByGroupRequest(_handle: number, _cid: number, request: Buffer) {
+	private async handleReadByGroupRequest(_handle: number, _cid: number, request: Buffer) {
 		let response: Buffer = null;
 
 		const startHandle = Math.max(request.readUInt16LE(1), 1);
@@ -612,7 +616,7 @@ export class HciGattLocal extends GattLocal {
 		return response;
 	}
 
-	private handlePrepareWriteRequest(_handle: number, _cid: number, request: Buffer): Buffer {
+	private async handlePrepareWriteRequest(_handle: number, _cid: number, request: Buffer): Promise<Buffer> {
 		throw new Error(`Method not implemented`);
 
 		/*let response: Buffer = null;
@@ -671,7 +675,7 @@ export class HciGattLocal extends GattLocal {
 		return response;*/
 	}
 
-	private handleExecuteWriteRequest(_handle: number, _cid: number, request: Buffer): Buffer {
+	private async handleExecuteWriteRequest(_handle: number, _cid: number, request: Buffer): Promise<Buffer> {
 		throw new Error(`Method not implemented`);
 
 		/*
@@ -720,7 +724,7 @@ export class HciGattLocal extends GattLocal {
 		return response;*/
 	}
 
-	private handleConfirmation(_handle: number, _cid: number, _request: Buffer): undefined {
+	private async handleConfirmation(_handle: number, _cid: number, _request: Buffer): Promise<undefined> {
 		throw new Error(`Method not implemented`);
 
 		/*

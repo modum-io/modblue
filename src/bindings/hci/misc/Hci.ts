@@ -1,5 +1,5 @@
 import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
-import { EventEmitter } from 'events';
+import { TypedEmitter } from 'tiny-typed-emitter';
 
 import { AddressType } from '../../../types';
 
@@ -24,6 +24,7 @@ const EVT_ENCRYPT_CHANGE = 0x08;
 const EVT_QOS_COMPLETE = 0x0d;
 const EVT_CMD_COMPLETE = 0x0e;
 const EVT_CMD_STATUS = 0x0f;
+const EVT_HARDWARE_ERROR = 0x10;
 const EVT_NUMBER_OF_COMPLETED_PACKETS = 0x13;
 const EVT_LE_META_EVENT = 0x3e;
 
@@ -122,51 +123,35 @@ interface HciCommand {
 	data: Buffer;
 }
 
-type StateChangeListener = (newState: string) => void;
-type AclDataPacketListener = (handle: number, cid: number, data: Buffer) => void;
+interface HciEvents {
+	stateChange: (newState: string) => void;
+	aclDataPkt: (handle: number, cid: number, data: Buffer) => void;
 
-type LeScanEnableListener = (enabled: boolean, filterDuplicates: boolean) => void;
-type LeConnCompleteListener = (
-	status: number,
-	handle: number,
-	role: number,
-	addressType: AddressType,
-	address: string,
-	interval: number,
-	latency: number,
-	supervisionTimeout: number,
-	masterClockAccuracy: number
-) => void;
-type DisconnectCompleteListener = (status: number, handle: number, reason: string) => void;
+	leScanEnable: (enabled: boolean, filterDuplicates: boolean) => void;
+	leConnComplete: (
+		status: number,
+		handle: number,
+		role: number,
+		addressType: AddressType,
+		address: string,
+		interval: number,
+		latency: number,
+		supervisionTimeout: number,
+		masterClockAccuracy: number
+	) => void;
+	disconnectComplete: (status: number, handle: number, reason: string) => void;
 
-type LeAdvertisingReportListener = (
-	type: number,
-	address: string,
-	addressType: AddressType,
-	eir: Buffer,
-	rssi: number
-) => void;
-type LeAdvertiseEnableListener = (enabled: boolean) => void;
+	leAdvertiseEnable: (enabled: boolean) => void;
+	leAdvertisingReport: (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
 
-type CmdStatusListener = (status: number) => void;
-type CmdCompleteListener = (status: number, data: Buffer) => void;
+	cmdStatus: (status: number) => void;
+	cmdComplete: (status: number, data: Buffer) => void;
 
-export declare interface Hci {
-	on(event: 'stateChange', listener: StateChangeListener): this;
-	on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
-
-	on(event: 'leScanEnable', listener: LeScanEnableListener): this;
-	on(event: 'leConnComplete', listener: LeConnCompleteListener): this;
-	on(event: 'disconnectComplete', listener: DisconnectCompleteListener): this;
-
-	on(event: 'leAdvertiseEnable', listener: LeAdvertiseEnableListener): this;
-	on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
-
-	on(event: 'cmdStatus', listner: CmdStatusListener): this;
-	on(event: 'cmdComplete', listner: CmdCompleteListener): this;
+	hciEvent: (eventCode: number, data: Buffer) => void;
+	error: (code: number) => void;
 }
 
-export class Hci extends EventEmitter {
+export class Hci extends TypedEmitter<HciEvents> {
 	public state: string;
 	public deviceId: number;
 
@@ -425,12 +410,12 @@ export class Hci extends EventEmitter {
 		await this.sendCommand(cmd);
 	}
 
-	private async reset() {
+	public async reset() {
 		const cmd = Buffer.alloc(4);
 
 		// header
 		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(OCF_RESET | (OGF_HOST_CTL << 10), 1);
+		cmd.writeUInt16LE(RESET_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x00, 3);
@@ -607,7 +592,7 @@ export class Hci extends EventEmitter {
 
 		return new Promise<number>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
-			let onComplete: LeConnCompleteListener;
+			let onComplete: HciEvents['leConnComplete'];
 
 			const cleanup = () => {
 				this.off('leConnComplete', onComplete);
@@ -633,7 +618,7 @@ export class Hci extends EventEmitter {
 				reject(error);
 			};
 
-			onComplete = async (status, handle, role, _addressType, _address) => {
+			onComplete = (status, handle, role, _addressType, _address) => {
 				if (_address !== address || _addressType !== addressType) {
 					return;
 				}
@@ -743,7 +728,7 @@ export class Hci extends EventEmitter {
 
 		return new Promise<void>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
-			let onComplete: DisconnectCompleteListener;
+			let onComplete: HciEvents['disconnectComplete'];
 
 			const cleanup = () => {
 				this.off('disconnectComplete', onComplete);
@@ -956,7 +941,7 @@ export class Hci extends EventEmitter {
 		await this.sendCommand(cmd);
 	}
 
-	private onSocketData = async (data: Buffer) => {
+	private onSocketData = (data: Buffer) => {
 		const eventType = data.readUInt8(0);
 
 		// console.log('<-', 'hci', data);
@@ -965,7 +950,7 @@ export class Hci extends EventEmitter {
 			case HCI_EVENT_PKT:
 				const subEventType = data.readUInt8(1);
 
-				this.emit(`event_${subEventType}`, data);
+				this.emit(`hciEvent`, subEventType, data);
 
 				switch (subEventType) {
 					case EVT_DISCONN_COMPLETE:
@@ -1027,8 +1012,6 @@ export class Hci extends EventEmitter {
 						const leMetaEventStatus = data.readUInt8(4);
 						const leMetaEventData = data.slice(5);
 
-						this.emit(`event_le_${leMetaEventType}`, leMetaEventStatus, leMetaEventData);
-
 						if (leMetaEventType === EVT_LE_ADVERTISING_REPORT) {
 							this.processLeAdvertisingReport(leMetaEventStatus, leMetaEventData);
 						} else if (leMetaEventType === EVT_LE_CONN_COMPLETE) {
@@ -1055,6 +1038,11 @@ export class Hci extends EventEmitter {
 
 						// Process the packet queue because we may have more space now
 						this.processAclPacketQueue();
+						break;
+
+					case EVT_HARDWARE_ERROR:
+						const errorCode = data.readUInt8(3);
+						this.emit('error', errorCode);
 						break;
 
 					default:

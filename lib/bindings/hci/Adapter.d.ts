@@ -14,6 +14,7 @@ export declare class HciAdapter extends Adapter {
     private uuidToHandle;
     private handleToUUID;
     private init;
+    private onHciError;
     dispose(): void;
     isScanning(): Promise<boolean>;
     startScanning(): Promise<void>;

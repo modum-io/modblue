@@ -11,6 +11,7 @@ export interface AdapterEvents {
 	discover: (peripheral: Peripheral) => void;
 	connect: (peripheral: Peripheral) => void;
 	disconnect: (peripheral: Peripheral, reason?: string) => void;
+	error: (message: string) => void;
 }
 
 export abstract class Adapter extends TypedEmitter<AdapterEvents> {

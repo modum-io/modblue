@@ -77,7 +77,7 @@ export class Gap extends EventEmitter {
 
 	public async stopScanning() {
 		this.scanState = 'stopping';
-		await this.hci.setScanEnabled(false, true);
+		await this.hci.setScanEnabled(false, this.scanFilterDuplicates);
 		this.scanState = 'stopped';
 	}
 

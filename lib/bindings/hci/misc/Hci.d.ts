@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { EventEmitter } from 'events';
+import { TypedEmitter } from 'tiny-typed-emitter';
 import { AddressType } from '../../../types';
 interface HciDevice {
     devId: number;
@@ -10,27 +10,20 @@ interface HciDevice {
     name: string;
     address: string;
 }
-declare type StateChangeListener = (newState: string) => void;
-declare type AclDataPacketListener = (handle: number, cid: number, data: Buffer) => void;
-declare type LeScanEnableListener = (enabled: boolean, filterDuplicates: boolean) => void;
-declare type LeConnCompleteListener = (status: number, handle: number, role: number, addressType: AddressType, address: string, interval: number, latency: number, supervisionTimeout: number, masterClockAccuracy: number) => void;
-declare type DisconnectCompleteListener = (status: number, handle: number, reason: string) => void;
-declare type LeAdvertisingReportListener = (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
-declare type LeAdvertiseEnableListener = (enabled: boolean) => void;
-declare type CmdStatusListener = (status: number) => void;
-declare type CmdCompleteListener = (status: number, data: Buffer) => void;
-export declare interface Hci {
-    on(event: 'stateChange', listener: StateChangeListener): this;
-    on(event: 'aclDataPkt', listener: AclDataPacketListener): this;
-    on(event: 'leScanEnable', listener: LeScanEnableListener): this;
-    on(event: 'leConnComplete', listener: LeConnCompleteListener): this;
-    on(event: 'disconnectComplete', listener: DisconnectCompleteListener): this;
-    on(event: 'leAdvertiseEnable', listener: LeAdvertiseEnableListener): this;
-    on(event: 'leAdvertisingReport', listener: LeAdvertisingReportListener): this;
-    on(event: 'cmdStatus', listner: CmdStatusListener): this;
-    on(event: 'cmdComplete', listner: CmdCompleteListener): this;
+interface HciEvents {
+    stateChange: (newState: string) => void;
+    aclDataPkt: (handle: number, cid: number, data: Buffer) => void;
+    leScanEnable: (enabled: boolean, filterDuplicates: boolean) => void;
+    leConnComplete: (status: number, handle: number, role: number, addressType: AddressType, address: string, interval: number, latency: number, supervisionTimeout: number, masterClockAccuracy: number) => void;
+    disconnectComplete: (status: number, handle: number, reason: string) => void;
+    leAdvertiseEnable: (enabled: boolean) => void;
+    leAdvertisingReport: (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
+    cmdStatus: (status: number) => void;
+    cmdComplete: (status: number, data: Buffer) => void;
+    hciEvent: (eventCode: number, data: Buffer) => void;
+    error: (code: number) => void;
 }
-export declare class Hci extends EventEmitter {
+export declare class Hci extends TypedEmitter<HciEvents> {
     state: string;
     deviceId: number;
     addressType: AddressType;
@@ -59,7 +52,7 @@ export declare class Hci extends EventEmitter {
     private sendCommand;
     private setSocketFilter;
     private setEventMask;
-    private reset;
+    reset(): Promise<void>;
     private readLocalVersion;
     private readBdAddr;
     private setLeEventMask;

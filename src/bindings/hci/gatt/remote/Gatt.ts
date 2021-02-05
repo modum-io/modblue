@@ -70,14 +70,14 @@ export class HciGattRemote extends GattRemote {
 		this.handle = null;
 	}
 
-	private onHciStateChange = async (newState: string) => {
+	private onHciStateChange = (newState: string) => {
 		// If the underlaying socket shuts down we're doomed
 		if (newState === 'poweredOff') {
 			this.dispose();
 		}
 	};
 
-	private onHciDisconnect = async (status: number, handle: number, reason?: string) => {
+	private onHciDisconnect = (status: number, handle: number, reason?: string) => {
 		if (handle !== this.handle) {
 			return;
 		}
@@ -90,7 +90,7 @@ export class HciGattRemote extends GattRemote {
 		this.dispose();
 	};
 
-	private onAclStreamData = async (handle: number, cid: number, data: Buffer) => {
+	private onAclStreamData = (handle: number, cid: number, data: Buffer) => {
 		if (handle !== this.handle || cid !== CONST.ATT_CID) {
 			return;
 		}
@@ -105,10 +105,11 @@ export class HciGattRemote extends GattRemote {
 			/*const valueHandle = data.readUInt16LE(1);
 			const valueData = data.slice(3);
 
-			// this.emit('handleNotify', valueHandle, valueData);*/
+			this.emit('handleNotify', valueHandle, valueData);*/
 
 			if (data[0] === CONST.ATT_OP_HANDLE_IND) {
-				await this.handleConfirmation();
+				// TODO: Possibly a proper error handling is required here?
+				this.handleConfirmation().catch(() => null);
 				// this.emit('handleConfirmation', valueHandle);
 			}
 
