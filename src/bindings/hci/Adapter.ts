@@ -118,18 +118,22 @@ export class HciAdapter extends Adapter {
 	};
 
 	public async connect(peripheral: HciPeripheral) {
-		if (this.hci.hciVersion < 8 && this.connectedDevices.size > 0) {
-			throw new Error(`Connecting in master & slave role concurrently is only supported in BLE 5+`);
-		}
+		// For BLE <= 4.2:
+		// - Disable advertising while we're connected.
+		// - Don't connect if we have a connection in master mode
+		if (this.hci.hciVersion < 8) {
+			if ([...this.connectedDevices.values()].some((d) => d.isMaster)) {
+				throw new Error(`Connecting in master & slave role concurrently is only supported in BLE 5+`);
+			}
 
-		// For BLE <= 4.2 disable advertising while we're connected
-		if (this.hci.hciVersion < 8 && this.advertising) {
-			this.wasAdvertising = true;
-			try {
-				await this.stopAdvertising();
-			} catch (err) {
-				this.emit('error', `Could not disable advertising before connecting: ${err}`);
-				this.wasAdvertising = false;
+			if (this.advertising) {
+				this.wasAdvertising = true;
+				try {
+					await this.stopAdvertising();
+				} catch (err) {
+					this.emit('error', `Could not disable advertising before connecting: ${err}`);
+					this.wasAdvertising = false;
+				}
 			}
 		}
 
@@ -139,7 +143,7 @@ export class HciAdapter extends Adapter {
 			this.uuidToHandle.set(peripheral.uuid, handle);
 			this.handleToUUID.set(handle, peripheral.uuid);
 
-			peripheral.onConnect(this.hci, handle);
+			peripheral.onConnect(false, this.hci, handle);
 			this.connectedDevices.set(handle, peripheral);
 		} catch (err) {
 			// Dispose anything in case we got a partial setup/connection done
@@ -244,7 +248,7 @@ export class HciAdapter extends Adapter {
 		const uuid = address;
 
 		const peripheral = new HciPeripheral(this, uuid, addressType, address, null, 0);
-		peripheral.onConnect(this.hci, handle);
+		peripheral.onConnect(true, this.hci, handle);
 
 		this.connectedDevices.set(handle, peripheral);
 		this.emit('connect', peripheral);
@@ -260,7 +264,11 @@ export class HciAdapter extends Adapter {
 		if (connectedDevice) {
 			connectedDevice.onDisconnect();
 			this.connectedDevices.delete(handle);
-			this.emit('disconnect', connectedDevice, reason);
+
+			// If the device was connected in master mode we inform our local listeners
+			if (connectedDevice.isMaster) {
+				this.emit('disconnect', connectedDevice, reason);
+			}
 		}
 
 		// We have to restart advertising if we were advertising before, and if all devices disconnected
