@@ -18,7 +18,7 @@ export class HciAdapter extends Adapter {
 	private deviceName: string = this.id;
 	private advertisedServiceUUIDs: string[] = [];
 	private peripherals: Map<string, HciPeripheral> = new Map();
-	private connectedDevices: Map<number, Peripheral> = new Map();
+	private connectedDevices: Map<number, HciPeripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
 
@@ -139,10 +139,11 @@ export class HciAdapter extends Adapter {
 			this.uuidToHandle.set(peripheral.uuid, handle);
 			this.handleToUUID.set(handle, peripheral.uuid);
 
-			await peripheral.onConnect(this.hci, handle);
+			peripheral.onConnect(this.hci, handle);
+			this.connectedDevices.set(handle, peripheral);
 		} catch (err) {
 			// Dispose anything in case we got a partial setup/connection done
-			await peripheral.onDisconnect();
+			peripheral.onDisconnect();
 
 			// Re-enable advertising since we didn't establish a connection
 			if (this.wasAdvertising) {
@@ -163,7 +164,7 @@ export class HciAdapter extends Adapter {
 		} catch {
 			// NO-OP
 		} finally {
-			await peripheral.onDisconnect();
+			peripheral.onDisconnect();
 		}
 	}
 
@@ -243,24 +244,26 @@ export class HciAdapter extends Adapter {
 		const uuid = address;
 
 		const peripheral = new HciPeripheral(this, uuid, addressType, address, null, 0);
-		this.connectedDevices.set(handle, peripheral);
+		peripheral.onConnect(this.hci, handle);
 
+		this.connectedDevices.set(handle, peripheral);
 		this.emit('connect', peripheral);
+
+		// Advertising automatically stops, so change the state accordingly
+		this.wasAdvertising = true;
+		this.advertising = false;
 	};
 
 	private onDisconnectComplete = (status: number, handle: number, reason?: string) => {
-		// Skip failed disconnects
-		if (status !== 0) {
-			return;
-		}
-
+		// Check if we have a connected device and remove it
 		const connectedDevice = this.connectedDevices.get(handle);
 		if (connectedDevice) {
+			connectedDevice.onDisconnect();
 			this.connectedDevices.delete(handle);
 			this.emit('disconnect', connectedDevice, reason);
 		}
 
-		// We have to restart advertising if we were advertising before
+		// We have to restart advertising if we were advertising before, and if all devices disconnected
 		if (this.wasAdvertising && this.connectedDevices.size === 0) {
 			this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs).catch((err) =>
 				this.emit('error', `Could not re-enable advertising after disconnect: ${err}`)
