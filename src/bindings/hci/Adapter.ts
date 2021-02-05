@@ -32,6 +32,7 @@ export class HciAdapter extends Adapter {
 		this.hci.on('leScanEnable', this.onLeScanEnable);
 		this.hci.on('leConnComplete', this.onLeConnComplete);
 		this.hci.on('disconnectComplete', this.onDisconnectComplete);
+		this.hci.on('error', this.onHciError);
 
 		this.gap = new Gap(this.hci);
 		this.gap.on('discover', this.onDiscover);
@@ -41,6 +42,11 @@ export class HciAdapter extends Adapter {
 		this._addressType = this.hci.addressType;
 		this._address = this.hci.address;
 	}
+
+	private onHciError = (code: number) => {
+		this.emit('error', `HCI hardware error ${code}`);
+		this.hci.reset().catch((err) => this.emit('error', `Could not reset HCI controller: ${err}`));
+	};
 
 	public dispose() {
 		if (!this.initialized) {
@@ -78,9 +84,9 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		await this.gap.stopScanning();
-
 		this.scanning = false;
+
+		await this.gap.stopScanning();
 	}
 
 	public async getScannedPeripherals(): Promise<Peripheral[]> {
@@ -110,9 +116,9 @@ export class HciAdapter extends Adapter {
 	};
 
 	public async connect(peripheral: HciPeripheral) {
-		// Advertising & connecting simultaneously is only supported with Bluetooth 4.2+
-		if (this.hci.hciVersion < 8 && this.advertising) {
-			throw new Error(`Advertising and connecting simultaneously is supported with Bluetooth 4.2+`);
+		const wasAdvertising = this.hci.hciVersion < 8 && this.advertising;
+		if (wasAdvertising) {
+			await this.stopAdvertising();
 		}
 
 		try {
@@ -128,6 +134,10 @@ export class HciAdapter extends Adapter {
 
 			// Rethrow
 			throw err;
+		} finally {
+			if (wasAdvertising) {
+				await this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs);
+			}
 		}
 	}
 
@@ -183,15 +193,16 @@ export class HciAdapter extends Adapter {
 		return this.gatt;
 	}
 
-	private onLeScanEnable = async (enabled: boolean, filterDuplicates: boolean) => {
+	private onLeScanEnable = (enabled: boolean, filterDuplicates: boolean) => {
 		// We have to restart scanning if we were scanning before
 		if (this.scanning && !enabled) {
+			this.emit('error', `LE scanning unexpectedly disabled`);
 			this.scanning = false;
-			await this.startScanning();
+			this.startScanning().catch((err) => this.emit('error', `Could not re-enable LE scanning: ${err}`));
 		}
 	};
 
-	private onLeConnComplete = async (
+	private onLeConnComplete = (
 		status: number,
 		handle: number,
 		role: number,
@@ -212,7 +223,7 @@ export class HciAdapter extends Adapter {
 		this.emit('connect', peripheral);
 	};
 
-	private onDisconnectComplete = async (status: number, handle: number, reason?: string) => {
+	private onDisconnectComplete = (status: number, handle: number, reason?: string) => {
 		if (status !== 0) {
 			return;
 		}
@@ -226,7 +237,9 @@ export class HciAdapter extends Adapter {
 		// We have to restart advertising if we were advertising before
 		if (this.advertising) {
 			this.advertising = false;
-			await this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs);
+			this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs).catch((err) =>
+				this.emit('error', `Could not re-enable advertising after disconnect: ${err}`)
+			);
 		}
 	};
 }
