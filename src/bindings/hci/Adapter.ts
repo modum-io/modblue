@@ -118,6 +118,10 @@ export class HciAdapter extends Adapter {
 	};
 
 	public async connect(peripheral: HciPeripheral) {
+		if (this.hci.hciVersion < 8 && this.connectedDevices.size > 0) {
+			throw new Error(`Connecting in master & slave role concurrently is only supported in BLE 5+`);
+		}
+
 		// For BLE <= 4.2 disable advertising while we're connected
 		this.wasAdvertising = this.hci.hciVersion < 8 && this.advertising;
 		if (this.wasAdvertising) {
