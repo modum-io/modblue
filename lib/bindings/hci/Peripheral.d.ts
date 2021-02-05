@@ -8,9 +8,11 @@ export declare class HciPeripheral extends Peripheral {
     private mtuExchanged;
     private handle;
     private signaling;
+    private _isMaster;
+    get isMaster(): boolean;
     connect(): Promise<void>;
-    onConnect(hci: Hci, handle: number): Promise<void>;
+    onConnect(isMaster: boolean, hci: Hci, handle: number): void;
     disconnect(): Promise<void>;
-    onDisconnect(): Promise<void>;
+    onDisconnect(): void;
     setupGatt(requestMtu?: number): Promise<GattRemote>;
 }

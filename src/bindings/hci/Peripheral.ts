@@ -16,6 +16,11 @@ export class HciPeripheral extends Peripheral {
 	private handle: number;
 	private signaling: Signaling;
 
+	private _isMaster: boolean;
+	public get isMaster() {
+		return this._isMaster;
+	}
+
 	public async connect(): Promise<void> {
 		if (this._state === 'connected') {
 			return;
@@ -24,12 +29,14 @@ export class HciPeripheral extends Peripheral {
 		this._state = 'connecting';
 		await this.adapter.connect(this);
 	}
-	public async onConnect(hci: Hci, handle: number) {
+	public onConnect(isMaster: boolean, hci: Hci, handle: number) {
 		this.hci = hci;
 		this.handle = handle;
-		this.signaling = new Signaling(this.hci, this.handle);
+		this._isMaster = isMaster;
 
+		this.signaling = new Signaling(this.hci, this.handle);
 		this.gatt = new HciGattRemote(this, hci, handle);
+
 		this.mtuExchanged = false;
 
 		this._state = 'connected';
@@ -43,7 +50,7 @@ export class HciPeripheral extends Peripheral {
 		this._state = 'disconnecting';
 		await this.adapter.disconnect(this);
 	}
-	public async onDisconnect() {
+	public onDisconnect() {
 		if (this.gatt) {
 			this.gatt.dispose();
 			this.gatt = null;

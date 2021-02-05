@@ -9,6 +9,7 @@ export class HciAdapter extends Adapter {
 	private initialized: boolean = false;
 	private scanning: boolean = false;
 	private advertising: boolean = false;
+	private wasAdvertising: boolean = false;
 
 	private hci: Hci;
 	private gap: Gap;
@@ -17,7 +18,7 @@ export class HciAdapter extends Adapter {
 	private deviceName: string = this.id;
 	private advertisedServiceUUIDs: string[] = [];
 	private peripherals: Map<string, HciPeripheral> = new Map();
-	private connectedDevices: Map<number, Peripheral> = new Map();
+	private connectedDevices: Map<number, HciPeripheral> = new Map();
 	private uuidToHandle: Map<string, number> = new Map();
 	private handleToUUID: Map<number, string> = new Map();
 
@@ -30,6 +31,7 @@ export class HciAdapter extends Adapter {
 
 		this.hci = new Hci(Number(this.id));
 		this.hci.on('leScanEnable', this.onLeScanEnable);
+		this.hci.on('leAdvertiseEnable', this.onLeAdvertiseEnable);
 		this.hci.on('leConnComplete', this.onLeConnComplete);
 		this.hci.on('disconnectComplete', this.onDisconnectComplete);
 		this.hci.on('error', this.onHciError);
@@ -116,9 +118,24 @@ export class HciAdapter extends Adapter {
 	};
 
 	public async connect(peripheral: HciPeripheral) {
-		const wasAdvertising = this.hci.hciVersion < 8 && this.advertising;
-		if (wasAdvertising) {
-			await this.stopAdvertising();
+		// For BLE <= 4.2:
+		// - Disable advertising while we're connected.
+		// - Don't connect if we have a connection in master mode
+		let advertisingWasDisabled = false;
+		if (this.hci.hciVersion < 8) {
+			if ([...this.connectedDevices.values()].some((d) => d.isMaster)) {
+				throw new Error(`Connecting in master & slave role concurrently is only supported in BLE 5+`);
+			}
+
+			if (this.advertising) {
+				try {
+					await this.stopAdvertising();
+					this.wasAdvertising = true;
+					advertisingWasDisabled = true;
+				} catch (err) {
+					this.emit('error', `Could not disable advertising before connecting: ${err}`);
+				}
+			}
 		}
 
 		try {
@@ -127,17 +144,20 @@ export class HciAdapter extends Adapter {
 			this.uuidToHandle.set(peripheral.uuid, handle);
 			this.handleToUUID.set(handle, peripheral.uuid);
 
-			await peripheral.onConnect(this.hci, handle);
+			peripheral.onConnect(false, this.hci, handle);
+			this.connectedDevices.set(handle, peripheral);
 		} catch (err) {
 			// Dispose anything in case we got a partial setup/connection done
-			await peripheral.onDisconnect();
+			peripheral.onDisconnect();
+
+			// Re-enable advertising since we didn't establish a connection
+			if (advertisingWasDisabled) {
+				await this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs);
+				this.wasAdvertising = false;
+			}
 
 			// Rethrow
 			throw err;
-		} finally {
-			if (wasAdvertising) {
-				await this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs);
-			}
 		}
 	}
 
@@ -149,7 +169,7 @@ export class HciAdapter extends Adapter {
 		} catch {
 			// NO-OP
 		} finally {
-			await peripheral.onDisconnect();
+			peripheral.onDisconnect();
 		}
 	}
 
@@ -180,7 +200,11 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		await this.gap.stopAdvertising();
+		try {
+			await this.gap.stopAdvertising();
+		} catch {
+			// NO-OP: Errors here probably mean we already stopped advertising
+		}
 
 		this.advertising = false;
 	}
@@ -193,12 +217,23 @@ export class HciAdapter extends Adapter {
 		return this.gatt;
 	}
 
-	private onLeScanEnable = (enabled: boolean, filterDuplicates: boolean) => {
+	private onLeScanEnable = (enabled: boolean) => {
 		// We have to restart scanning if we were scanning before
 		if (this.scanning && !enabled) {
 			this.emit('error', `LE scanning unexpectedly disabled`);
 			this.scanning = false;
 			this.startScanning().catch((err) => this.emit('error', `Could not re-enable LE scanning: ${err}`));
+		}
+	};
+
+	private onLeAdvertiseEnable = (enabled: boolean) => {
+		// We have to restart advertising if we were advertising before
+		if (this.advertising && !enabled) {
+			this.emit('error', `LE advertising unexpectedly disabled`);
+			this.advertising = false;
+			this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs).catch((err) =>
+				this.emit('error', `Could not re-enable LE advertising: ${err}`)
+			);
 		}
 	};
 
@@ -218,28 +253,35 @@ export class HciAdapter extends Adapter {
 		const uuid = address;
 
 		const peripheral = new HciPeripheral(this, uuid, addressType, address, null, 0);
-		this.connectedDevices.set(handle, peripheral);
+		peripheral.onConnect(true, this.hci, handle);
 
+		this.connectedDevices.set(handle, peripheral);
 		this.emit('connect', peripheral);
+
+		// Advertising automatically stops, so change the state accordingly
+		this.wasAdvertising = true;
+		this.advertising = false;
 	};
 
 	private onDisconnectComplete = (status: number, handle: number, reason?: string) => {
-		if (status !== 0) {
-			return;
-		}
-
+		// Check if we have a connected device and remove it
 		const connectedDevice = this.connectedDevices.get(handle);
 		if (connectedDevice) {
+			connectedDevice.onDisconnect();
 			this.connectedDevices.delete(handle);
-			this.emit('disconnect', connectedDevice, reason);
+
+			// If the device was connected in master mode we inform our local listeners
+			if (connectedDevice.isMaster) {
+				this.emit('disconnect', connectedDevice, reason);
+			}
 		}
 
-		// We have to restart advertising if we were advertising before
-		if (this.advertising) {
-			this.advertising = false;
+		// We have to restart advertising if we were advertising before, and if all devices disconnected
+		if (this.wasAdvertising && this.connectedDevices.size === 0) {
 			this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs).catch((err) =>
 				this.emit('error', `Could not re-enable advertising after disconnect: ${err}`)
 			);
+			this.wasAdvertising = false;
 		}
 	};
 }

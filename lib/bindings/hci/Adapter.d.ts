@@ -4,6 +4,7 @@ export declare class HciAdapter extends Adapter {
     private initialized;
     private scanning;
     private advertising;
+    private wasAdvertising;
     private hci;
     private gap;
     private gatt;
@@ -28,6 +29,7 @@ export declare class HciAdapter extends Adapter {
     stopAdvertising(): Promise<void>;
     setupGatt(maxMtu?: number): Promise<GattLocal>;
     private onLeScanEnable;
+    private onLeAdvertiseEnable;
     private onLeConnComplete;
     private onDisconnectComplete;
 }
