@@ -123,9 +123,14 @@ export class HciAdapter extends Adapter {
 		}
 
 		// For BLE <= 4.2 disable advertising while we're connected
-		this.wasAdvertising = this.hci.hciVersion < 8 && this.advertising;
-		if (this.wasAdvertising) {
-			await this.stopAdvertising();
+		if (this.hci.hciVersion < 8 && this.advertising) {
+			this.wasAdvertising = true;
+			try {
+				await this.stopAdvertising();
+			} catch (err) {
+				this.emit('error', `Could not disable advertising before connecting: ${err}`);
+				this.wasAdvertising = false;
+			}
 		}
 
 		try {
@@ -244,7 +249,7 @@ export class HciAdapter extends Adapter {
 	};
 
 	private onDisconnectComplete = (status: number, handle: number, reason?: string) => {
-		// Skip master connections, they are handled elsewhere
+		// Skip failed disconnects
 		if (status !== 0) {
 			return;
 		}
@@ -256,7 +261,7 @@ export class HciAdapter extends Adapter {
 		}
 
 		// We have to restart advertising if we were advertising before
-		if (this.wasAdvertising) {
+		if (this.wasAdvertising && this.connectedDevices.size === 0) {
 			this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs).catch((err) =>
 				this.emit('error', `Could not re-enable advertising after disconnect: ${err}`)
 			);
