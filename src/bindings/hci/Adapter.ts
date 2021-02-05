@@ -121,18 +121,19 @@ export class HciAdapter extends Adapter {
 		// For BLE <= 4.2:
 		// - Disable advertising while we're connected.
 		// - Don't connect if we have a connection in master mode
+		let advertisingWasDisabled = false;
 		if (this.hci.hciVersion < 8) {
 			if ([...this.connectedDevices.values()].some((d) => d.isMaster)) {
 				throw new Error(`Connecting in master & slave role concurrently is only supported in BLE 5+`);
 			}
 
 			if (this.advertising) {
-				this.wasAdvertising = true;
 				try {
 					await this.stopAdvertising();
+					this.wasAdvertising = true;
+					advertisingWasDisabled = true;
 				} catch (err) {
 					this.emit('error', `Could not disable advertising before connecting: ${err}`);
-					this.wasAdvertising = false;
 				}
 			}
 		}
@@ -150,7 +151,7 @@ export class HciAdapter extends Adapter {
 			peripheral.onDisconnect();
 
 			// Re-enable advertising since we didn't establish a connection
-			if (this.wasAdvertising) {
+			if (advertisingWasDisabled) {
 				await this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs);
 				this.wasAdvertising = false;
 			}
@@ -199,7 +200,11 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		await this.gap.stopAdvertising();
+		try {
+			await this.gap.stopAdvertising();
+		} catch {
+			// NO-OP: Errors here probably mean we already stopped advertising
+		}
 
 		this.advertising = false;
 	}
