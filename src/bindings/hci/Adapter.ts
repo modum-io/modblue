@@ -5,16 +5,20 @@ import { HciGattLocal } from './gatt';
 import { Gap, Hci } from './misc';
 import { HciPeripheral } from './Peripheral';
 
+const SCAN_ENABLE_TIMEOUT = 1000;
+const ADVERTISING_ENABLE_TIMEOUT = 1000;
+
 export class HciAdapter extends Adapter {
 	private initialized: boolean = false;
 	private scanning: boolean = false;
+	private scanEnableTimer: NodeJS.Timer;
 	private advertising: boolean = false;
+	private advertisingEnableTimer: NodeJS.Timer;
 	private wasAdvertising: boolean = false;
 
 	private hci: Hci;
 	private gap: Gap;
 	private gatt: HciGattLocal;
-
 	private deviceName: string = this.id;
 	private advertisedServiceUUIDs: string[] = [];
 	private peripherals: Map<string, HciPeripheral> = new Map();
@@ -82,6 +86,11 @@ export class HciAdapter extends Adapter {
 	}
 
 	public async stopScanning(): Promise<void> {
+		if (this.scanEnableTimer) {
+			clearTimeout(this.scanEnableTimer);
+			this.scanEnableTimer = null;
+		}
+
 		if (!this.scanning) {
 			return;
 		}
@@ -196,6 +205,11 @@ export class HciAdapter extends Adapter {
 	}
 
 	public async stopAdvertising(): Promise<void> {
+		if (this.advertisingEnableTimer) {
+			clearTimeout(this.advertisingEnableTimer);
+			this.advertisingEnableTimer = null;
+		}
+
 		if (!this.advertising) {
 			return;
 		}
@@ -220,20 +234,36 @@ export class HciAdapter extends Adapter {
 	private onLeScanEnable = (enabled: boolean) => {
 		// We have to restart scanning if we were scanning before
 		if (this.scanning && !enabled) {
-			this.emit('error', `LE scanning unexpectedly disabled`);
 			this.scanning = false;
-			this.startScanning().catch((err) => this.emit('error', `Could not re-enable LE scanning: ${err}`));
+			const enableScanning = () => {
+				this.startScanning()
+					.then(() => {
+						this.scanEnableTimer = null;
+					})
+					.catch((err) => {
+						this.emit('error', `Could not re-enable LE scanning: ${err}`);
+						this.scanEnableTimer = setTimeout(enableScanning, SCAN_ENABLE_TIMEOUT);
+					});
+			};
+			enableScanning();
 		}
 	};
 
 	private onLeAdvertiseEnable = (enabled: boolean) => {
 		// We have to restart advertising if we were advertising before
 		if (this.advertising && !enabled) {
-			this.emit('error', `LE advertising unexpectedly disabled`);
 			this.advertising = false;
-			this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs).catch((err) =>
-				this.emit('error', `Could not re-enable LE advertising: ${err}`)
-			);
+			const enableAdvertising = () => {
+				this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs)
+					.then(() => {
+						this.advertisingEnableTimer = null;
+					})
+					.catch((err) => {
+						this.emit('error', `Could not re-enable LE advertising: ${err}`);
+						this.advertisingEnableTimer = setTimeout(enableAdvertising, ADVERTISING_ENABLE_TIMEOUT);
+					});
+			};
+			enableAdvertising();
 		}
 	};
 
