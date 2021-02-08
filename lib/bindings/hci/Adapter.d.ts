@@ -3,7 +3,9 @@ import { HciPeripheral } from './Peripheral';
 export declare class HciAdapter extends Adapter {
     private initialized;
     private scanning;
+    private scanEnableTimer;
     private advertising;
+    private advertisingEnableTimer;
     private wasAdvertising;
     private hci;
     private gap;
