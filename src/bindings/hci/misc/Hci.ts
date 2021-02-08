@@ -289,6 +289,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 	};
 
 	public dispose() {
+		this.mutex.cancel();
+
 		if (this.socketTimer) {
 			clearInterval(this.socketTimer);
 			this.socketTimer = null;

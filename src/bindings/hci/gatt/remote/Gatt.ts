@@ -55,6 +55,8 @@ export class HciGattRemote extends GattRemote {
 	}
 
 	public dispose() {
+		this.mutex.cancel();
+
 		if (this.currentCmd) {
 			this.currentCmd.onResponse(null, 'GATT disposed');
 			this.currentCmd = null;
