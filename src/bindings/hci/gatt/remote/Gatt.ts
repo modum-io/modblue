@@ -200,6 +200,7 @@ export class HciGattRemote extends GattRemote {
 
 				if (data === null) {
 					gattError.message = error;
+					gattError.stack = new Error().stack.split('\n').slice(0, 2).join('\n') + '\n' + gattError.stack;
 					reject(gattError);
 				} else {
 					resolve(data);
