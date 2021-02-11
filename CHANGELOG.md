@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.1.3](https://github.com/modum-io/modblue/compare/v5.1.2...v5.1.3) (2021-02-11)
+
+### Bug Fixes
+
+- **hci:** Add better cleanup handling ([a019f61](https://github.com/modum-io/modblue/commit/a019f610221ed577238c4d40c8d5f1304607154c))
+
 ### [5.1.2](https://github.com/modum-io/modblue/compare/v5.1.1...v5.1.2) (2021-02-08)
 
 ### Bug Fixes
