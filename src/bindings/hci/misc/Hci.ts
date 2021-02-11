@@ -289,23 +289,31 @@ export class Hci extends TypedEmitter<HciEvents> {
 	};
 
 	public dispose() {
-		this.mutex.cancel();
-
 		if (this.socketTimer) {
 			clearInterval(this.socketTimer);
 			this.socketTimer = null;
 		}
 
+		this.isSocketUp = false;
+
 		this.socket.stop();
 		this.socket.removeAllListeners();
 		this.socket = null;
+
+		this.mutex.cancel();
 	}
 
 	private async sendCommand(data: Buffer, statusOnly?: false, customMutex?: boolean): Promise<Buffer>;
 	private async sendCommand(data: Buffer, statusOnly?: true, customMutex?: boolean): Promise<void>;
 	private async sendCommand(data: Buffer, statusOnly?: boolean, customMutex?: boolean): Promise<Buffer | void> {
+		// Check if our socket is available
+		if (!this.isSocketUp) {
+			throw new Error('HCI socket not available');
+		}
+
 		const release = customMutex ? null : await this.acquireMutex();
 
+		// Our socket might have been disposed while waiting for the mutex
 		if (!this.isSocketUp) {
 			if (release) {
 				release();
