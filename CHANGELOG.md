@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.1.4](https://github.com/modum-io/modblue/compare/v5.1.3...v5.1.4) (2021-02-11)
+
+### Bug Fixes
+
+- Fix husky running after install ([890a13f](https://github.com/modum-io/modblue/commit/890a13fb96ec54dd1f289b41885b03b3ba4cdf47))
+
 ### [5.1.3](https://github.com/modum-io/modblue/compare/v5.1.2...v5.1.3) (2021-02-11)
 
 ### Bug Fixes
