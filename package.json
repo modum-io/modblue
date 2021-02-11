@@ -21,7 +21,9 @@
 		"build": "tsc",
 		"docs": "typedoc",
 		"release": "standard-version -a",
-		"postinstall": "npx husky install"
+		"postinstall": "npx husky install",
+		"prepublishOnly": "pinst --disable",
+		"postpublish": "pinst --enable"
 	},
 	"dependencies": {
 		"@abandonware/bluetooth-hci-socket": "0.5.3-7",
@@ -33,6 +35,7 @@
 		"@types/node": "14.14.25",
 		"husky": "5.0.9",
 		"int64-buffer": "1.0.0",
+		"pinst": "2.1.4",
 		"precise-commits": "1.0.2",
 		"prettier": "2.2.1",
 		"standard-version": "9.1.0",
