@@ -55,13 +55,7 @@ export class HciGattRemote extends GattRemote {
 	}
 
 	public dispose() {
-		this.mutex.cancel();
-
-		if (this.currentCmd) {
-			this.currentCmd.onResponse(null, 'GATT disposed');
-			this.currentCmd = null;
-		}
-
+		// First dispose hci so no further commands are processed
 		if (this.hci) {
 			this.hci.off('aclDataPkt', this.onAclStreamData);
 			this.hci.off('stateChange', this.onHciStateChange);
@@ -69,6 +63,16 @@ export class HciGattRemote extends GattRemote {
 			this.hci = null;
 		}
 
+		// Then cancel the current command
+		if (this.currentCmd) {
+			this.currentCmd.onResponse(null, 'GATT disposed');
+			this.currentCmd = null;
+		}
+
+		// Then cancel any commands waiting for the mutex
+		this.mutex.cancel();
+
+		// At last throw the handle away
 		this.handle = null;
 	}
 
@@ -154,9 +158,14 @@ export class HciGattRemote extends GattRemote {
 	private async queueCommand(buffer: Buffer, resolveOnWrite: true): Promise<void>;
 	private async queueCommand(buffer: Buffer, resolveOnWrite: false): Promise<Buffer>;
 	private async queueCommand(buffer: Buffer, resolveOnWrite: boolean) {
+		// If we don't have an hci anymore exit now
+		if (!this.hci) {
+			throw new GattError(this.peripheral, 'GATT already disposed');
+		}
+
 		const release = await this.acquireMutex();
 
-		// We might have been waiting for the mutex and now we're already disposed
+		// The hci might have been disposed while we were waiting for the mutex
 		if (!this.hci) {
 			release();
 			throw new GattError(this.peripheral, 'GATT already disposed');
