@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.2.1](https://github.com/modum-io/modblue/compare/v5.2.0...v5.2.1) (2021-02-15)
+
+### Bug Fixes
+
+- **hci:** Fix console log ([b81c1af](https://github.com/modum-io/modblue/commit/b81c1afe8984695c6adaec6a0542a1bff1b04200))
+
 ## [5.2.0](https://github.com/modum-io/modblue/compare/v5.1.4...v5.2.0) (2021-02-15)
 
 ### Features
