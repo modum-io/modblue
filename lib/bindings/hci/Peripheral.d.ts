@@ -10,9 +10,9 @@ export declare class HciPeripheral extends Peripheral {
     private signaling;
     private _isMaster;
     get isMaster(): boolean;
-    connect(): Promise<void>;
+    connect(minInterval?: number, maxInterval?: number, latency?: number, supervisionTimeout?: number): Promise<void>;
     onConnect(isMaster: boolean, hci: Hci, handle: number): void;
     disconnect(): Promise<void>;
-    onDisconnect(): void;
+    onDisconnect(reason?: string): void;
     setupGatt(requestMtu?: number): Promise<GattRemote>;
 }

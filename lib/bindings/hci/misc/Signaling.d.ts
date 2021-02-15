@@ -5,7 +5,5 @@ export declare class Signaling {
     constructor(hci: Hci, handle: number);
     dispose(): void;
     private onAclStreamData;
-    private onHciStateChange;
-    private onHciDisconnect;
     private processConnectionParameterUpdateRequest;
 }

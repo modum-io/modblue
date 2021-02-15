@@ -4,23 +4,23 @@ const MAC_ADDRESS = /(?:[0-9A-F]{2}:?){6}/i;
 
 const USAGE = `
 Usage:
-	node ./tests/connect.js <bindings> <loggers> <service> <characteristic>
+	node ./tests/connect.js <bindings> <devices> <service> <characteristic>
 Arguments:
 	bindings:        Bindings to use: "hci" or "dbus"
-	loggers:         Logger MAC addresses seperated by pipe. Eg. "AA:AA:AA:AA:AA:AA|BB:BB:BB:BB:BB:BB"
+	devices:         Peripheral MAC addresses seperated by pipe. Eg. "AA:AA:AA:AA:AA:AA|BB:BB:BB:BB:BB:BB"
 	service:         Service UUID without dashes
 	characteristic:  Characteristic UUID without dashes
 `;
 
 const BINDINGS = process.argv[2];
-const PERIPHERAL_ADDRESSES = (process.argv[3] || '').split(/[,|;]/g).filter((p) => !!p && MAC_ADDRESS.test(p));
+const DEVICE_ADDRESSES = (process.argv[3] || '').split(/[,|;]/g).filter((p) => !!p && MAC_ADDRESS.test(p));
 const SERVICE_UUID = process.argv[4];
 const CHAR_UUID = process.argv[5];
 
 const printUsage = () => console.log(USAGE);
 
 const main = async () => {
-	if (!BINDINGS || !PERIPHERAL_ADDRESSES || PERIPHERAL_ADDRESSES.length === 0 || !SERVICE_UUID || !CHAR_UUID) {
+	if (!BINDINGS || !DEVICE_ADDRESSES || DEVICE_ADDRESSES.length === 0 || !SERVICE_UUID || !CHAR_UUID) {
 		throw new Error(printUsage());
 	}
 
@@ -55,9 +55,7 @@ const main = async () => {
 	console.log('Getting peripherals...');
 
 	const peripherals = await adapter.getScannedPeripherals();
-	const missing = PERIPHERAL_ADDRESSES.filter(
-		(address) => !peripherals.some((p) => p.address === address.toUpperCase())
-	);
+	const missing = DEVICE_ADDRESSES.filter((address) => !peripherals.some((p) => p.address === address.toUpperCase()));
 	if (missing.length > 0) {
 		throw new Error(
 			`Could not find peripherals.\nAvailable: ${peripherals.map((p) => p.address)}\nMissing: ${missing}`
@@ -69,7 +67,7 @@ const main = async () => {
 	let success = 0;
 
 	while (true) {
-		const targetAddress = PERIPHERAL_ADDRESSES[total % PERIPHERAL_ADDRESSES.length].toUpperCase();
+		const targetAddress = DEVICE_ADDRESSES[total % DEVICE_ADDRESSES.length].toUpperCase();
 
 		console.log(`Using peripheral ${targetAddress}`);
 		const peripheral = peripherals.find((p) => p.address === targetAddress);

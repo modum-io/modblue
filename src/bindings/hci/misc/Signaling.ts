@@ -15,15 +15,11 @@ export class Signaling {
 		this.handle = handle;
 		this.hci = hci;
 		this.hci.on('aclDataPkt', this.onAclStreamData);
-		this.hci.on('stateChange', this.onHciStateChange);
-		this.hci.on('disconnectComplete', this.onHciDisconnect);
 	}
 
 	public dispose() {
 		if (this.hci) {
 			this.hci.off('aclDataPkt', this.onAclStreamData);
-			this.hci.off('stateChange', this.onHciStateChange);
-			this.hci.off('disconnectComplete', this.onHciDisconnect);
 			this.hci = null;
 		}
 
@@ -45,21 +41,6 @@ export class Signaling {
 		}
 	};
 
-	private onHciStateChange = (newState: string) => {
-		// If the underlaying socket shuts down we're doomed
-		if (newState === 'poweredOff') {
-			this.dispose();
-		}
-	};
-
-	private onHciDisconnect = (status: number, handle: number, reason?: string) => {
-		if (handle !== this.handle) {
-			return;
-		}
-
-		this.dispose();
-	};
-
 	private processConnectionParameterUpdateRequest(identifier: number, data: Buffer) {
 		const minInterval = data.readUInt16LE(0) * 1.25;
 		const maxInterval = data.readUInt16LE(2) * 1.25;
@@ -76,7 +57,7 @@ export class Signaling {
 
 			this.hci.writeAclDataPkt(this.handle, SIGNALING_CID, response);
 
-			this.hci.connUpdateLe(this.handle, minInterval, maxInterval, latency, supervisionTimeout);
+			this.hci.connUpdateLe(this.handle, minInterval, maxInterval, latency, supervisionTimeout).catch(() => null);
 		}
 	}
 }

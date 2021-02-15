@@ -21,13 +21,18 @@ export class HciPeripheral extends Peripheral {
 		return this._isMaster;
 	}
 
-	public async connect(): Promise<void> {
+	public async connect(
+		minInterval?: number,
+		maxInterval?: number,
+		latency?: number,
+		supervisionTimeout?: number
+	): Promise<void> {
 		if (this._state === 'connected') {
 			return;
 		}
 
 		this._state = 'connecting';
-		await this.adapter.connect(this);
+		await this.adapter.connect(this, minInterval, maxInterval, latency, supervisionTimeout);
 	}
 	public onConnect(isMaster: boolean, hci: Hci, handle: number) {
 		this.hci = hci;
@@ -50,9 +55,9 @@ export class HciPeripheral extends Peripheral {
 		this._state = 'disconnecting';
 		await this.adapter.disconnect(this);
 	}
-	public onDisconnect() {
+	public onDisconnect(reason?: string) {
 		if (this.gatt) {
-			this.gatt.dispose();
+			this.gatt.dispose(reason);
 			this.gatt = null;
 		}
 
@@ -68,13 +73,13 @@ export class HciPeripheral extends Peripheral {
 		this._state = 'disconnected';
 	}
 
-	public async setupGatt(requestMtu?: number): Promise<GattRemote> {
+	public async setupGatt(requestMtu: number = DEFAULT_MTU): Promise<GattRemote> {
 		if (this.state !== 'connected' || !this.handle) {
 			throw new Error(`Peripheral is not connected`);
 		}
 
 		if (!this.mtuExchanged) {
-			await this.gatt.exchangeMtu(requestMtu || DEFAULT_MTU);
+			await this.gatt.exchangeMtu(requestMtu);
 			this.mtuExchanged = true;
 		}
 

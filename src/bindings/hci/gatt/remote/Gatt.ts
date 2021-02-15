@@ -8,7 +8,7 @@ import { HciGattCharacteristicRemote } from './Characteristic';
 import { HciGattDescriptorRemote } from './Descriptor';
 import { HciGattServiceRemote } from './Service';
 
-const GATT_CMD_TIMEOUT = 10000; // in milliseconds
+const GATT_CMD_TIMEOUT = 20000; // in milliseconds
 
 interface GattCommand {
 	buffer: Buffer;
@@ -21,6 +21,7 @@ export class HciGattRemote extends GattRemote {
 
 	private security: string;
 	private mtuWasExchanged: boolean = false;
+	private disposeReason: string;
 
 	private mutex: MutexInterface;
 	private mutexStack: Error;
@@ -29,17 +30,15 @@ export class HciGattRemote extends GattRemote {
 
 	public services: Map<string, HciGattServiceRemote> = new Map();
 
-	public constructor(peripheral: Peripheral, hci: Hci, handle: number, cmdTimeout?: number) {
+	public constructor(peripheral: Peripheral, hci: Hci, handle: number, cmdTimeout: number = GATT_CMD_TIMEOUT) {
 		super(peripheral);
 
 		this.handle = handle;
 
 		this.hci = hci;
 		this.hci.on('aclDataPkt', this.onAclStreamData);
-		this.hci.on('stateChange', this.onHciStateChange);
-		this.hci.on('disconnectComplete', this.onHciDisconnect);
 
-		this.cmdTimeout = cmdTimeout || GATT_CMD_TIMEOUT;
+		this.cmdTimeout = cmdTimeout;
 		this.mutex = withTimeout(new Mutex(), this.cmdTimeout, new GattError(peripheral, 'GATT command mutex timeout'));
 		this.currentCmd = null;
 	}
@@ -54,18 +53,18 @@ export class HciGattRemote extends GattRemote {
 		}
 	}
 
-	public dispose() {
+	public dispose(reason?: string) {
+		this.disposeReason = reason;
+
 		// First dispose hci so no further commands are processed
 		if (this.hci) {
 			this.hci.off('aclDataPkt', this.onAclStreamData);
-			this.hci.off('stateChange', this.onHciStateChange);
-			this.hci.off('disconnectComplete', this.onHciDisconnect);
 			this.hci = null;
 		}
 
 		// Then cancel the current command
 		if (this.currentCmd) {
-			this.currentCmd.onResponse(null, 'GATT disposed');
+			this.currentCmd.onResponse(null, reason || 'GATT disposed');
 			this.currentCmd = null;
 		}
 
@@ -75,26 +74,6 @@ export class HciGattRemote extends GattRemote {
 		// At last throw the handle away
 		this.handle = null;
 	}
-
-	private onHciStateChange = (newState: string) => {
-		// If the underlaying socket shuts down we're doomed
-		if (newState === 'poweredOff') {
-			this.dispose();
-		}
-	};
-
-	private onHciDisconnect = (status: number, handle: number, reason?: string) => {
-		if (handle !== this.handle) {
-			return;
-		}
-
-		if (this.currentCmd) {
-			this.currentCmd.onResponse(null, reason);
-			this.currentCmd = null;
-		}
-
-		this.dispose();
-	};
 
 	private onAclStreamData = (handle: number, cid: number, data: Buffer) => {
 		if (handle !== this.handle || cid !== CONST.ATT_CID) {
@@ -160,7 +139,7 @@ export class HciGattRemote extends GattRemote {
 	private async queueCommand(buffer: Buffer, resolveOnWrite: boolean) {
 		// If we don't have an hci anymore exit now
 		if (!this.hci) {
-			throw new GattError(this.peripheral, 'GATT already disposed');
+			throw new GattError(this.peripheral, `GATT already disposed`, this.disposeReason);
 		}
 
 		const release = await this.acquireMutex();
@@ -168,7 +147,7 @@ export class HciGattRemote extends GattRemote {
 		// The hci might have been disposed while we were waiting for the mutex
 		if (!this.hci) {
 			release();
-			throw new GattError(this.peripheral, 'GATT already disposed');
+			throw new GattError(this.peripheral, `GATT already disposed`, this.disposeReason);
 		}
 
 		// Create the error outside the promise to preserve the stack trace
@@ -199,7 +178,8 @@ export class HciGattRemote extends GattRemote {
 				release();
 
 				if (data === null) {
-					gattError.message = error;
+					gattError.details = error;
+					gattError.stack = new Error().stack + '\n' + gattError.stack;
 					reject(gattError);
 				} else {
 					resolve(data);
