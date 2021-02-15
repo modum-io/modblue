@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.2.0](https://github.com/modum-io/modblue/compare/v5.1.4...v5.2.0) (2021-02-15)
+
+### Features
+
+- Add connection options ([6291de0](https://github.com/modum-io/modblue/commit/6291de0793f17a4733a9ded74798a730a25fd03e))
+- **hci:** Add better disconnect handling ([6291de0](https://github.com/modum-io/modblue/commit/6291de0793f17a4733a9ded74798a730a25fd03e))
+- **hci:** Track connection interval ([6291de0](https://github.com/modum-io/modblue/commit/6291de0793f17a4733a9ded74798a730a25fd03e))
+
+### Bug Fixes
+
+- **hci:** Add more info to gatt error ([c32c755](https://github.com/modum-io/modblue/commit/c32c7554d58bdd86423c1f08e8b20468cd183992))
+- **hci:** Increase GATT timeout ([6291de0](https://github.com/modum-io/modblue/commit/6291de0793f17a4733a9ded74798a730a25fd03e))
+
 ### [5.1.4](https://github.com/modum-io/modblue/compare/v5.1.3...v5.1.4) (2021-02-11)
 
 ### Bug Fixes
