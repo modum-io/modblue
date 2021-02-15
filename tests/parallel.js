@@ -4,10 +4,10 @@ const MAC_ADDRESS = /(?:[0-9A-F]{2}:?){6}/i;
 
 const USAGE = `
 Usage:
-	node ./tests/connect.js <bindings> <loggers> <service> <characteristic>
+	node ./tests/connect.js <bindings> <devices> <service> <characteristic>
 Arguments:
 	bindings:        Bindings to use: "hci" or "dbus"
-	loggers:         Logger MAC addresses seperated by pipe. Eg. "AA:AA:AA:AA:AA:AA|BB:BB:BB:BB:BB:BB" (at least 2)
+	devices:         Peripheral MAC addresses seperated by pipe. Eg. "AA:AA:AA:AA:AA:AA|BB:BB:BB:BB:BB:BB" (at least 2)
 	service:         Service UUID without dashes
 	characteristic:  Characteristic UUID without dashes
 `;
@@ -68,7 +68,7 @@ const main = async () => {
 	let total = 0;
 	let success = 0;
 
-	const testLogger = async (targetAddress) => {
+	const testDevice = async (targetAddress) => {
 		const peripheral = peripherals.find((p) => p.address === targetAddress);
 		console.log(targetAddress, `Connecting ${total}...`);
 
@@ -119,8 +119,8 @@ const main = async () => {
 	};
 
 	for (let i = 0; i < PERIPHERAL_ADDRESSES.length; i++) {
-		testLogger(PERIPHERAL_ADDRESSES[i].toUpperCase());
-		setInterval(() => testLogger(PERIPHERAL_ADDRESSES[i].toUpperCase()), 10000);
+		testDevice(PERIPHERAL_ADDRESSES[i].toUpperCase());
+		setInterval(() => testDevice(PERIPHERAL_ADDRESSES[i].toUpperCase()), 10000);
 	}
 
 	// Keep this process running

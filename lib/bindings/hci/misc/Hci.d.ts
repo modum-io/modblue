@@ -14,14 +14,15 @@ interface HciEvents {
     stateChange: (newState: string) => void;
     aclDataPkt: (handle: number, cid: number, data: Buffer) => void;
     leScanEnable: (enabled: boolean, filterDuplicates: boolean) => void;
-    leConnComplete: (status: number, handle: number, role: number, addressType: AddressType, address: string, interval: number, latency: number, supervisionTimeout: number, masterClockAccuracy: number) => void;
+    leConnComplete: (status: number, handle: number, role: number, addressType: AddressType, address: string, interval: number, latency: number, supervisionTimeout: number) => void;
+    leConnUpdate: (status: number, handle: number, interval: number, latency: number, supervisionTimeout: number) => void;
     disconnectComplete: (status: number, handle: number, reason: string) => void;
     leAdvertiseEnable: (enabled: boolean) => void;
     leAdvertisingReport: (type: number, address: string, addressType: AddressType, eir: Buffer, rssi: number) => void;
     cmdStatus: (status: number) => void;
     cmdComplete: (status: number, data: Buffer) => void;
     hciEvent: (eventCode: number, data: Buffer) => void;
-    error: (code: number) => void;
+    error: (error: Error) => void;
 }
 export declare class Hci extends TypedEmitter<HciEvents> {
     state: string;
@@ -60,10 +61,9 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private writeLeHostSupported;
     setScanParameters(): Promise<void>;
     setScanEnabled(enabled: boolean, filterDuplicates: boolean): Promise<void>;
-    createLeConn(address: string, addressType: AddressType): Promise<number>;
+    createLeConn(address: string, addressType: AddressType, minInterval?: number, maxInterval?: number, latency?: number, supervisionTimeout?: number): Promise<number>;
     cancelLeConn(customMutex?: boolean): Promise<void>;
-    connUpdateLe(handle: number, minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number): void;
-    startLeEncryption(handle: number, random: any, diversifier: Buffer, key: Buffer): void;
+    connUpdateLe(handle: number, minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number): Promise<void>;
     disconnect(handle: number, reason?: number): Promise<void>;
     readRssi(handle: number): Promise<number>;
     writeAclDataPkt(handleId: number, cid: number, data: Buffer): void;
@@ -74,8 +74,20 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     setAdvertisingData(data: Buffer): Promise<void>;
     setAdvertisingEnabled(enabled: boolean): Promise<void>;
     private onSocketData;
+    private handleEventPkt;
+    private handleDisconnectPkt;
+    private handleCmdCompletePkt;
+    private handleCmdStatusPkt;
+    private handleLeMetaEventPkt;
+    private handleLeConnCompleteEvent;
+    private handleLeConnUpdateEvent;
+    private handleLeAdvertisingReportEvent;
+    private handleNumCompletedPktsPkt;
+    private handleHardwareErrorPkt;
+    private handleAclDataPkt;
+    private handleCmdPkt;
+    private handleSetScanEnablePkt;
+    private handleSetAdvertiseEnablePkt;
     private onSocketError;
-    private processLeConnComplete;
-    private processLeAdvertisingReport;
 }
 export {};

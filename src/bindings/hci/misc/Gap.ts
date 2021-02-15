@@ -167,10 +167,10 @@ export class Gap extends EventEmitter {
 		await this.startAdvertisingWithEIRData(advertisementData, scanData);
 	}
 
-	public async startAdvertisingWithEIRData(advertisementData: Buffer, scanData: Buffer) {
-		advertisementData = advertisementData || Buffer.alloc(0);
-		scanData = scanData || Buffer.alloc(0);
-
+	public async startAdvertisingWithEIRData(
+		advertisementData: Buffer = Buffer.alloc(0),
+		scanData: Buffer = Buffer.alloc(0)
+	) {
 		if (advertisementData.length > 31) {
 			throw new Error('Advertisement data is over maximum limit of 31 bytes');
 		} else if (scanData.length > 31) {

@@ -9,6 +9,7 @@ export declare class HciGattRemote extends GattRemote {
     private handle;
     private security;
     private mtuWasExchanged;
+    private disposeReason;
     private mutex;
     private mutexStack;
     private currentCmd;
@@ -16,9 +17,7 @@ export declare class HciGattRemote extends GattRemote {
     services: Map<string, HciGattServiceRemote>;
     constructor(peripheral: Peripheral, hci: Hci, handle: number, cmdTimeout?: number);
     private acquireMutex;
-    dispose(): void;
-    private onHciStateChange;
-    private onHciDisconnect;
+    dispose(reason?: string): void;
     private onAclStreamData;
     private errorResponse;
     private queueCommand;

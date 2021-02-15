@@ -17,6 +17,7 @@ export declare class HciAdapter extends Adapter {
     private uuidToHandle;
     private handleToUUID;
     private init;
+    private onHciStateChange;
     private onHciError;
     dispose(): void;
     isScanning(): Promise<boolean>;
@@ -24,7 +25,7 @@ export declare class HciAdapter extends Adapter {
     stopScanning(): Promise<void>;
     getScannedPeripherals(): Promise<Peripheral[]>;
     private onDiscover;
-    connect(peripheral: HciPeripheral): Promise<void>;
+    connect(peripheral: HciPeripheral, minInterval?: number, maxInterval?: number, latency?: number, supervisionTimeout?: number): Promise<void>;
     disconnect(peripheral: HciPeripheral): Promise<void>;
     isAdvertising(): Promise<boolean>;
     startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;

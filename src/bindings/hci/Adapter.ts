@@ -34,6 +34,7 @@ export class HciAdapter extends Adapter {
 		this.initialized = true;
 
 		this.hci = new Hci(Number(this.id));
+		this.hci.on('stateChange', this.onHciStateChange);
 		this.hci.on('leScanEnable', this.onLeScanEnable);
 		this.hci.on('leAdvertiseEnable', this.onLeAdvertiseEnable);
 		this.hci.on('leConnComplete', this.onLeConnComplete);
@@ -49,9 +50,16 @@ export class HciAdapter extends Adapter {
 		this._address = this.hci.address;
 	}
 
-	private onHciError = (code: number) => {
-		this.emit('error', `HCI hardware error ${code}`);
-		this.hci.reset().catch((err) => this.emit('error', `Could not reset HCI controller: ${err}`));
+	private onHciStateChange = (newState: string) => {
+		// If the underlaying socket shuts down we're doomed
+		if (newState === 'poweredOff') {
+			this.dispose();
+		}
+	};
+
+	private onHciError = (error: Error) => {
+		this.emit('error', error);
+		this.hci.reset().catch((err) => this.emit('error', new Error(`Could not reset HCI controller: ${err}`)));
 	};
 
 	public dispose() {
@@ -60,6 +68,11 @@ export class HciAdapter extends Adapter {
 		}
 
 		this.initialized = false;
+
+		for (const device of this.connectedDevices.values()) {
+			device.onDisconnect('Underlaying adapter disposed');
+		}
+		this.connectedDevices.clear();
 
 		this.hci.removeAllListeners();
 		this.hci.dispose();
@@ -126,7 +139,13 @@ export class HciAdapter extends Adapter {
 		this.emit('discover', peripheral);
 	};
 
-	public async connect(peripheral: HciPeripheral) {
+	public async connect(
+		peripheral: HciPeripheral,
+		minInterval?: number,
+		maxInterval?: number,
+		latency?: number,
+		supervisionTimeout?: number
+	) {
 		// For BLE <= 4.2:
 		// - Disable advertising while we're connected.
 		// - Don't connect if we have a connection in master mode
@@ -142,13 +161,20 @@ export class HciAdapter extends Adapter {
 					this.wasAdvertising = true;
 					advertisingWasDisabled = true;
 				} catch (err) {
-					this.emit('error', `Could not disable advertising before connecting: ${err}`);
+					this.emit('error', new Error(`Could not disable advertising before connecting: ${err}`));
 				}
 			}
 		}
 
 		try {
-			const handle = await this.hci.createLeConn(peripheral.address, peripheral.addressType);
+			const handle = await this.hci.createLeConn(
+				peripheral.address,
+				peripheral.addressType,
+				minInterval,
+				maxInterval,
+				latency,
+				supervisionTimeout
+			);
 
 			this.uuidToHandle.set(peripheral.uuid, handle);
 			this.handleToUUID.set(handle, peripheral.uuid);
@@ -186,7 +212,7 @@ export class HciAdapter extends Adapter {
 		return this.advertising;
 	}
 
-	public async startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void> {
+	public async startAdvertising(deviceName: string, serviceUUIDs: string[] = []): Promise<void> {
 		await this.init();
 
 		if (this.advertising) {
@@ -199,7 +225,7 @@ export class HciAdapter extends Adapter {
 			this.gatt.setData(this.deviceName, this.gatt.serviceInputs);
 		}
 
-		await this.gap.startAdvertising(this.deviceName, serviceUUIDs || []);
+		await this.gap.startAdvertising(this.deviceName, serviceUUIDs);
 
 		this.advertising = true;
 	}
@@ -241,7 +267,7 @@ export class HciAdapter extends Adapter {
 						this.scanEnableTimer = null;
 					})
 					.catch((err) => {
-						this.emit('error', `Could not re-enable LE scanning: ${err}`);
+						this.emit('error', new Error(`Could not re-enable LE scanning: ${err}`));
 						this.scanEnableTimer = setTimeout(enableScanning, SCAN_ENABLE_TIMEOUT);
 					});
 			};
@@ -259,7 +285,7 @@ export class HciAdapter extends Adapter {
 						this.advertisingEnableTimer = null;
 					})
 					.catch((err) => {
-						this.emit('error', `Could not re-enable LE advertising: ${err}`);
+						this.emit('error', new Error(`Could not re-enable LE advertising: ${err}`));
 						this.advertisingEnableTimer = setTimeout(enableAdvertising, ADVERTISING_ENABLE_TIMEOUT);
 					});
 			};
@@ -297,7 +323,7 @@ export class HciAdapter extends Adapter {
 		// Check if we have a connected device and remove it
 		const connectedDevice = this.connectedDevices.get(handle);
 		if (connectedDevice) {
-			connectedDevice.onDisconnect();
+			connectedDevice.onDisconnect(reason);
 			this.connectedDevices.delete(handle);
 
 			// If the device was connected in master mode we inform our local listeners
@@ -309,7 +335,7 @@ export class HciAdapter extends Adapter {
 		// We have to restart advertising if we were advertising before, and if all devices disconnected
 		if (this.wasAdvertising && this.connectedDevices.size === 0) {
 			this.startAdvertising(this.deviceName, this.advertisedServiceUUIDs).catch((err) =>
-				this.emit('error', `Could not re-enable advertising after disconnect: ${err}`)
+				this.emit('error', new Error(`Could not re-enable advertising after disconnect: ${err}`))
 			);
 			this.wasAdvertising = false;
 		}

@@ -70,8 +70,18 @@ export abstract class Peripheral {
 
 	/**
 	 * Connect to this peripheral. Throws an error when connecting fails.
+	 * @param minInterval The minimum connection interval.
+	 * @param maxInterval The maximum connection interval.
+	 * @param latency The connection latency.
+	 * @param supervisionTimeout The supervision timeout.
 	 */
-	public abstract connect(): Promise<void>;
+	public abstract connect(
+		minInterval?: number,
+		maxInterval?: number,
+		latency?: number,
+		supervisionTimeout?: number
+	): Promise<void>;
+
 	/**
 	 * Disconnect from this peripheral. Does nothing if not connected. This method **never** throws an error.
 	 * When connecting to a peripheral you should always wrap your calls in try-catch and call this method at the end.
