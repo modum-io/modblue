@@ -193,7 +193,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.handles = new Map();
 
 		this.cmdTimeout = cmdTimeout;
-		this.mutex = withTimeout(new Mutex(), this.cmdTimeout, new Error(`HCI command mutex timeout`));
+		this.mutex = withTimeout(new Mutex(), this.cmdTimeout, new HciError(`HCI command mutex timeout`));
 		this.currentCmd = null;
 	}
 
@@ -383,7 +383,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 			const timeoutError = new HciError(`HCI command timed out`);
 			timeout = setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
 
-			console.log('->', 'hci', data);
+			// console.log('->', 'hci', data);
 			this.socket.write(data);
 		});
 	}
