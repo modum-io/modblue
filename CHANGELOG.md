@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.2.2](https://github.com/modum-io/modblue/compare/v5.2.1...v5.2.2) (2021-02-22)
+
+### Bug Fixes
+
+- **hci:** Fix adapter issues ([04ed396](https://github.com/modum-io/modblue/commit/04ed3968e27171686ef5899c78765952e11345b3))
+
 ### [5.2.1](https://github.com/modum-io/modblue/compare/v5.2.0...v5.2.1) (2021-02-15)
 
 ### Bug Fixes
