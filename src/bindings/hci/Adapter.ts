@@ -34,17 +34,19 @@ export class HciAdapter extends Adapter {
 		this.initialized = true;
 
 		this.hci = new Hci(Number(this.id));
+		this.hci.on('error', this.onHciError);
+
+		await this.hci.init();
+
+		// Don't listen for these events until init is done
 		this.hci.on('stateChange', this.onHciStateChange);
 		this.hci.on('leScanEnable', this.onLeScanEnable);
 		this.hci.on('leAdvertiseEnable', this.onLeAdvertiseEnable);
 		this.hci.on('leConnComplete', this.onLeConnComplete);
 		this.hci.on('disconnectComplete', this.onDisconnectComplete);
-		this.hci.on('error', this.onHciError);
 
 		this.gap = new Gap(this.hci);
 		this.gap.on('discover', this.onDiscover);
-
-		await this.hci.init();
 
 		this._addressType = this.hci.addressType;
 		this._address = this.hci.address;

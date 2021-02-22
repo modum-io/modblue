@@ -240,7 +240,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 	}
 
 	private checkSocketState = async () => {
-		const isUp = this.socket.isDevUp();
+		const isUp = this.socket && this.socket.isDevUp();
 
 		if (isUp !== this.isSocketUp) {
 			// If the hci socket state changed the initialize or cleanup our connection
