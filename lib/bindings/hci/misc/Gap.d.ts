@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { AddressType } from '../../../types';
+import { AddressType } from '../../../models';
 declare type DiscoverListener = (address: string, addressType: AddressType, connectable: boolean, advertisement: any, rssi: number) => void;
 export declare interface Gap {
     on(event: 'discover', listener: DiscoverListener): this;

@@ -27,13 +27,17 @@
 		"pretty-quick": "pretty-quick --staged"
 	},
 	"dependencies": {
-		"@abandonware/bluetooth-hci-socket": "0.5.3-7",
 		"async-mutex": "0.3.1",
-		"dbus-next": "0.9.1",
 		"tiny-typed-emitter": "2.0.3"
 	},
+	"peerDependencies": {
+		"@abandonware/bluetooth-hci-socket": "0.5.x",
+		"dbus-next": "0.9.x"
+	},
 	"devDependencies": {
+		"@abandonware/bluetooth-hci-socket": "0.5.3-7",
 		"@types/node": "14.14.31",
+		"dbus-next": "0.9.1",
 		"husky": "5.1.2",
 		"int64-buffer": "1.0.0",
 		"pinst": "2.1.6",

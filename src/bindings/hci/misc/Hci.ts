@@ -1,7 +1,7 @@
 import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 import { TypedEmitter } from 'tiny-typed-emitter';
 
-import { AddressType } from '../../../types';
+import { AddressType } from '../../../models';
 
 import STATUS_MAPPER from './hci-status.json';
 import { HciError } from './HciError';

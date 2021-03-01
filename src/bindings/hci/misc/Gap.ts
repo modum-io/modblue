@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import os from 'os';
 
-import { AddressType } from '../../../types';
+import { AddressType } from '../../../models';
 
 import { Hci } from './Hci';
 

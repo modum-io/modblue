@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { AddressType } from '../../../types';
+import { AddressType } from '../../../models';
 interface HciDevice {
     devId: number;
     devUp: boolean;

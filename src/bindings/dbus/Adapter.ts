@@ -1,7 +1,6 @@
 import { ClientInterface } from 'dbus-next';
 
-import { Adapter, GattLocal, Peripheral } from '../../models';
-import { AddressType } from '../../types';
+import { Adapter, AddressType, GattLocal, Peripheral } from '../../models';
 
 import { buildTypedValue, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE, I_OBJECT_MANAGER, I_PROPERTIES } from './misc';
 import { DbusMODblue } from './MODblue';

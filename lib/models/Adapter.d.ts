@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { TypedEmitter } from 'tiny-typed-emitter';
 import { inspect, InspectOptionsStylized } from 'util';
-import { AddressType } from '../types';
+import { AddressType } from './AddressType';
 import { GattLocal } from './gatt';
 import { MODblue } from './MODblue';
 import { Peripheral } from './Peripheral';

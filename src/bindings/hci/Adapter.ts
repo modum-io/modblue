@@ -1,5 +1,4 @@
-import { Adapter, GattLocal, Peripheral } from '../../models';
-import { AddressType } from '../../types';
+import { Adapter, AddressType, GattLocal, Peripheral } from '../../models';
 
 import { HciGattLocal } from './gatt';
 import { Gap, Hci } from './misc';

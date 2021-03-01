@@ -1,4 +1,5 @@
-const { HciMODblue, DbusMODblue } = require('../lib');
+const { HciMODblue } = require('../lib/hci');
+const { DbusMODblue } = require('../lib/dbus');
 
 const MAC_ADDRESS = /(?:[0-9A-F]{2}:?){6}/i;
 
