@@ -49,21 +49,33 @@ Trying to make the world better place by improving the bluetooth experience one 
 
 ### Installation
 
+Install the module from npm:
+
 ```bash
 npm i -E @modum-io/modblue
 ```
 
-### Usage
-
-Currently there are the following bindings available:
+Then install the peer depencies depending on which one(s) you want to use:  
 
 - `hci` (using [bluetooth-hci-socket](https://github.com/abandonware/node-bluetooth-hci-socket))
+
+   ```bash
+   npm i -E @abandonware/bluetooth-hci-socket
+   ```
+
 - `dbus` (using [dbus-next](https://github.com/dbusjs/node-dbus-next))
+
+   ```bash
+   npm i -E dbus-next
+   ```
+
+### Usage
 
 Create a new `MODblue` object to get started (all bindings have the same interface)
 
 ```ts
-import { HciMODblue, DbusMODblue } from '@modum-io/modblue';
+import { HciMODblue } from '@modum-io/modblue/hci'; // for hci bindings
+// import { DbusMODblue } from '@modum-io/modblue/dbus'; // for dbus bindings
 
 const modblue = new HciMODblue();    // or: new DbusMODblue()
 ```
