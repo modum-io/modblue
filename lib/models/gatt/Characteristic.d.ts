@@ -1,11 +1,15 @@
 /// <reference types="node" />
+import { TypedEmitter } from 'tiny-typed-emitter';
 import { inspect, InspectOptionsStylized } from 'util';
 import { GattService } from './Service';
 export declare type GattCharacteristicProperty = 'broadcast' | 'read' | 'write-without-response' | 'write' | 'notify' | 'indicate' | 'authenticated-signed-writes' | 'extended-properties' | 'reliable-write' | 'writable-auxiliaries' | 'authorize';
+export interface GattCharacteristicEvents {
+    notification: (data: Buffer) => void;
+}
 /**
  * Represents a GATT Characteristic.
  */
-export declare abstract class GattCharacteristic {
+export declare abstract class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
     /**
      * The GATT service that this characteristic belongs to.
      */

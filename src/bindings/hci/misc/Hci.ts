@@ -1196,16 +1196,17 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const flags = data.readUInt16LE(0) >> 12;
 		const handleId = data.readUInt16LE(0) & 0x0fff;
 
-		const handle = this.handles.get(handleId);
+		let handle = this.handles.get(handleId);
 		if (!handle) {
-			this.handles.set(handleId, {
+			handle = {
 				id: handleId,
 				interval: 0,
 				latency: 0,
 				supervisionTimeout: 0,
 				aclPacketsInQueue: 0,
 				buffer: null
-			});
+			};
+			this.handles.set(handleId, handle);
 		}
 
 		if (ACL_START === flags) {
