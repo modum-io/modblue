@@ -5,7 +5,7 @@ import { GattCharacteristicLocal } from './Characteristic';
 export class GattDescriptorLocal extends GattDescriptor {
 	public readonly characteristic: GattCharacteristicLocal;
 
-	public readonly value: Buffer;
+	public value: Buffer;
 
 	public constructor(characteristic: GattCharacteristicLocal, uuid: string, value: Buffer) {
 		super(characteristic, uuid);
