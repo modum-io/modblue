@@ -21,9 +21,7 @@
 		"build": "tsc",
 		"docs": "typedoc",
 		"release": "standard-version -a",
-		"postinstall": "npx husky install",
-		"prepublishOnly": "pinst --disable",
-		"postpublish": "pinst --enable",
+		"prepare": "husky install",
 		"pretty-quick": "pretty-quick --staged"
 	},
 	"dependencies": {
@@ -40,7 +38,6 @@
 		"dbus-next": "0.9.1",
 		"husky": "5.1.2",
 		"int64-buffer": "1.0.0",
-		"pinst": "2.1.6",
 		"prettier": "2.2.1",
 		"pretty-quick": "3.1.0",
 		"standard-version": "9.1.1",
