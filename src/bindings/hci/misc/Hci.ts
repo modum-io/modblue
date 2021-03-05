@@ -178,6 +178,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 	private totalNumAclDataPackets: number;
 	private aclLeDataPacketLength: number;
 	private totalNumAclLeDataPackets: number;
+	private isProcessingAclQueue: boolean;
 	private aclPacketQueue: { handle: Handle; pkt: Buffer }[] = [];
 
 	public constructor(deviceId?: number, cmdTimeout: number = HCI_CMD_TIMEOUT) {
@@ -273,6 +274,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 				await this.readLeBufferSize();
 				await this.readBdAddr();
 
+				this.isProcessingAclQueue = false;
 				this.state = 'poweredOn';
 				this.emit('stateChange', this.state);
 			} else {
@@ -839,6 +841,11 @@ export class Hci extends TypedEmitter<HciEvents> {
 	}
 
 	private processAclPacketQueue() {
+		if (this.isProcessingAclQueue) {
+			return;
+		}
+		this.isProcessingAclQueue = true;
+
 		let inProgress = 0;
 		for (const handle of this.handles.values()) {
 			inProgress += handle.aclPacketsInQueue;
@@ -851,6 +858,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 			this.socket.write(pkt);
 		}
+
+		this.isProcessingAclQueue = false;
 	}
 
 	public async readBufferSize() {
