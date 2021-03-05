@@ -1,0 +1,1 @@
+{"version":3,"file":"HciError.d.ts","sourceRoot":"","sources":["../../../../src/bindings/hci/misc/HciError.ts"],"names":[],"mappings":"AAAA,qBAAa,QAAS,SAAQ,KAAK;IAClC,SAAgB,OAAO,EAAE,MAAM,CAAC;gBAEb,OAAO,EAAE,MAAM,EAAE,OAAO,CAAC,EAAE,MAAM;CAMpD"}

@@ -34,3 +34,4 @@ export declare class GattCharacteristicRemote extends GattCharacteristic {
      */
     discoverDescriptors(): Promise<GattDescriptorRemote[]>;
 }
+//# sourceMappingURL=Characteristic.d.ts.map

@@ -23,3 +23,4 @@ export declare class DbusPeripheral extends Peripheral {
     private doneDisconnecting;
     setupGatt(requestMtu?: number): Promise<GattRemote>;
 }
+//# sourceMappingURL=Peripheral.d.ts.map

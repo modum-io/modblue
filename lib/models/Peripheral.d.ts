@@ -79,3 +79,4 @@ export declare abstract class Peripheral {
     };
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
+//# sourceMappingURL=Peripheral.d.ts.map

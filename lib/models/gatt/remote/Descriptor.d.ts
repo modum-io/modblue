@@ -20,3 +20,4 @@ export declare class GattDescriptorRemote extends GattDescriptor {
      */
     writeValue(data: Buffer): Promise<void>;
 }
+//# sourceMappingURL=Descriptor.d.ts.map

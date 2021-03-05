@@ -16,3 +16,4 @@ export declare class DbusGattRemote extends GattRemote {
     readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): Promise<Buffer>;
     writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer): Promise<void>;
 }
+//# sourceMappingURL=Gatt.d.ts.map

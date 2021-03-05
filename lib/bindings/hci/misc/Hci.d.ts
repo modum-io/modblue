@@ -92,3 +92,4 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private onSocketError;
 }
 export {};
+//# sourceMappingURL=Hci.d.ts.map

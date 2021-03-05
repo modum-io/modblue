@@ -13,3 +13,4 @@ export declare class GattCharacteristicLocal extends GattCharacteristic {
     readRequest(offset: number): Promise<[number, Buffer]>;
     writeRequest(offset: number, data: Buffer, withoutResponse: boolean): Promise<number>;
 }
+//# sourceMappingURL=Characteristic.d.ts.map

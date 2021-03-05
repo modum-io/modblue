@@ -44,3 +44,4 @@ export declare abstract class GattCharacteristic extends TypedEmitter<GattCharac
     };
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
+//# sourceMappingURL=Characteristic.d.ts.map

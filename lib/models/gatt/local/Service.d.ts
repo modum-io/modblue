@@ -6,3 +6,4 @@ export declare class GattServiceLocal extends GattService {
     readonly characteristics: GattCharacteristicLocal[];
     constructor(gatt: GattLocal, uuid: string, characteristics: GattCharacteristicLocal[]);
 }
+//# sourceMappingURL=Service.d.ts.map

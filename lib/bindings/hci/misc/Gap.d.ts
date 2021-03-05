@@ -20,3 +20,4 @@ export declare class Gap extends EventEmitter {
     private onHciLeAdvertisingReport;
 }
 export {};
+//# sourceMappingURL=Gap.d.ts.map

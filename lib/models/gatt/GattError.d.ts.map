@@ -1,0 +1,1 @@
+{"version":3,"file":"GattError.d.ts","sourceRoot":"","sources":["../../../src/models/gatt/GattError.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,UAAU,EAAE,MAAM,eAAe,CAAC;AAE3C,qBAAa,SAAU,SAAQ,KAAK;IACnC,SAAgB,UAAU,EAAE,UAAU,CAAC;IAChC,OAAO,CAAC,EAAE,MAAM,CAAC;gBAEL,UAAU,EAAE,UAAU,EAAE,OAAO,EAAE,MAAM,EAAE,OAAO,CAAC,EAAE,MAAM;CAO5E"}

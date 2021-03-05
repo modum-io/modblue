@@ -9,3 +9,4 @@ declare const MAPPINGS: {
 };
 export declare function buildTypedValue(types: keyof typeof MAPPINGS | (keyof typeof MAPPINGS)[], value: any): any;
 export {};
+//# sourceMappingURL=TypeValue.d.ts.map

@@ -16,3 +16,4 @@ export declare class HciPeripheral extends Peripheral {
     onDisconnect(reason?: string): void;
     setupGatt(requestMtu?: number): Promise<GattRemote>;
 }
+//# sourceMappingURL=Peripheral.d.ts.map

@@ -1,0 +1,1 @@
+{"version":3,"file":"Signaling.d.ts","sourceRoot":"","sources":["../../../../src/bindings/hci/misc/Signaling.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,GAAG,EAAE,MAAM,OAAO,CAAC;AAO5B,qBAAa,SAAS;IACrB,OAAO,CAAC,GAAG,CAAM;IACjB,OAAO,CAAC,MAAM,CAAS;gBAEJ,GAAG,EAAE,GAAG,EAAE,MAAM,EAAE,MAAM;IAMpC,OAAO;IASd,OAAO,CAAC,eAAe,CAarB;IAEF,OAAO,CAAC,uCAAuC;CAqB/C"}

@@ -6,3 +6,4 @@ export declare class GattDescriptorLocal extends GattDescriptor {
     value: Buffer;
     constructor(characteristic: GattCharacteristicLocal, uuid: string, value: Buffer);
 }
+//# sourceMappingURL=Descriptor.d.ts.map

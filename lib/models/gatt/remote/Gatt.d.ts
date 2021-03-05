@@ -80,3 +80,4 @@ export declare abstract class GattRemote extends Gatt {
         peripheral: Peripheral;
     };
 }
+//# sourceMappingURL=Gatt.d.ts.map

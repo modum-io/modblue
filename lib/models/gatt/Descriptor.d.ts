@@ -21,3 +21,4 @@ export declare abstract class GattDescriptor {
     };
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
+//# sourceMappingURL=Descriptor.d.ts.map

@@ -5,3 +5,4 @@ export declare class HciGattDescriptorRemote extends GattDescriptorRemote {
     readonly handle: number;
     constructor(characteristic: HciGattCharacteristicRemote, uuid: string, handle: number);
 }
+//# sourceMappingURL=Descriptor.d.ts.map

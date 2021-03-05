@@ -7,3 +7,4 @@ export declare class HciMODblue extends MODblue {
     dispose(): Promise<void>;
     getAdapters(): Promise<Adapter[]>;
 }
+//# sourceMappingURL=MODblue.d.ts.map

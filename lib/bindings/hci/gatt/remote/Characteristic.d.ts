@@ -9,3 +9,4 @@ export declare class HciGattCharacteristicRemote extends GattCharacteristicRemot
     descriptors: Map<string, HciGattDescriptorRemote>;
     constructor(service: HciGattServiceRemote, uuid: string, propertiesFlag: number, secureFlag: number, startHandle: number, valueHandle: number);
 }
+//# sourceMappingURL=Characteristic.d.ts.map

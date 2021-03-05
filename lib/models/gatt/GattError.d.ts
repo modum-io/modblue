@@ -4,3 +4,4 @@ export declare class GattError extends Error {
     details?: string;
     constructor(peripheral: Peripheral, message: string, details?: string);
 }
+//# sourceMappingURL=GattError.d.ts.map
