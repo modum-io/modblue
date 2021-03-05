@@ -1,8 +1,8 @@
 {
 	"compilerOptions": {
 		"module": "CommonJS",
-		"target": "ES2018",
-		"lib": ["ES2019", "ES2020"],
+		"target": "ES2015",
+		"lib": ["ES2016", "ES2017"],
 		"moduleResolution": "node",
 		"noImplicitAny": true,
 		"resolveJsonModule": true,
@@ -13,6 +13,7 @@
 		"types": ["node"],
 		"outDir": "lib",
 		"declaration": true,
+		"declarationMap": true,
 		"sourceMap": true,
 		"plugins": [
 			{

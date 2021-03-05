@@ -18,3 +18,4 @@ export declare class GattServiceRemote extends GattService {
      */
     discoverCharacteristics(): Promise<GattCharacteristicRemote[]>;
 }
+//# sourceMappingURL=Service.d.ts.map

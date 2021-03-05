@@ -36,3 +36,4 @@ export declare class HciAdapter extends Adapter {
     private onLeConnComplete;
     private onDisconnectComplete;
 }
+//# sourceMappingURL=Adapter.d.ts.map

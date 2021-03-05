@@ -1,3 +1,4 @@
+import { TypedEmitter } from 'tiny-typed-emitter';
 import { inspect, InspectOptionsStylized } from 'util';
 
 import { GattService } from './Service';
@@ -17,10 +18,14 @@ export type GattCharacteristicProperty =
 	| 'writable-auxiliaries'
 	| 'authorize';
 
+export interface GattCharacteristicEvents {
+	notification: (data: Buffer) => void;
+}
+
 /**
  * Represents a GATT Characteristic.
  */
-export abstract class GattCharacteristic {
+export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
 	/**
 	 * The GATT service that this characteristic belongs to.
 	 */
@@ -54,6 +59,8 @@ export abstract class GattCharacteristic {
 		propsOrFlag: number | GattCharacteristicProperty[],
 		secureOrFlag: number | GattCharacteristicProperty[]
 	) {
+		super();
+
 		this.service = service;
 
 		this.uuid = uuid;

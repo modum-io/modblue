@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { AddressType } from '../../../types';
+import { AddressType } from '../../../models';
 interface HciDevice {
     devId: number;
     devUp: boolean;
@@ -49,6 +49,7 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private acquireMutex;
     init(): Promise<void>;
     private checkSocketState;
+    trackSentAclPackets(handleId: number, packets: number): void;
     dispose(): void;
     private sendCommand;
     private setSocketFilter;
@@ -91,3 +92,4 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private onSocketError;
 }
 export {};
+//# sourceMappingURL=Hci.d.ts.map

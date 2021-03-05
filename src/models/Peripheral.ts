@@ -1,8 +1,7 @@
 import { inspect, InspectOptionsStylized } from 'util';
 
-import { AddressType } from '../types';
-
 import { Adapter } from './Adapter';
+import { AddressType } from './AddressType';
 import { GattRemote } from './gatt';
 
 /**

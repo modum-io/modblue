@@ -117,18 +117,26 @@
 				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
 					<h3>Installation</h3>
 				</a>
+				<p>Install the module from npm:</p>
 				<pre><code class="language-bash"><span style="color: #000000">npm i -E @modum-io/modblue</span>
 </code></pre>
+				<p>Then install the peer depencies depending on which one(s) you want to use:  </p>
+				<ul>
+					<li><p><code>hci</code> (using <a href="https://github.com/abandonware/node-bluetooth-hci-socket">bluetooth-hci-socket</a>)</p>
+						<pre><code class="language-bash"><span style="color: #000000">npm i -E @abandonware/bluetooth-hci-socket</span>
+</code></pre>
+					</li>
+					<li><p><code>dbus</code> (using <a href="https://github.com/dbusjs/node-dbus-next">dbus-next</a>)</p>
+						<pre><code class="language-bash"><span style="color: #000000">npm i -E dbus-next</span>
+</code></pre>
+					</li>
+				</ul>
 				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
 					<h3>Usage</h3>
 				</a>
-				<p>Currently there are the following bindings available:</p>
-				<ul>
-					<li><code>hci</code> (using <a href="https://github.com/abandonware/node-bluetooth-hci-socket">bluetooth-hci-socket</a>)</li>
-					<li><code>dbus</code> (using <a href="https://github.com/dbusjs/node-dbus-next">dbus-next</a>)</li>
-				</ul>
 				<p>Create a new <code>MODblue</code> object to get started (all bindings have the same interface)</p>
-				<pre><code class="language-ts"><span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">HciMODblue</span><span style="color: #000000">, </span><span style="color: #001080">DbusMODblue</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;@modum-io/modblue&#039;</span><span style="color: #000000">;</span>
+				<pre><code class="language-ts"><span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">HciMODblue</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;@modum-io/modblue/hci&#039;</span><span style="color: #000000">; </span><span style="color: #008000">// for hci bindings</span>
+<span style="color: #008000">// import { DbusMODblue } from &#039;@modum-io/modblue/dbus&#039;; // for dbus bindings</span>
 
 <span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">modblue</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">HciMODblue</span><span style="color: #000000">();    </span><span style="color: #008000">// or: new DbusMODblue()</span>
 </code></pre>
@@ -297,9 +305,6 @@
 						<a href="classes/adapter.html" class="tsd-kind-icon">Adapter</a>
 					</li>
 					<li class=" tsd-kind-class">
-						<a href="classes/dbusmodblue.html" class="tsd-kind-icon">DbusMODblue</a>
-					</li>
-					<li class=" tsd-kind-class">
 						<a href="classes/gatt.html" class="tsd-kind-icon">Gatt</a>
 					</li>
 					<li class=" tsd-kind-class">
@@ -337,9 +342,6 @@
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="classes/gattserviceremote.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Remote</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/hcimodblue.html" class="tsd-kind-icon">HciMODblue</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="classes/modblue.html" class="tsd-kind-icon">MODblue</a>

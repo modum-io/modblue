@@ -1,0 +1,1 @@
+{"version":3,"file":"Interfaces.d.ts","sourceRoot":"","sources":["../../../../src/bindings/dbus/misc/Interfaces.ts"],"names":[],"mappings":"AAAA,eAAO,MAAM,eAAe,uBAAuB,CAAC;AACpD,eAAO,MAAM,cAAc,sBAAsB,CAAC;AAClD,eAAO,MAAM,eAAe,2BAA2B,CAAC;AACxD,eAAO,MAAM,sBAAsB,kCAAkC,CAAC;AAEtE,eAAO,MAAM,YAAY,oCAAoC,CAAC;AAC9D,eAAO,MAAM,gBAAgB,uCAAuC,CAAC"}

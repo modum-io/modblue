@@ -57,3 +57,4 @@ export declare abstract class GattLocal extends Gatt {
     };
 }
 export {};
+//# sourceMappingURL=Gatt.d.ts.map

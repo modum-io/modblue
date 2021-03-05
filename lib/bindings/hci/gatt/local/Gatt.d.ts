@@ -20,3 +20,4 @@ export declare class HciGattLocal extends GattLocal {
     private handleExecuteWriteRequest;
     private handleConfirmation;
 }
+//# sourceMappingURL=Gatt.d.ts.map

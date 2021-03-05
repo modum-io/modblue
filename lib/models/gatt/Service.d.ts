@@ -21,3 +21,4 @@ export declare abstract class GattService {
     };
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
+//# sourceMappingURL=Service.d.ts.map

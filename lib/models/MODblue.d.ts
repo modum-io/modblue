@@ -13,3 +13,4 @@ export declare abstract class MODblue {
      */
     abstract getAdapters(): Promise<Adapter[]>;
 }
+//# sourceMappingURL=MODblue.d.ts.map

@@ -81,11 +81,13 @@ export class HciGattLocal extends GattLocal {
 				default:
 				case CONST.ATT_OP_READ_MULTI_REQ:
 				case CONST.ATT_OP_SIGNED_WRITE_CMD:
+					// console.log('[ACL]', 'UNSUPPORTED', requestType, data);
 					response = this.errorResponse(requestType, 0x0000, CONST.ATT_ECODE_REQ_NOT_SUPP);
 					break;
 			}
-		} catch {
+		} catch (err) {
 			// TODO: How should errors thrown inside possibly user-defined functions be propagated?
+			// console.error(err);
 		}
 
 		if (response) {
@@ -522,85 +524,90 @@ export class HciGattLocal extends GattLocal {
 		const requestType = request[0];
 		const withoutResponse = requestType === CONST.ATT_OP_WRITE_CMD;
 		const valueHandle = request.readUInt16LE(1);
-		const data = request.slice(3);
+		const requestData = request.slice(3);
 		const offset = 0;
 
 		const handle = this.handles[valueHandle];
 
-		if (handle && (handle.type === 'characteristic' || handle.type === 'characteristicValue')) {
+		if (handle && handle.type !== 'service') {
 			if (
-				withoutResponse
+				handle.type === 'descriptor' ||
+				(withoutResponse
 					? handle.object.properties.includes('write-without-response')
-					: handle.object.properties.includes('write')
+					: handle.object.properties.includes('write'))
 			) {
 				if (
-					withoutResponse
+					handle.type !== 'descriptor' &&
+					(withoutResponse
 						? handle.object.secure.includes('write-without-response')
-						: handle.object.secure.includes('write') /*&& !this._aclStream.encrypted*/
+						: handle.object.secure.includes('write')) /*&& !this._aclStream.encrypted*/
 				) {
 					response = this.errorResponse(requestType, valueHandle, CONST.ATT_ECODE_AUTHENTICATION);
-				} /*else if (handle.type === 'descriptor' || handle.object.uuid === '2902') {
+				} else if (handle.type === 'descriptor' || handle.object.uuid === '2902') {
 					let result = null;
+					let data: Buffer = null;
 
-					if (data.length !== 2) {
+					console.log('write req 1', requestData);
+
+					if (requestData.length !== 2) {
 						result = CONST.ATT_ECODE_INVAL_ATTR_VALUE_LEN;
 					} else {
-						const value = data.readUInt16LE(0);
-						const handleAttribute = handle.object;
+						const value = requestData.readUInt16LE(0);
 
-						handle.value = data;
+						if (handle.type === 'descriptor') {
+							handle.object.value = requestData;
+						}
 
+						// tslint:disable-next-line: no-bitwise
 						if (value & 0x0003) {
-							const charHandle = valueHandle - 1;
-							const updateValueCallback = () => {
-								return (data) => {
-									const dataLength = Math.min(data.length, this._maxMtu - 3);
-									const useNotify = attribute.properties.indexOf('notify') !== -1;
-									const useIndicate = attribute.properties.indexOf('indicate') !== -1;
+							// console.log('subscribe');
 
-									if (useNotify) {
-										const notifyMessage = Buffer.alloc(3 + dataLength);
+							const useNotify = true; // handle.object.properties.indexOf('notify') !== -1;
+							// const useIndicate = handle.object.properties.indexOf('indicate') !== -1;
 
-										notifyMessage.writeUInt8(CONST.ATT_OP_HANDLE_NOTIFY, 0);
-										notifyMessage.writeUInt16LE(charHandle, 1);
+							if (useNotify) {
+								data = Buffer.alloc(3);
 
-										for (let i = 0; i < dataLength; i++) {
-											notifyMessage[3 + i] = data[i];
-										}
+								data.writeUInt8(CONST.ATT_OP_HANDLE_NOTIFY, 0);
+								data.writeUInt16LE(valueHandle, 1);
+							} /*else if (useIndicate) {
+								const indicateMessage = Buffer.alloc(3 + dataLength);
 
-										this.send(notifyMessage);
+								indicateMessage.writeUInt8(CONST.ATT_OP_HANDLE_IND, 0);
+								indicateMessage.writeUInt16LE(charHandle, 1);
 
-										attribute.emit('notify');
-									} else if (useIndicate) {
-										const indicateMessage = Buffer.alloc(3 + dataLength);
+								for (let i = 0; i < dataLength; i++) {
+									indicateMessage[3 + i] = data[i];
+								}
 
-										indicateMessage.writeUInt8(CONST.ATT_OP_HANDLE_IND, 0);
-										indicateMessage.writeUInt16LE(charHandle, 1);
+								this._lastIndicatedAttribute = attribute;
 
-										for (let i = 0; i < dataLength; i++) {
-											indicateMessage[3 + i] = data[i];
-										}
-
-										this._lastIndicatedAttribute = attribute;
-
-										this.send(indicateMessage);
-									}
-								};
-							};
-
-							if (handleAttribute.emit) {
-								handleAttribute.emit('subscribe', this._maxMtu - 3, updateValueCallback);
-							}
+								this.send(indicateMessage);
+							}*/
 						} else {
-							handleAttribute.emit('unsubscribe');
+							// console.log('unsubscribe');
+
+							data = Buffer.alloc(0);
 						}
 
 						result = CONST.ATT_ECODE_SUCCESS;
 					}
 
-					callback(result);
-				}*/ else {
-					const result = await handle.object.writeRequest(offset, data, withoutResponse);
+					if (result !== null) {
+						if (result === CONST.ATT_ECODE_SUCCESS) {
+							const dataLength = Math.min(data.length, this.getMtu(_handle) - 1);
+							response = Buffer.alloc(1 + dataLength);
+
+							response[0] = CONST.ATT_OP_WRITE_RESP;
+							for (let i = 0; i < dataLength; i++) {
+								response[1 + i] = data[i];
+							}
+						} else {
+							response = this.errorResponse(requestType, valueHandle, result);
+						}
+					}
+				} else {
+					const result = await handle.object.writeRequest(offset, requestData, withoutResponse);
 					response =
 						result === CONST.ATT_ECODE_SUCCESS
 							? Buffer.from([CONST.ATT_OP_WRITE_RESP])

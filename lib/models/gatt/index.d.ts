@@ -5,3 +5,4 @@ export { GattError } from './GattError';
 export { GattService } from './Service';
 export * from './local';
 export * from './remote';
+//# sourceMappingURL=index.d.ts.map

@@ -6,3 +6,4 @@ export declare class DbusGattServiceRemote extends GattServiceRemote {
     characteristics: Map<string, DbusGattCharacteristicRemote>;
     constructor(gatt: DbusGattRemote, path: string, uuid: string);
 }
+//# sourceMappingURL=Service.d.ts.map

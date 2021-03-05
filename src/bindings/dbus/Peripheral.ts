@@ -1,7 +1,6 @@
 import { ClientInterface } from 'dbus-next';
 
-import { GattRemote, Peripheral } from '../../models';
-import { AddressType } from '../../types';
+import { AddressType, GattRemote, Peripheral } from '../../models';
 
 import { DbusAdapter } from './Adapter';
 import { DbusGattRemote } from './gatt';

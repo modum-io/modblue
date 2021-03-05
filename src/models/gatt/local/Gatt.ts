@@ -1,5 +1,3 @@
-import { inspect, InspectOptions } from 'util';
-
 import { Adapter } from '../../Adapter';
 import { GattCharacteristicProperty } from '../Characteristic';
 import { Gatt } from '../Gatt';

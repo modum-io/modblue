@@ -4,3 +4,4 @@ export declare const I_BLUEZ_SERVICE = "org.bluez.GattService1";
 export declare const I_BLUEZ_CHARACTERISTIC = "org.bluez.GattCharacteristic1";
 export declare const I_PROPERTIES = "org.freedesktop.DBus.Properties";
 export declare const I_OBJECT_MANAGER = "org.freedesktop.DBus.ObjectManager";
+//# sourceMappingURL=Interfaces.d.ts.map

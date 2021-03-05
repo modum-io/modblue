@@ -11,3 +11,4 @@ export declare class DbusMODblue extends MODblue {
     dispose(): Promise<void>;
     getAdapters(): Promise<Adapter[]>;
 }
+//# sourceMappingURL=MODblue.d.ts.map

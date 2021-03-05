@@ -50,3 +50,4 @@ export declare const GATT_CHARAC_UUID = 10243;
 export declare const GATT_CLIENT_CHARAC_CFG_UUID = 10498;
 export declare const GATT_SERVER_CHARAC_CFG_UUID = 10499;
 export declare const ATT_CID = 4;
+//# sourceMappingURL=Constants.d.ts.map

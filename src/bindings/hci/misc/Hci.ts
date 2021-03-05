@@ -1,7 +1,7 @@
 import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 import { TypedEmitter } from 'tiny-typed-emitter';
 
-import { AddressType } from '../../../types';
+import { AddressType } from '../../../models';
 
 import STATUS_MAPPER from './hci-status.json';
 import { HciError } from './HciError';
@@ -291,6 +291,13 @@ export class Hci extends TypedEmitter<HciEvents> {
 			}
 		}
 	};
+
+	public trackSentAclPackets(handleId: number, packets: number) {
+		const handle = this.handles.get(handleId);
+		if (handle) {
+			handle.aclPacketsInQueue += packets;
+		}
+	}
 
 	public dispose() {
 		if (this.socketTimer) {
@@ -844,7 +851,10 @@ export class Hci extends TypedEmitter<HciEvents> {
 			inProgress += handle.aclPacketsInQueue;
 		}
 
-		while (inProgress < this.totalNumAclLeDataPackets && this.aclPacketQueue.length > 0) {
+		// We limit our packets to the max - 1, just to be safe. But we need at least 1 to send stuff
+		// E.g. on linux the connection parameter update is handling automatically, so we need a spare slot for that packet
+		const maxPackets = Math.max(1, this.totalNumAclLeDataPackets - 1);
+		while (inProgress < maxPackets && this.aclPacketQueue.length > 0) {
 			const { handle, pkt } = this.aclPacketQueue.shift();
 			handle.aclPacketsInQueue++;
 			inProgress++;
@@ -1170,8 +1180,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const numHandles = data.readUInt8(0);
 
 		for (let i = 0; i < numHandles; i++) {
-			const targetHandleId = data.readUInt16LE(1 + i * 2);
-			const targetNumPackets = data.readUInt16LE(1 + numHandles * 2 + i * 2);
+			const targetHandleId = data.readUInt16LE(1 + i * 4);
+			const targetNumPackets = data.readUInt16LE(1 + i * 4 + 2);
 
 			const targetHandle = this.handles.get(targetHandleId);
 			if (!targetHandle) {
@@ -1196,16 +1206,17 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const flags = data.readUInt16LE(0) >> 12;
 		const handleId = data.readUInt16LE(0) & 0x0fff;
 
-		const handle = this.handles.get(handleId);
+		let handle = this.handles.get(handleId);
 		if (!handle) {
-			this.handles.set(handleId, {
+			handle = {
 				id: handleId,
 				interval: 0,
 				latency: 0,
 				supervisionTimeout: 0,
 				aclPacketsInQueue: 0,
 				buffer: null
-			});
+			};
+			this.handles.set(handleId, handle);
 		}
 
 		if (ACL_START === flags) {
