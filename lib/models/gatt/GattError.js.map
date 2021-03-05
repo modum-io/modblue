@@ -1,0 +1,1 @@
+{"version":3,"file":"GattError.js","sourceRoot":"","sources":["../../../src/models/gatt/GattError.ts"],"names":[],"mappings":";;;AAEA,MAAa,SAAU,SAAQ,KAAK;IAInC,YAAmB,UAAsB,EAAE,OAAe,EAAE,OAAgB;QAC3E,KAAK,CAAC,OAAO,CAAC,CAAC;QAEf,IAAI,CAAC,IAAI,GAAG,WAAW,CAAC;QACxB,IAAI,CAAC,UAAU,GAAG,UAAU,CAAC;QAC7B,IAAI,CAAC,OAAO,GAAG,OAAO,CAAC;IACxB,CAAC;CACD;AAXD,8BAWC"}

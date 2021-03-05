@@ -1,0 +1,1 @@
+{"version":3,"file":"Descriptor.js","sourceRoot":"","sources":["../../../../src/models/gatt/local/Descriptor.ts"],"names":[],"mappings":";;;AAAA,8CAA+C;AAI/C,MAAa,mBAAoB,SAAQ,2BAAc;IAKtD,YAAmB,cAAuC,EAAE,IAAY,EAAE,KAAa;QACtF,KAAK,CAAC,cAAc,EAAE,IAAI,CAAC,CAAC;QAE5B,IAAI,CAAC,KAAK,GAAG,KAAK,CAAC;IACpB,CAAC;CACD;AAVD,kDAUC"}

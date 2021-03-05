@@ -1,0 +1,1 @@
+{"version":3,"file":"Service.js","sourceRoot":"","sources":["../../../../src/models/gatt/local/Service.ts"],"names":[],"mappings":";;;AAAA,wCAAyC;AAKzC,MAAa,gBAAiB,SAAQ,qBAAW;IAKhD,YAAmB,IAAe,EAAE,IAAY,EAAE,eAA0C;QAC3F,KAAK,CAAC,IAAI,EAAE,IAAI,CAAC,CAAC;QAElB,IAAI,CAAC,eAAe,GAAG,eAAe,CAAC;IACxC,CAAC;CACD;AAVD,4CAUC"}
