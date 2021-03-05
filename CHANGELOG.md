@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.0.0](https://github.com/modum-io/modblue/compare/v5.2.2...v6.0.0) (2021-03-05)
+
+### ⚠ BREAKING CHANGES
+
+- hci or dbus dependency must be included manually
+
+### Bug Fixes
+
+- Change typescript target ([09e7502](https://github.com/modum-io/modblue/commit/09e7502a833451e49371ff61067d8f5beee02739))
+- Project structure ([4c3c12b](https://github.com/modum-io/modblue/commit/4c3c12bdd5cfeb8b252ddfbfe4a33d23140f7ea0))
+- Remove subprojects ([af20da9](https://github.com/modum-io/modblue/commit/af20da991f6ede3117bed0f770f16ad029e39318))
+- **hci:** Fix acl packet counting issues ([7422855](https://github.com/modum-io/modblue/commit/74228551c1a3b43482809b2a41ba8d1227d12ace))
+- **hci:** Fix descriptors & notify events ([52d64ec](https://github.com/modum-io/modblue/commit/52d64ec39ed079a2082360f74bdea11d099e206f))
+- **hci:** Fix notifications ([55e7860](https://github.com/modum-io/modblue/commit/55e7860319d5f746f5fddddd1ee032a7ee9c395d))
+- **hci:** Limit acl queue processing ([973d148](https://github.com/modum-io/modblue/commit/973d148508c5f7cdf4cf28dbed5a6ded67d5c30c))
+- Make hci and dbus peer dependencies ([0fc88be](https://github.com/modum-io/modblue/commit/0fc88becf4e7a96210d2419435f7456e05abc091))
+- Update readme to reflect module changes ([24b7331](https://github.com/modum-io/modblue/commit/24b73311f39f2609cf7251692c992da4a7667726))
+
 ### [5.2.2](https://github.com/modum-io/modblue/compare/v5.2.1...v5.2.2) (2021-02-22)
 
 ### Bug Fixes
