@@ -178,7 +178,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 	private totalNumAclDataPackets: number;
 	private aclLeDataPacketLength: number;
 	private totalNumAclLeDataPackets: number;
-	private isProcessingAclQueue: boolean;
 	private aclPacketQueue: { handle: Handle; pkt: Buffer }[] = [];
 
 	public constructor(deviceId?: number, cmdTimeout: number = HCI_CMD_TIMEOUT) {
@@ -274,7 +273,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 				await this.readLeBufferSize();
 				await this.readBdAddr();
 
-				this.isProcessingAclQueue = false;
 				this.state = 'poweredOn';
 				this.emit('stateChange', this.state);
 			} else {
@@ -293,6 +291,13 @@ export class Hci extends TypedEmitter<HciEvents> {
 			}
 		}
 	};
+
+	public trackSentAclPackets(handleId: number, packets: number) {
+		const handle = this.handles.get(handleId);
+		if (handle) {
+			handle.aclPacketsInQueue += packets;
+		}
+	}
 
 	public dispose() {
 		if (this.socketTimer) {
@@ -841,25 +846,21 @@ export class Hci extends TypedEmitter<HciEvents> {
 	}
 
 	private processAclPacketQueue() {
-		if (this.isProcessingAclQueue) {
-			return;
-		}
-		this.isProcessingAclQueue = true;
-
 		let inProgress = 0;
 		for (const handle of this.handles.values()) {
 			inProgress += handle.aclPacketsInQueue;
 		}
 
-		while (inProgress < this.totalNumAclLeDataPackets && this.aclPacketQueue.length > 0) {
+		// We limit our packets to the max - 1, just to be safe. But we need at least 1 to send stuff
+		// E.g. on linux the connection parameter update is handling automatically, so we need a spare slot for that packet
+		const maxPackets = Math.max(1, this.totalNumAclLeDataPackets - 1);
+		while (inProgress < maxPackets && this.aclPacketQueue.length > 0) {
 			const { handle, pkt } = this.aclPacketQueue.shift();
 			handle.aclPacketsInQueue++;
 			inProgress++;
 
 			this.socket.write(pkt);
 		}
-
-		this.isProcessingAclQueue = false;
 	}
 
 	public async readBufferSize() {
@@ -1179,8 +1180,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const numHandles = data.readUInt8(0);
 
 		for (let i = 0; i < numHandles; i++) {
-			const targetHandleId = data.readUInt16LE(1 + i * 2);
-			const targetNumPackets = data.readUInt16LE(1 + numHandles * 2 + i * 2);
+			const targetHandleId = data.readUInt16LE(1 + i * 4);
+			const targetNumPackets = data.readUInt16LE(1 + i * 4 + 2);
 
 			const targetHandle = this.handles.get(targetHandleId);
 			if (!targetHandle) {

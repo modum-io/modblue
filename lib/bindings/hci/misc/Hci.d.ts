@@ -43,13 +43,13 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private totalNumAclDataPackets;
     private aclLeDataPacketLength;
     private totalNumAclLeDataPackets;
-    private isProcessingAclQueue;
     private aclPacketQueue;
     constructor(deviceId?: number, cmdTimeout?: number);
     static getDeviceList(): HciDevice[];
     private acquireMutex;
     init(): Promise<void>;
     private checkSocketState;
+    trackSentAclPackets(handleId: number, packets: number): void;
     dispose(): void;
     private sendCommand;
     private setSocketFilter;
