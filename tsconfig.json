@@ -1,28 +1,22 @@
 {
 	"compilerOptions": {
+		"moduleResolution": "Node",
 		"module": "CommonJS",
 		"target": "ES2015",
+		"types": ["node"],
 		"lib": ["ES2016", "ES2017"],
-		"moduleResolution": "node",
+		"outDir": "lib",
 		"noImplicitAny": true,
 		"resolveJsonModule": true,
 		"esModuleInterop": true,
-		"removeComments": false,
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
-		"types": ["node"],
-		"outDir": "lib",
 		"declaration": true,
 		"declarationMap": true,
-		"sourceMap": true,
-		"plugins": [
-			{
-				"name": "tslint-language-service"
-			}
-		]
+		"sourceMap": true
 	},
 	"include": ["src/**/*"],
-	"exclude": ["node_modules", "lib", "tests"],
+	"exclude": ["docs", "lib", "tests", "node_modules"],
 	"typedocOptions": {
 		"out": "docs",
 		"listInvalidSymbolLinks": true,
