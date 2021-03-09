@@ -170,11 +170,11 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 		this.secureFlag = secureFlag;
 	}
 
-	public toString() {
+	public toString(): string {
 		return JSON.stringify(this.toJSON());
 	}
 
-	public toJSON() {
+	public toJSON(): Record<string, unknown> {
 		return {
 			uuid: this.uuid,
 			properties: this.properties,
@@ -183,7 +183,7 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized) {
+	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

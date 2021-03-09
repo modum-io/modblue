@@ -1,4 +1,5 @@
-/docs/
-/lib/
-/node_modules/
+docs
+lib
+node_modules
+
 README.md

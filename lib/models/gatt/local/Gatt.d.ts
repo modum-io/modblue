@@ -51,10 +51,7 @@ export declare abstract class GattLocal extends Gatt {
     get serviceInputs(): GattServiceInput[];
     constructor(adapter: Adapter, maxMtu?: number);
     setData(deviceName: string, services: GattServiceInput[]): void;
-    toJSON(): {
-        maxMtu: number;
-        adapter: Adapter;
-    };
+    toJSON(): Record<string, unknown>;
 }
 export {};
 //# sourceMappingURL=Gatt.d.ts.map

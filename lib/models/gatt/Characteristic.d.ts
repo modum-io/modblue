@@ -36,12 +36,7 @@ export declare abstract class GattCharacteristic extends TypedEmitter<GattCharac
     readonly secureFlag: number;
     constructor(service: GattService, uuid: string, propsOrFlag: number | GattCharacteristicProperty[], secureOrFlag: number | GattCharacteristicProperty[]);
     toString(): string;
-    toJSON(): {
-        uuid: string;
-        properties: GattCharacteristicProperty[];
-        secure: GattCharacteristicProperty[];
-        service: GattService;
-    };
+    toJSON(): Record<string, unknown>;
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
 //# sourceMappingURL=Characteristic.d.ts.map

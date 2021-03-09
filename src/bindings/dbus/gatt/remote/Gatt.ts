@@ -6,6 +6,7 @@ import {
 } from '../../../../models';
 import {
 	buildTypedValue,
+	DbusObject,
 	I_BLUEZ_CHARACTERISTIC,
 	I_BLUEZ_DEVICE,
 	I_BLUEZ_SERVICE,
@@ -34,70 +35,64 @@ export class DbusGattRemote extends GattRemote {
 		const path = this.peripheral.path;
 		const dbus = this.peripheral.adapter.modblue.dbus;
 
-		const timeoutError = new Error('Discovering timed out');
+		const obj = await dbus.getProxyObject('org.bluez', path);
+		const propsIface = obj.getInterface(I_PROPERTIES);
 
-		return new Promise<DbusGattServiceRemote[]>(async (resolve, reject) => {
-			let cancelled = false;
+		const servicesResolved = (await propsIface.Get(I_BLUEZ_DEVICE, 'ServicesResolved')).value;
+		if (!servicesResolved) {
+			const timeoutError = new Error('Discovering timed out');
+			await new Promise<void>((res, rej) => {
+				let timeout: NodeJS.Timeout;
 
-			const onTimeout = () => {
-				cancelled = true;
-				reject(timeoutError);
-			};
-			const timeout = setTimeout(onTimeout, DISCOVER_TIMEOUT * 1000);
+				const onPropertiesChanged = (iface: string, changedProps: DbusObject) => {
+					if (iface !== I_BLUEZ_DEVICE) {
+						return;
+					}
 
-			const obj = await dbus.getProxyObject('org.bluez', path);
-			const propsIface = obj.getInterface(I_PROPERTIES);
-
-			const servicesResolved = (await propsIface.Get(I_BLUEZ_DEVICE, 'ServicesResolved')).value;
-			if (!servicesResolved) {
-				await new Promise<void>(async (res) => {
-					const onPropertiesChanged = (iface: string, changedProps: any) => {
-						if (iface !== I_BLUEZ_DEVICE) {
-							return;
+					if ('ServicesResolved' in changedProps && changedProps.ServicesResolved.value) {
+						propsIface.off('PropertiesChanged', onPropertiesChanged);
+						if (timeout) {
+							clearTimeout(timeout);
+							timeout = null;
 						}
+						res();
+					}
+				};
 
-						if ('ServicesResolved' in changedProps && changedProps.ServicesResolved.value) {
-							propsIface.off('PropertiesChanged', onPropertiesChanged);
-							res();
-						}
-					};
-					propsIface.on('PropertiesChanged', onPropertiesChanged);
-				});
+				propsIface.on('PropertiesChanged', onPropertiesChanged);
+
+				timeout = setTimeout(() => {
+					propsIface.off('PropertiesChanged', onPropertiesChanged);
+					rej(timeoutError);
+				}, DISCOVER_TIMEOUT * 1000);
+			});
+		}
+
+		const objManager = await dbus.getProxyObject(`org.bluez`, '/');
+		const objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
+
+		const objs = await objManagerIface.GetManagedObjects();
+		const keys = Object.keys(objs);
+
+		for (const srvPath of keys) {
+			if (!srvPath.startsWith(path)) {
+				continue;
 			}
 
-			if (cancelled) {
-				// If we canceled by timeout then all the promises have already been rejected, so just return.
-				return;
-			} else {
-				clearTimeout(timeout);
+			const srvObj = objs[srvPath][I_BLUEZ_SERVICE];
+			if (!srvObj) {
+				continue;
 			}
 
-			const objManager = await dbus.getProxyObject(`org.bluez`, '/');
-			const objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
-
-			const objs = await objManagerIface.GetManagedObjects();
-			const keys = Object.keys(objs);
-
-			for (const srvPath of keys) {
-				if (!srvPath.startsWith(path)) {
-					continue;
-				}
-
-				const srvObj = objs[srvPath][I_BLUEZ_SERVICE];
-				if (!srvObj) {
-					continue;
-				}
-
-				let service = this.services.get(srvPath);
-				if (!service) {
-					const uuid = srvObj.UUID.value.replace(/\-/g, '');
-					service = new DbusGattServiceRemote(this, srvPath, uuid);
-					this.services.set(uuid, service);
-				}
+			let service = this.services.get(srvPath);
+			if (!service) {
+				const uuid = srvObj.UUID.value.replace(/-/g, '');
+				service = new DbusGattServiceRemote(this, srvPath, uuid);
+				this.services.set(uuid, service);
 			}
+		}
 
-			resolve([...this.services.values()]);
-		});
+		return [...this.services.values()];
 	}
 
 	public async discoverCharacteristics(serviceUUID: string): Promise<GattCharacteristicRemote[]> {
@@ -124,7 +119,7 @@ export class DbusGattRemote extends GattRemote {
 				continue;
 			}
 
-			const uuid = charObj.UUID.value.replace(/\-/g, '');
+			const uuid = charObj.UUID.value.replace(/-/g, '');
 			const properties = (charObj.Flags.value as string[]).filter((p) => !p.startsWith('secure-'));
 			const secure = properties.filter((p) => p.startsWith('encrypt')).map((p) => p.replace('encrypt-', ''));
 			const characteristic = new DbusGattCharacteristicRemote(
@@ -182,25 +177,20 @@ export class DbusGattRemote extends GattRemote {
 			type: buildTypedValue('string', withoutResponse ? 'command' : 'request')
 		});
 	}
-	public async broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): Promise<void> {
+	public async broadcast(): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
-	public async notify(serviceUUID: string, characteristicUUID: string, notify: boolean): Promise<void> {
+	public async notify(): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
-	public async discoverDescriptors(serviceUUID: string, characteristicUUID: string): Promise<GattDescriptorRemote[]> {
+	public async discoverDescriptors(): Promise<GattDescriptorRemote[]> {
 		throw new Error('Method not implemented.');
 	}
 
-	public async readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): Promise<Buffer> {
+	public async readValue(): Promise<Buffer> {
 		throw new Error('Method not implemented.');
 	}
-	public async writeValue(
-		serviceUUID: string,
-		characteristicUUID: string,
-		descriptorUUID: string,
-		data: Buffer
-	): Promise<void> {
+	public async writeValue(): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
 }

@@ -1,5 +1,5 @@
-import { EventEmitter } from 'events';
 import os from 'os';
+import { TypedEmitter } from 'tiny-typed-emitter';
 
 import { AddressType } from '../../../models';
 
@@ -14,32 +14,39 @@ interface Discovery {
 	address: string;
 	addressType: AddressType;
 	connectable: boolean;
-	advertisement: any;
+	advertisement: Advertisement;
 	rssi: number;
 	count: number;
 	hasScanResponse: boolean;
 }
 
-type DiscoverListener = (
-	address: string,
-	addressType: AddressType,
-	connectable: boolean,
-	advertisement: any,
-	rssi: number
-) => void;
-
-export declare interface Gap {
-	on(event: 'discover', listener: DiscoverListener): this;
+interface Advertisement {
+	localName: string;
+	txPowerLevel: number;
+	manufacturerData: Buffer;
+	serviceData: { uuid: string; data: Buffer }[];
+	serviceUuids: string[];
+	solicitationServiceUuids: string[];
 }
 
-export class Gap extends EventEmitter {
+interface GapEvents {
+	discover: (
+		address: string,
+		addressType: AddressType,
+		connectable: boolean,
+		advertisement: Advertisement,
+		rssi: number
+	) => void;
+}
+
+export class Gap extends TypedEmitter<GapEvents> {
 	private hci: Hci;
 	private advertiseState: string;
 	private scanState: string;
 	private scanFilterDuplicates: boolean;
 	private discoveries: Map<string, Discovery>;
 
-	public constructor(hci: any) {
+	public constructor(hci: Hci) {
 		super();
 
 		this.hci = hci;
@@ -51,7 +58,7 @@ export class Gap extends EventEmitter {
 		this.hci.on('leAdvertisingReport', this.onHciLeAdvertisingReport);
 	}
 
-	public async startScanning(allowDuplicates: boolean) {
+	public async startScanning(allowDuplicates: boolean): Promise<void> {
 		this.scanState = 'starting';
 		this.scanFilterDuplicates = !allowDuplicates;
 
@@ -75,13 +82,13 @@ export class Gap extends EventEmitter {
 		this.scanState = 'started';
 	}
 
-	public async stopScanning() {
+	public async stopScanning(): Promise<void> {
 		this.scanState = 'stopping';
 		await this.hci.setScanEnabled(false, this.scanFilterDuplicates);
 		this.scanState = 'stopped';
 	}
 
-	public async startAdvertising(name: string, serviceUuids: string[]) {
+	public async startAdvertising(name: string, serviceUuids: string[]): Promise<void> {
 		let advertisementDataLength = 3;
 		let scanDataLength = 0;
 
@@ -127,7 +134,7 @@ export class Gap extends EventEmitter {
 		advertisementData.writeUInt8(0x01, 1);
 		advertisementData.writeUInt8(0x06, 2);
 
-		var advertisementDataOffset = 3;
+		let advertisementDataOffset = 3;
 
 		if (serviceUuids16bit.length) {
 			advertisementData.writeUInt8(1 + 2 * serviceUuids16bit.length, advertisementDataOffset);
@@ -170,7 +177,7 @@ export class Gap extends EventEmitter {
 	public async startAdvertisingWithEIRData(
 		advertisementData: Buffer = Buffer.alloc(0),
 		scanData: Buffer = Buffer.alloc(0)
-	) {
+	): Promise<void> {
 		if (advertisementData.length > 31) {
 			throw new Error('Advertisement data is over maximum limit of 31 bytes');
 		} else if (scanData.length > 31) {
@@ -199,7 +206,7 @@ export class Gap extends EventEmitter {
 		this.advertiseState = 'started';
 	}
 
-	public async stopAdvertising() {
+	public async stopAdvertising(): Promise<void> {
 		this.advertiseState = 'stopping';
 
 		await this.hci.setAdvertisingEnabled(false);
@@ -234,7 +241,7 @@ export class Gap extends EventEmitter {
 			// reset service data every non-scan response event
 			advertisement.serviceData = [];
 			advertisement.serviceUuids = [];
-			advertisement.serviceSolicitationUuids = [];
+			advertisement.solicitationServiceUuids = [];
 		}
 
 		discoveryCount++;
@@ -295,8 +302,8 @@ export class Gap extends EventEmitter {
 				case 0x14: // List of 16 bit solicitation UUIDs
 					for (let j = 0; j < bytes.length; j += 2) {
 						const serviceSolicitationUuid = bytes.readUInt16LE(j).toString(16);
-						if (advertisement.serviceSolicitationUuids.indexOf(serviceSolicitationUuid) === -1) {
-							advertisement.serviceSolicitationUuids.push(serviceSolicitationUuid);
+						if (advertisement.solicitationServiceUuids.indexOf(serviceSolicitationUuid) === -1) {
+							advertisement.solicitationServiceUuids.push(serviceSolicitationUuid);
 						}
 					}
 					break;
@@ -309,8 +316,8 @@ export class Gap extends EventEmitter {
 							.match(/.{1,2}/g)
 							.reverse()
 							.join('');
-						if (advertisement.serviceSolicitationUuids.indexOf(serviceSolicitationUuid) === -1) {
-							advertisement.serviceSolicitationUuids.push(serviceSolicitationUuid);
+						if (advertisement.solicitationServiceUuids.indexOf(serviceSolicitationUuid) === -1) {
+							advertisement.solicitationServiceUuids.push(serviceSolicitationUuid);
 						}
 					}
 					break;
@@ -354,8 +361,8 @@ export class Gap extends EventEmitter {
 				case 0x1f: // List of 32 bit solicitation UUIDs
 					for (let j = 0; j < bytes.length; j += 4) {
 						const serviceSolicitationUuid = bytes.readUInt32LE(j).toString(16);
-						if (advertisement.serviceSolicitationUuids.indexOf(serviceSolicitationUuid) === -1) {
-							advertisement.serviceSolicitationUuids.push(serviceSolicitationUuid);
+						if (advertisement.solicitationServiceUuids.indexOf(serviceSolicitationUuid) === -1) {
+							advertisement.solicitationServiceUuids.push(serviceSolicitationUuid);
 						}
 					}
 					break;

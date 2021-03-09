@@ -34,7 +34,7 @@ export abstract class Peripheral {
 	/**
 	 * Any advertisement data received from the peripheral. Usually a buffer.
 	 */
-	public advertisement: any;
+	public advertisement: Record<string, unknown>;
 	/**
 	 * The current RSSI signal strength of the peripheral.
 	 */
@@ -44,7 +44,7 @@ export abstract class Peripheral {
 	/**
 	 * The current state of the peripheral.
 	 */
-	public get state() {
+	public get state(): PeripheralState {
 		return this._state;
 	}
 
@@ -53,7 +53,7 @@ export abstract class Peripheral {
 		uuid: string,
 		addressType: AddressType,
 		address: string,
-		advertisement?: any,
+		advertisement?: Record<string, unknown>,
 		rssi?: number
 	) {
 		this.adapter = adapter;
@@ -102,11 +102,11 @@ export abstract class Peripheral {
 	 */
 	public abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
 
-	public toString() {
+	public toString(): string {
 		return JSON.stringify(this.toJSON());
 	}
 
-	public toJSON() {
+	public toJSON(): Record<string, unknown> {
 		return {
 			uuid: this.uuid,
 			address: this.address,
@@ -117,7 +117,7 @@ export abstract class Peripheral {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized) {
+	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

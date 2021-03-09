@@ -1,6 +1,7 @@
 import { GattDescriptor } from '../Descriptor';
 
 import { GattCharacteristicRemote } from './Characteristic';
+import { GattRemote } from './Gatt';
 
 /**
  * Represents a descriptor of a remote GATT characterstic.
@@ -10,7 +11,7 @@ export class GattDescriptorRemote extends GattDescriptor {
 	 * The remote GATT characteristic that this descriptor belongs to.
 	 */
 	public readonly characteristic: GattCharacteristicRemote;
-	protected get gatt() {
+	protected get gatt(): GattRemote {
 		return this.characteristic.service.gatt;
 	}
 

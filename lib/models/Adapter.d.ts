@@ -29,7 +29,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
     /**
      * The MAC address type of this adapter.
      */
-    get addressType(): AddressType;
+    get addressType(): string;
     protected _address: string;
     /**
      * The MAC address of this adapter.
@@ -83,11 +83,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
      */
     abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
     toString(): string;
-    toJSON(): {
-        id: string;
-        name: string;
-        address: string;
-    };
+    toJSON(): Record<string, unknown>;
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
 //# sourceMappingURL=Adapter.d.ts.map

@@ -1,1 +1,1 @@
-{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../../src/bindings/dbus/misc/index.ts"],"names":[],"mappings":"AAAA,OAAO,EACN,eAAe,EACf,cAAc,EACd,eAAe,EACf,sBAAsB,EACtB,gBAAgB,EAChB,YAAY,EACZ,MAAM,cAAc,CAAC;AACtB,OAAO,EAAE,eAAe,EAAE,MAAM,aAAa,CAAC"}
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../../src/bindings/dbus/misc/index.ts"],"names":[],"mappings":"AAAA,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC;AAC5B,cAAc,cAAc,CAAC"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"DbusObject.d.ts","sourceRoot":"","sources":["../../../../src/bindings/dbus/misc/DbusObject.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,UAAU;IAC1B,CAAC,GAAG,EAAE,MAAM,GAAG;QACd,KAAK,EAAE,OAAO,CAAC;KACf,CAAC;CACF"}

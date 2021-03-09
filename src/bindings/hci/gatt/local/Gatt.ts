@@ -21,7 +21,7 @@ export class HciGattLocal extends GattLocal {
 		this.negotiatedMtus = new Map();
 	}
 
-	private onHciDisconnect = (status: number, handleId: number, reason?: string) => {
+	private onHciDisconnect = (status: number, handleId: number) => {
 		// Reset MTU after a device disconnects
 		this.negotiatedMtus.delete(handleId);
 	};
@@ -186,7 +186,7 @@ export class HciGattLocal extends GattLocal {
 						.join(''),
 					'hex'
 				);
-				for (var j = 0; j < uuid.length; j++) {
+				for (let j = 0; j < uuid.length; j++) {
 					response[2 + i * lengthPerInfo + 2 + j] = uuid[j];
 				}
 			}
@@ -309,7 +309,7 @@ export class HciGattLocal extends GattLocal {
 							.join(''),
 						'hex'
 					);
-					for (var j = 0; j < serviceUuid.length; j++) {
+					for (let j = 0; j < serviceUuid.length; j++) {
 						response[2 + i * lengthPerService + 4 + j] = serviceUuid[j];
 					}
 				}
@@ -381,7 +381,7 @@ export class HciGattLocal extends GattLocal {
 							.join(''),
 						'hex'
 					);
-					for (var j = 0; j < characteristicUuid.length; j++) {
+					for (let j = 0; j < characteristicUuid.length; j++) {
 						response[2 + i * lengthPerCharacteristic + 5 + j] = characteristicUuid[j];
 					}
 				}
@@ -411,7 +411,7 @@ export class HciGattLocal extends GattLocal {
 			if (secure /*&& !this._aclStream.encrypted*/) {
 				response = this.errorResponse(CONST.ATT_OP_READ_BY_TYPE_REQ, startHandle, CONST.ATT_ECODE_AUTHENTICATION);
 			} else if (handleObject) {
-				let responseStatus: number = 0;
+				let responseStatus = 0;
 				let responseBuffer: Buffer = null;
 
 				if (handleObject instanceof GattCharacteristicLocal) {
@@ -623,7 +623,7 @@ export class HciGattLocal extends GattLocal {
 		return response;
 	}
 
-	private async handlePrepareWriteRequest(_handle: number, _cid: number, request: Buffer): Promise<Buffer> {
+	private async handlePrepareWriteRequest(handle: number, cid: number, request: Buffer): Promise<Buffer> {
 		throw new Error(`Method not implemented`);
 
 		/*let response: Buffer = null;
@@ -682,7 +682,7 @@ export class HciGattLocal extends GattLocal {
 		return response;*/
 	}
 
-	private async handleExecuteWriteRequest(_handle: number, _cid: number, request: Buffer): Promise<Buffer> {
+	private async handleExecuteWriteRequest(handle: number, cid: number, request: Buffer): Promise<Buffer> {
 		throw new Error(`Method not implemented`);
 
 		/*
@@ -731,7 +731,7 @@ export class HciGattLocal extends GattLocal {
 		return response;*/
 	}
 
-	private async handleConfirmation(_handle: number, _cid: number, _request: Buffer): Promise<undefined> {
+	private async handleConfirmation(handle: number, cid: number, request: Buffer): Promise<undefined> {
 		throw new Error(`Method not implemented`);
 
 		/*

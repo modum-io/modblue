@@ -4,11 +4,9 @@ import { AddressType } from '../../../models';
 interface HciDevice {
     devId: number;
     devUp: boolean;
-    idVendor: null;
-    idProduct: null;
-    busNumber: null;
-    name: string;
-    address: string;
+    idVendor: number;
+    idProduct: number;
+    busNumber: number;
 }
 interface HciEvents {
     stateChange: (newState: string) => void;

@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { GattCharacteristic } from '../Characteristic';
 import { GattDescriptorRemote } from './Descriptor';
+import { GattRemote } from './Gatt';
 import { GattServiceRemote } from './Service';
 /**
  * Represents a characteristic connected to a remote GATT service.
@@ -10,7 +11,7 @@ export declare class GattCharacteristicRemote extends GattCharacteristic {
      * The service that this characteristic belongs to.
      */
     readonly service: GattServiceRemote;
-    protected get gatt(): import("./Gatt").GattRemote;
+    protected get gatt(): GattRemote;
     /**
      * A map of UUID to descriptor that were discovered during {@link discoverDescriptors}.
      */

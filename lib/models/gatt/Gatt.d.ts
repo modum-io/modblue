@@ -5,7 +5,7 @@ import { inspect, InspectOptionsStylized } from 'util';
  */
 export declare abstract class Gatt {
     toString(): string;
-    toJSON(): {};
+    toJSON(): Record<string, unknown>;
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
 //# sourceMappingURL=Gatt.d.ts.map

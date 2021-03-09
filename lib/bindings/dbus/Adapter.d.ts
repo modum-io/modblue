@@ -25,6 +25,6 @@ export declare class DbusAdapter extends Adapter {
     isAdvertising(): Promise<boolean>;
     startAdvertising(): Promise<void>;
     stopAdvertising(): Promise<void>;
-    setupGatt(maxMtu?: number): Promise<GattLocal>;
+    setupGatt(): Promise<GattLocal>;
 }
 //# sourceMappingURL=Adapter.d.ts.map

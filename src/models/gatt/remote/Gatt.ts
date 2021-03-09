@@ -23,7 +23,7 @@ export abstract class GattRemote extends Gatt {
 	/**
 	 * The MTU that was agreed upon during the MTU negotiation.
 	 */
-	public get mtu() {
+	public get mtu(): number {
 		return this._mtu;
 	}
 
@@ -106,7 +106,7 @@ export abstract class GattRemote extends Gatt {
 		data: Buffer
 	): Promise<void>;
 
-	public toJSON() {
+	public toJSON(): Record<string, unknown> {
 		return {
 			...super.toJSON(),
 			mtu: this.mtu,
