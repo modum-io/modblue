@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.0.1](https://github.com/modum-io/modblue/compare/v6.0.0...v6.0.1) (2021-03-09)
+
+### Bug Fixes
+
+- Clean up typescript code ([5f3e06f](https://github.com/modum-io/modblue/commit/5f3e06f733be7c869f778fbeb4fb61f4b9e11824))
+- Make library work with require ([1bb8f98](https://github.com/modum-io/modblue/commit/1bb8f984eff51fb082e4c87fae59551c74a84ec0))
+
 ## [6.0.0](https://github.com/modum-io/modblue/compare/v5.2.2...v6.0.0) (2021-03-05)
 
 ### ⚠ BREAKING CHANGES
