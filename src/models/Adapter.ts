@@ -28,7 +28,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
 	 * The public name of this adapter.
 	 */
-	public get name() {
+	public get name(): string {
 		return this._name;
 	}
 
@@ -36,7 +36,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
 	 * The MAC address type of this adapter.
 	 */
-	public get addressType() {
+	public get addressType(): string {
 		return this._addressType;
 	}
 
@@ -44,7 +44,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
 	 * The MAC address of this adapter.
 	 */
-	public get address() {
+	public get address(): string {
 		return this._address;
 	}
 
@@ -66,40 +66,51 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	 */
 	public async scanFor(
 		isTarget: (peripheral: Peripheral) => boolean,
-		timeoutInSeconds: number = 10,
+		timeoutInSeconds = 10,
 		serviceUUIDs?: []
-	) {
-		let onDiscover: (peripheral: Peripheral) => void;
+	): Promise<Peripheral> {
+		const origScope = new Error();
 
-		const scan = new Promise<Peripheral>((resolve) => {
-			onDiscover = (peripheral: Peripheral) => {
+		return new Promise<Peripheral>((resolve, reject) => {
+			let timeout: NodeJS.Timeout;
+			const onDiscover = (peripheral: Peripheral) => {
 				if (isTarget(peripheral)) {
-					this.off('discover', onDiscover);
-					resolve(peripheral);
+					resolveHandler(peripheral);
 				}
 			};
+
+			const cleanup = () => {
+				this.stopScanning();
+				this.off('discover', onDiscover);
+
+				if (timeout) {
+					clearTimeout(timeout);
+					timeout = null;
+				}
+			};
+
+			const resolveHandler = (peripheral: Peripheral) => {
+				cleanup();
+				resolve(peripheral);
+			};
+
+			const rejectHandler = async (error?: Error) => {
+				cleanup();
+
+				if (error) {
+					error.stack = error.stack + '\n' + origScope.stack;
+				}
+
+				reject(error);
+			};
+
 			this.on('discover', onDiscover);
+
+			this.startScanning(serviceUUIDs, true).catch((err) => rejectHandler(err));
+
+			const timeoutError = new Error(`Scanning timed out`);
+			timeout = setTimeout(() => rejectHandler(timeoutError), timeoutInSeconds * 1000);
 		});
-
-		await this.startScanning(serviceUUIDs, true);
-
-		// Create error outside scope to preserve stack trace
-		const timeoutErr = new Error(`Scan timed out`);
-		const timeout = new Promise<undefined>((_, reject) =>
-			setTimeout(() => reject(timeoutErr), timeoutInSeconds * 1000)
-		);
-
-		try {
-			const res = await Promise.race([scan, timeout]);
-			await this.stopScanning();
-
-			return res;
-		} catch (err) {
-			this.off('discover', onDiscover);
-			await this.stopScanning();
-
-			throw err;
-		}
 	}
 
 	/**
@@ -146,11 +157,11 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	 */
 	public abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
 
-	public toString() {
+	public toString(): string {
 		return JSON.stringify(this.toJSON());
 	}
 
-	public toJSON() {
+	public toJSON(): Record<string, unknown> {
 		return {
 			id: this.id,
 			name: this.name,
@@ -158,7 +169,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized) {
+	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

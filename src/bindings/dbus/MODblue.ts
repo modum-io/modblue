@@ -20,7 +20,7 @@ export class DbusMODblue extends MODblue {
 		this.dbus = systemBus();
 	}
 
-	public async dispose() {
+	public async dispose(): Promise<void> {
 		this.adapters = new Map();
 	}
 

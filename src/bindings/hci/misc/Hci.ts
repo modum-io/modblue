@@ -6,7 +6,7 @@ import { AddressType } from '../../../models';
 import STATUS_MAPPER from './hci-status.json';
 import { HciError } from './HciError';
 
-// tslint:disable-next-line: variable-name
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const BluetoothHciSocket = require('@abandonware/bluetooth-hci-socket');
 
 // tslint:disable: no-bitwise
@@ -99,11 +99,9 @@ const HCI_CMD_TIMEOUT = 10000; // in milliseconds
 interface HciDevice {
 	devId: number;
 	devUp: boolean;
-	idVendor: null;
-	idProduct: null;
-	busNumber: null;
-	name: string;
-	address: string;
+	idVendor: number;
+	idProduct: number;
+	busNumber: number;
 }
 
 interface Handle {
@@ -164,6 +162,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 	public hciVersion: number;
 	public hciRevision: number;
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private socket: any;
 	private socketTimer: NodeJS.Timer;
 	private isSocketUp: boolean;
@@ -197,9 +196,9 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.currentCmd = null;
 	}
 
-	public static getDeviceList() {
+	public static getDeviceList(): HciDevice[] {
 		const socket = new BluetoothHciSocket();
-		return socket.getDeviceList() as HciDevice[];
+		return socket.getDeviceList();
 	}
 
 	private async acquireMutex() {
@@ -212,7 +211,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		}
 	}
 
-	public async init() {
+	public async init(): Promise<void> {
 		this.socket = new BluetoothHciSocket();
 		this.socket.on('data', this.onSocketData);
 		this.socket.on('error', this.onSocketError);
@@ -292,14 +291,14 @@ export class Hci extends TypedEmitter<HciEvents> {
 		}
 	};
 
-	public trackSentAclPackets(handleId: number, packets: number) {
+	public trackSentAclPackets(handleId: number, packets: number): void {
 		const handle = this.handles.get(handleId);
 		if (handle) {
 			handle.aclPacketsInQueue += packets;
 		}
 	}
 
-	public dispose() {
+	public dispose(): void {
 		if (this.socketTimer) {
 			clearInterval(this.socketTimer);
 			this.socketTimer = null;
@@ -336,7 +335,14 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 		return new Promise<Buffer | void>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
-			let onComplete: (status: number, responseData?: Buffer) => void;
+			const onComplete = (status: number, responseData?: Buffer) => {
+				if (status !== 0) {
+					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					rejectHandler(new HciError(`HCI Command ${this.currentCmd.cmd} failed`, errStatus));
+				} else {
+					resolveHandler(responseData);
+				}
+			};
 
 			const cleanup = () => {
 				if (statusOnly) {
@@ -369,15 +375,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 				}
 				cleanup();
 				reject(error);
-			};
-
-			onComplete = (status: number, responseData?: Buffer) => {
-				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					rejectHandler(new HciError(`HCI Command ${this.currentCmd.cmd} failed`, errStatus));
-				} else {
-					resolveHandler(responseData);
-				}
 			};
 
 			this.currentCmd = { cmd: data.readUInt16LE(1), data };
@@ -431,7 +428,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		await this.sendCommand(cmd);
 	}
 
-	public async reset() {
+	public async reset(): Promise<void> {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -535,7 +532,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		await this.sendCommand(cmd);
 	}
 
-	public async setScanParameters() {
+	public async setScanParameters(): Promise<void> {
 		const cmd = Buffer.alloc(11);
 
 		// header
@@ -555,7 +552,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		await this.sendCommand(cmd);
 	}
 
-	public async setScanEnabled(enabled: boolean, filterDuplicates: boolean) {
+	public async setScanEnabled(enabled: boolean, filterDuplicates: boolean): Promise<void> {
 		const cmd = Buffer.alloc(6);
 
 		// header
@@ -575,11 +572,11 @@ export class Hci extends TypedEmitter<HciEvents> {
 	public async createLeConn(
 		address: string,
 		addressType: AddressType,
-		minInterval: number = 0x0006,
-		maxInterval: number = 0x000c,
-		latency: number = 0x0000,
-		supervisionTimeout: number = 0x00c8
-	) {
+		minInterval = 0x0006,
+		maxInterval = 0x000c,
+		latency = 0x0000,
+		supervisionTimeout = 0x00c8
+	): Promise<number> {
 		address = address.toUpperCase();
 
 		const cmd = Buffer.alloc(29);
@@ -620,7 +617,24 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 		return new Promise<number>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
-			let onComplete: HciEvents['leConnComplete'];
+			const onComplete: HciEvents['leConnComplete'] = (status, handle, role, _addressType, _address) => {
+				if (_address !== address || _addressType !== addressType) {
+					return;
+				}
+
+				if (status !== 0) {
+					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					rejectHandler(new HciError(`LE conn failed`, errStatus));
+					return;
+				}
+
+				if (role !== 0) {
+					rejectHandler(new HciError(`Could not acquire le connection as master role`));
+					return;
+				}
+
+				resolveHandler(handle);
+			};
 
 			const cleanup = () => {
 				this.off('leConnComplete', onComplete);
@@ -654,27 +668,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 				reject(error);
 			};
 
-			onComplete = async (status, handle, role, _addressType, _address) => {
-				if (_address !== address || _addressType !== addressType) {
-					return;
-				}
-
-				this.off('leConnComplete', onComplete);
-
-				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					await rejectHandler(new HciError(`LE conn failed`, errStatus));
-					return;
-				}
-
-				if (role !== 0) {
-					await rejectHandler(new HciError(`Could not acquire le connection as master role`));
-					return;
-				}
-
-				resolveHandler(handle);
-			};
-
 			this.on('leConnComplete', onComplete);
 
 			const timeoutError = new HciError(`Creating connection timed out`);
@@ -684,7 +677,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		});
 	}
 
-	public async cancelLeConn(customMutex?: boolean) {
+	public async cancelLeConn(customMutex?: boolean): Promise<void> {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -703,7 +696,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		maxInterval: number,
 		latency: number,
 		supervisionTimeout: number
-	) {
+	): Promise<void> {
 		const cmd = Buffer.alloc(18);
 
 		// header
@@ -725,7 +718,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		await this.sendCommand(cmd, true);
 	}
 
-	public async disconnect(handle: number, reason: number = HCI_OE_USER_ENDED_CONNECTION) {
+	public async disconnect(handle: number, reason = HCI_OE_USER_ENDED_CONNECTION): Promise<void> {
 		const cmd = Buffer.alloc(7);
 
 		// header
@@ -743,7 +736,21 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 		return new Promise<void>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
-			let onComplete: HciEvents['disconnectComplete'];
+			const onComplete: HciEvents['disconnectComplete'] = (status, _handle) => {
+				if (_handle !== handle) {
+					return;
+				}
+
+				this.off('disconnectComplete', onComplete);
+
+				if (status !== 0) {
+					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					rejectHandler(new HciError(`Disconnect failed`, errStatus));
+					return;
+				}
+
+				resolveHandler();
+			};
 
 			const cleanup = () => {
 				this.off('disconnectComplete', onComplete);
@@ -767,29 +774,13 @@ export class Hci extends TypedEmitter<HciEvents> {
 				reject(error);
 			};
 
-			onComplete = (status, _handle, _reason) => {
-				if (_handle !== handle) {
-					return;
-				}
-
-				this.off('disconnectComplete', onComplete);
-
-				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					rejectHandler(new HciError(`Disconnect failed`, errStatus));
-					return;
-				}
-
-				resolveHandler();
-			};
-
 			this.on('disconnectComplete', onComplete);
 
 			this.sendCommand(cmd, true).catch((err) => rejectHandler(err));
 		});
 	}
 
-	public async readRssi(handle: number) {
+	public async readRssi(handle: number): Promise<number> {
 		const cmd = Buffer.alloc(6);
 
 		// header
@@ -808,7 +799,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		return rssi;
 	}
 
-	public writeAclDataPkt(handleId: number, cid: number, data: Buffer) {
+	public writeAclDataPkt(handleId: number, cid: number, data: Buffer): void {
 		if (!this.isSocketUp) {
 			throw new HciError('HCI socket not available');
 		}
@@ -863,7 +854,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		}
 	}
 
-	public async readBufferSize() {
+	public async readBufferSize(): Promise<void> {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -881,7 +872,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		// const totalNumSyncDataPackets = response.readUInt16LE(5);
 	}
 
-	public async readLeBufferSize() {
+	public async readLeBufferSize(): Promise<void> {
 		const cmd = Buffer.alloc(4);
 
 		// header
@@ -904,7 +895,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		}
 	}
 
-	public async setScanResponseData(data: Buffer) {
+	public async setScanResponseData(data: Buffer): Promise<void> {
 		const cmd = Buffer.alloc(36);
 
 		cmd.fill(0x00);
@@ -923,7 +914,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		await this.sendCommand(cmd);
 	}
 
-	public async setAdvertisingData(data: Buffer) {
+	public async setAdvertisingData(data: Buffer): Promise<void> {
 		const cmd = Buffer.alloc(36);
 
 		cmd.fill(0x00);
@@ -942,7 +933,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		await this.sendCommand(cmd);
 	}
 
-	public async setAdvertisingEnabled(enabled: boolean) {
+	public async setAdvertisingEnabled(enabled: boolean): Promise<void> {
 		const cmd = Buffer.alloc(5);
 
 		// header
@@ -1280,7 +1271,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.emit('leAdvertiseEnable', advertiseEnabled);
 	}
 
-	private onSocketError = (error: any) => {
+	private onSocketError = (error: NodeJS.ErrnoException) => {
 		if (error.code === 'EPERM') {
 			this.state = 'unauthorized';
 			this.emit('stateChange', this.state);

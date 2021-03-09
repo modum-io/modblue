@@ -2,7 +2,7 @@ import { ClientInterface } from 'dbus-next';
 
 import { Adapter, AddressType, GattLocal, Peripheral } from '../../models';
 
-import { buildTypedValue, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE, I_OBJECT_MANAGER, I_PROPERTIES } from './misc';
+import { buildTypedValue, DbusObject, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE, I_OBJECT_MANAGER, I_PROPERTIES } from './misc';
 import { DbusMODblue } from './MODblue';
 import { DbusPeripheral } from './Peripheral';
 
@@ -16,9 +16,9 @@ export class DbusAdapter extends Adapter {
 	private adapterIface: ClientInterface;
 	private propsIface: ClientInterface;
 
-	private initialized: boolean = false;
-	private scanning: boolean = false;
-	private requestScanStop: boolean = false;
+	private initialized = false;
+	private scanning = false;
+	private requestScanStop = false;
 	private updateTimer: NodeJS.Timer;
 
 	private peripherals: Map<string, Peripheral> = new Map();
@@ -40,7 +40,7 @@ export class DbusAdapter extends Adapter {
 
 		const objManager = await this.modblue.dbus.getProxyObject(`org.bluez`, '/');
 		this.objManagerIface = objManager.getInterface(I_OBJECT_MANAGER);
-		this.objManagerIface.on('InterfacesAdded', (path: string, data: any) => {
+		this.objManagerIface.on('InterfacesAdded', (path: string, data: Record<string, DbusObject>) => {
 			if (!path.startsWith(`${this.path}/`)) {
 				return;
 			}
@@ -59,7 +59,7 @@ export class DbusAdapter extends Adapter {
 		this.adapterIface = obj.getInterface(I_BLUEZ_ADAPTER);
 		this.propsIface = obj.getInterface(I_PROPERTIES);
 
-		const onPropertiesChanged = (iface: string, changedProps: any) => {
+		const onPropertiesChanged = (iface: string, changedProps: DbusObject) => {
 			if (iface !== I_BLUEZ_ADAPTER) {
 				return;
 			}
@@ -84,11 +84,11 @@ export class DbusAdapter extends Adapter {
 		return [...this.peripherals.values()];
 	}
 
-	public async isScanning() {
+	public async isScanning(): Promise<boolean> {
 		return this.scanning;
 	}
 
-	public async startScanning() {
+	public async startScanning(): Promise<void> {
 		await this.init();
 
 		if (this.scanning) {
@@ -117,7 +117,7 @@ export class DbusAdapter extends Adapter {
 		this.scanning = true;
 	}
 
-	public async stopScanning() {
+	public async stopScanning(): Promise<void> {
 		if (!this.scanning) {
 			return;
 		}
@@ -143,14 +143,14 @@ export class DbusAdapter extends Adapter {
 		});
 	}
 
-	private onDeviceFound = (path: string, data: any) => {
+	private onDeviceFound = (path: string, data: DbusObject) => {
 		const id = path.replace(`${this.path}/`, '');
 
 		let peripheral = this.peripherals.get(id);
 		if (!peripheral) {
 			const address = data.Address?.value as string;
 			const addressType = data.AddressType?.value as AddressType;
-			const advertisement = data.ManufacturerData?.value;
+			const advertisement = data.ManufacturerData?.value as Record<string, unknown>;
 			const rssi = data.RSSI?.value as number;
 			peripheral = new DbusPeripheral(this, path, id, addressType, address, advertisement, rssi);
 			this.peripherals.set(id, peripheral);
@@ -177,7 +177,7 @@ export class DbusAdapter extends Adapter {
 		}
 	};
 
-	public async isAdvertising() {
+	public async isAdvertising(): Promise<boolean> {
 		return false;
 	}
 
@@ -188,7 +188,7 @@ export class DbusAdapter extends Adapter {
 		throw new Error('Method not implemented.');
 	}
 
-	public setupGatt(maxMtu?: number): Promise<GattLocal> {
+	public setupGatt(): Promise<GattLocal> {
 		throw new Error('Method not implemented.');
 	}
 }

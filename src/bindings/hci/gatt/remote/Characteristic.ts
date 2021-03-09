@@ -1,4 +1,4 @@
-import { GattCharacteristicProperty, GattCharacteristicRemote } from '../../../../models';
+import { GattCharacteristicRemote } from '../../../../models';
 
 import { HciGattDescriptorRemote } from './Descriptor';
 import { HciGattServiceRemote } from './Service';

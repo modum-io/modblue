@@ -20,7 +20,7 @@ export class HciGattRemote extends GattRemote {
 	private handle: number;
 
 	private security: string;
-	private mtuWasExchanged: boolean = false;
+	private mtuWasExchanged: boolean;
 	private disposeReason: string;
 
 	private mutex: MutexInterface;
@@ -41,6 +41,7 @@ export class HciGattRemote extends GattRemote {
 		this.cmdTimeout = cmdTimeout;
 		this.mutex = withTimeout(new Mutex(), this.cmdTimeout, new GattError(peripheral, 'GATT command mutex timeout'));
 		this.currentCmd = null;
+		this.mtuWasExchanged = false;
 	}
 
 	private async acquireMutex() {
@@ -53,7 +54,7 @@ export class HciGattRemote extends GattRemote {
 		}
 	}
 
-	public dispose(reason?: string) {
+	public dispose(reason?: string): void {
 		this.disposeReason = reason;
 
 		// First dispose hci so no further commands are processed
@@ -155,7 +156,7 @@ export class HciGattRemote extends GattRemote {
 		const gattError = new GattError(this.peripheral, 'GATT Error'); // Actual error will be appended
 		const timeoutError = new GattError(this.peripheral, 'GATT command timed out');
 
-		return new Promise<any>((resolve, reject) => {
+		return new Promise<Buffer | void>((resolve, reject) => {
 			let isDone = false;
 			const onTimeout = () => {
 				if (isDone) {
@@ -210,7 +211,7 @@ export class HciGattRemote extends GattRemote {
 		return this.queueCommand(buf, false);
 	}
 
-	public readByGroupRequest(startHandle: number, endHandle: number, groupUUID: number) {
+	public readByGroupRequest(startHandle: number, endHandle: number, groupUUID: number): Promise<Buffer> {
 		const buf = Buffer.alloc(7);
 
 		buf.writeUInt8(CONST.ATT_OP_READ_BY_GROUP_REQ, 0);
@@ -221,7 +222,7 @@ export class HciGattRemote extends GattRemote {
 		return this.queueCommand(buf, false);
 	}
 
-	public readByTypeRequest(startHandle: number, endHandle: number, groupUUID: number) {
+	public readByTypeRequest(startHandle: number, endHandle: number, groupUUID: number): Promise<Buffer> {
 		const buf = Buffer.alloc(7);
 
 		buf.writeUInt8(CONST.ATT_OP_READ_BY_TYPE_REQ, 0);
@@ -232,7 +233,7 @@ export class HciGattRemote extends GattRemote {
 		return this.queueCommand(buf, false);
 	}
 
-	public readRequest(handle: number) {
+	public readRequest(handle: number): Promise<Buffer> {
 		const buf = Buffer.alloc(3);
 
 		buf.writeUInt8(CONST.ATT_OP_READ_REQ, 0);
@@ -241,7 +242,7 @@ export class HciGattRemote extends GattRemote {
 		return this.queueCommand(buf, false);
 	}
 
-	public readBlobRequest(handle: number, offset: number) {
+	public readBlobRequest(handle: number, offset: number): Promise<Buffer> {
 		const buf = Buffer.alloc(5);
 
 		buf.writeUInt8(CONST.ATT_OP_READ_BLOB_REQ, 0);
@@ -251,7 +252,7 @@ export class HciGattRemote extends GattRemote {
 		return this.queueCommand(buf, false);
 	}
 
-	public findInfoRequest(startHandle: number, endHandle: number) {
+	public findInfoRequest(startHandle: number, endHandle: number): Promise<Buffer> {
 		const buf = Buffer.alloc(5);
 
 		buf.writeUInt8(CONST.ATT_OP_FIND_INFO_REQ, 0);
@@ -311,7 +312,7 @@ export class HciGattRemote extends GattRemote {
 		return this.queueCommand(buf, true);
 	}
 
-	public async exchangeMtu(mtu: number) {
+	public async exchangeMtu(mtu: number): Promise<number> {
 		if (this.mtuWasExchanged) {
 			return this.mtu;
 		}
@@ -334,7 +335,8 @@ export class HciGattRemote extends GattRemote {
 		const newServices: HciGattServiceRemote[] = [];
 		let startHandle = 0x0001;
 
-		while (true) {
+		const run = true;
+		while (run) {
 			const data = await this.readByGroupRequest(startHandle, 0xffff, CONST.GATT_PRIM_SVC_UUID);
 
 			const opcode = data[0];
@@ -384,7 +386,8 @@ export class HciGattRemote extends GattRemote {
 
 		let startHandle = service.startHandle;
 
-		while (true) {
+		const run = true;
+		while (run) {
 			const data = await this.readByTypeRequest(startHandle, service.endHandle, CONST.GATT_CHARAC_UUID);
 
 			const opcode = data[0];
@@ -449,7 +452,7 @@ export class HciGattRemote extends GattRemote {
 		return newChars;
 	}
 
-	public async read(serviceUUID: string, characteristicUUID: string) {
+	public async read(serviceUUID: string, characteristicUUID: string): Promise<Buffer> {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
 			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
@@ -465,7 +468,8 @@ export class HciGattRemote extends GattRemote {
 		let data = await this.readRequest(characteristic.valueHandle);
 		let opcode = data[0];
 
-		while (true) {
+		const run = true;
+		while (run) {
 			if (opcode !== CONST.ATT_OP_READ_RESP && opcode !== CONST.ATT_OP_READ_BLOB_RESP) {
 				return readData;
 			}
@@ -481,7 +485,12 @@ export class HciGattRemote extends GattRemote {
 		}
 	}
 
-	public async write(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean) {
+	public async write(
+		serviceUUID: string,
+		characteristicUUID: string,
+		data: Buffer,
+		withoutResponse: boolean
+	): Promise<void> {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
 			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
@@ -507,7 +516,12 @@ export class HciGattRemote extends GattRemote {
 	}
 
 	/* Perform a "long write" as described Bluetooth Spec section 4.9.4 "Write Long Characteristic Values" */
-	private async longWrite(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean) {
+	private async longWrite(
+		serviceUUID: string,
+		characteristicUUID: string,
+		data: Buffer,
+		withoutResponse: boolean
+	): Promise<void> {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
 			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
@@ -552,7 +566,7 @@ export class HciGattRemote extends GattRemote {
 		}
 	}
 
-	public async broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean) {
+	public async broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): Promise<void> {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
 			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
@@ -596,7 +610,7 @@ export class HciGattRemote extends GattRemote {
 		}
 	}
 
-	public async notify(serviceUUID: string, characteristicUUID: string, notify: boolean) {
+	public async notify(serviceUUID: string, characteristicUUID: string, notify: boolean): Promise<void> {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
 			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
@@ -667,7 +681,8 @@ export class HciGattRemote extends GattRemote {
 
 		let startHandle = characteristic.valueHandle + 1;
 
-		while (true) {
+		const run = true;
+		while (run) {
 			const data = await this.findInfoRequest(startHandle, characteristic.endHandle);
 			const opcode = data[0];
 
@@ -693,7 +708,7 @@ export class HciGattRemote extends GattRemote {
 		return newDescs;
 	}
 
-	public async readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string) {
+	public async readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): Promise<Buffer> {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
 			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);
@@ -717,7 +732,8 @@ export class HciGattRemote extends GattRemote {
 		let data = await this.readRequest(descriptor.handle);
 		let opcode = data[0];
 
-		while (true) {
+		const run = true;
+		while (run) {
 			if (opcode !== CONST.ATT_OP_READ_RESP && opcode !== CONST.ATT_OP_READ_BLOB_RESP) {
 				return readData;
 			}
@@ -733,7 +749,12 @@ export class HciGattRemote extends GattRemote {
 		}
 	}
 
-	public async writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer) {
+	public async writeValue(
+		serviceUUID: string,
+		characteristicUUID: string,
+		descriptorUUID: string,
+		data: Buffer
+	): Promise<void> {
 		const service = this.services.get(serviceUUID);
 		if (!service) {
 			throw new GattError(this.peripheral, `Service ${serviceUUID} not found`);

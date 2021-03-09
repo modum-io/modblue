@@ -15,10 +15,7 @@ export declare abstract class GattService {
     readonly uuid: string;
     constructor(gatt: Gatt, uuid: string);
     toString(): string;
-    toJSON(): {
-        uuid: string;
-        gatt: Gatt;
-    };
+    toJSON(): Record<string, unknown>;
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
 //# sourceMappingURL=Service.d.ts.map

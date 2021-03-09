@@ -17,7 +17,7 @@ export class HciPeripheral extends Peripheral {
 	private signaling: Signaling;
 
 	private _isMaster: boolean;
-	public get isMaster() {
+	public get isMaster(): boolean {
 		return this._isMaster;
 	}
 
@@ -34,7 +34,7 @@ export class HciPeripheral extends Peripheral {
 		this._state = 'connecting';
 		await this.adapter.connect(this, minInterval, maxInterval, latency, supervisionTimeout);
 	}
-	public onConnect(isMaster: boolean, hci: Hci, handle: number) {
+	public onConnect(isMaster: boolean, hci: Hci, handle: number): void {
 		this.hci = hci;
 		this.handle = handle;
 		this._isMaster = isMaster;
@@ -55,7 +55,7 @@ export class HciPeripheral extends Peripheral {
 		this._state = 'disconnecting';
 		await this.adapter.disconnect(this);
 	}
-	public onDisconnect(reason?: string) {
+	public onDisconnect(reason?: string): void {
 		if (this.gatt) {
 			this.gatt.dispose(reason);
 			this.gatt = null;

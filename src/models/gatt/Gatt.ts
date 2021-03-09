@@ -4,15 +4,15 @@ import { inspect, InspectOptionsStylized } from 'util';
  * A local or remote GATT server.
  */
 export abstract class Gatt {
-	public toString() {
+	public toString(): string {
 		return JSON.stringify(this.toJSON());
 	}
 
-	public toJSON(): {} {
+	public toJSON(): Record<string, unknown> {
 		return {};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized) {
+	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

@@ -52,21 +52,21 @@ export abstract class GattLocal extends Gatt {
 	protected handles: Handle[];
 
 	protected _maxMtu: number;
-	public get maxMtu() {
+	public get maxMtu(): number {
 		return this._maxMtu;
 	}
 
 	protected _deviceName: string;
-	public get deviceName() {
+	public get deviceName(): string {
 		return this._deviceName;
 	}
 
 	protected _serviceInputs: GattServiceInput[];
-	public get serviceInputs() {
+	public get serviceInputs(): GattServiceInput[] {
 		return this._serviceInputs;
 	}
 
-	public constructor(adapter: Adapter, maxMtu: number = 256) {
+	public constructor(adapter: Adapter, maxMtu = 256) {
 		super();
 
 		this.adapter = adapter;
@@ -210,7 +210,7 @@ export abstract class GattLocal extends Gatt {
 		this.handles = handles;
 	}
 
-	public toJSON() {
+	public toJSON(): Record<string, unknown> {
 		return {
 			...super.toJSON(),
 			maxMtu: this.maxMtu,

@@ -9,7 +9,7 @@ import { Hci } from './misc';
 export class HciMODblue extends MODblue {
 	private adapters: Map<number, HciAdapter> = new Map();
 
-	public async dispose() {
+	public async dispose(): Promise<void> {
 		for (const adapter of this.adapters.values()) {
 			adapter.dispose();
 		}
@@ -21,7 +21,7 @@ export class HciMODblue extends MODblue {
 		for (const rawAdapter of adapters) {
 			let adapter = this.adapters.get(rawAdapter.devId);
 			if (!adapter) {
-				adapter = new HciAdapter(this, `hci${rawAdapter.devId}`, rawAdapter.name, rawAdapter.address?.toUpperCase());
+				adapter = new HciAdapter(this, `hci${rawAdapter.devId}`);
 				this.adapters.set(rawAdapter.devId, adapter);
 			}
 		}

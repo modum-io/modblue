@@ -75,9 +75,6 @@ export declare abstract class GattRemote extends Gatt {
      * @param data The data to write.
      */
     abstract writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer): Promise<void>;
-    toJSON(): {
-        mtu: number;
-        peripheral: Peripheral;
-    };
+    toJSON(): Record<string, unknown>;
 }
 //# sourceMappingURL=Gatt.d.ts.map

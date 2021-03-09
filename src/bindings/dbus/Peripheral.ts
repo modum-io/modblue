@@ -4,9 +4,7 @@ import { AddressType, GattRemote, Peripheral } from '../../models';
 
 import { DbusAdapter } from './Adapter';
 import { DbusGattRemote } from './gatt';
-import { I_BLUEZ_DEVICE, I_PROPERTIES } from './misc';
-
-// tslint:disable: promise-must-complete
+import { DbusObject, I_BLUEZ_DEVICE, I_PROPERTIES } from './misc';
 
 const CONNECT_TIMEOUT = 10; // in seconds
 
@@ -16,15 +14,15 @@ export class DbusPeripheral extends Peripheral {
 
 	private deviceIface: ClientInterface;
 	private propsIface: ClientInterface;
-	private _init: boolean = false;
+	private _init = false;
 
 	private gatt: DbusGattRemote;
 
-	private isConnecting: boolean = false;
-	private connecting: [() => void, (error?: any) => void][] = [];
+	private isConnecting = false;
+	private connecting: [() => void, (error?: Error) => void][] = [];
 	private connectTimeout: NodeJS.Timer;
-	private isDisconnecting: boolean = false;
-	private disconnecting: [() => void, (error?: any) => void][] = [];
+	private isDisconnecting = false;
+	private disconnecting: [() => void, (error?: Error) => void][] = [];
 	private disconnectTimeout: NodeJS.Timer;
 
 	public constructor(
@@ -33,7 +31,7 @@ export class DbusPeripheral extends Peripheral {
 		id: string,
 		addressType: AddressType,
 		address: string,
-		advertisement: any,
+		advertisement: Record<string, unknown>,
 		rssi: number
 	) {
 		super(adapter, id, addressType, address, advertisement, rssi);
@@ -79,14 +77,14 @@ export class DbusPeripheral extends Peripheral {
 		this.connecting = [];
 		this.isConnecting = true;
 
-		return new Promise(async (resolve, reject) => {
+		await this.init();
+
+		return new Promise((resolve, reject) => {
 			this.connecting.push([resolve, reject]);
 
 			const done = () => this.doneConnecting();
 
-			await this.init();
-
-			const onPropertiesChanged = (iface: string, changedProps: any) => {
+			const onPropertiesChanged = (iface: string, changedProps: DbusObject) => {
 				if (iface !== I_BLUEZ_DEVICE) {
 					return;
 				}
@@ -99,7 +97,7 @@ export class DbusPeripheral extends Peripheral {
 			this.propsIface.on('PropertiesChanged', onPropertiesChanged);
 
 			const timeout = async () => {
-				this.doneConnecting('Connecting timed out');
+				this.doneConnecting(new Error('Connecting timed out'));
 				this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 
 				try {
@@ -111,11 +109,7 @@ export class DbusPeripheral extends Peripheral {
 			};
 			this.connectTimeout = setTimeout(timeout, CONNECT_TIMEOUT * 1000);
 
-			try {
-				await this.deviceIface.Connect();
-			} catch (err) {
-				this.doneConnecting(err);
-			}
+			this.deviceIface.Connect().catch((err: Error) => this.doneConnecting(err));
 		});
 	}
 
@@ -135,14 +129,14 @@ export class DbusPeripheral extends Peripheral {
 		this.disconnecting = [];
 		this.isDisconnecting = true;
 
-		return new Promise<void>(async (resolve, reject) => {
+		await this.init();
+
+		return new Promise<void>((resolve, reject) => {
 			this.disconnecting.push([resolve, reject]);
 
 			const done = () => this.doneDisconnecting();
 
-			await this.init();
-
-			const onPropertiesChanged = (iface: string, changedProps: any) => {
+			const onPropertiesChanged = (iface: string, changedProps: DbusObject) => {
 				if (iface !== I_BLUEZ_DEVICE) {
 					return;
 				}
@@ -155,20 +149,16 @@ export class DbusPeripheral extends Peripheral {
 			this.propsIface.on('PropertiesChanged', onPropertiesChanged);
 
 			const timeout = () => {
-				this.doneDisconnecting('Disconnecting timed out');
+				this.doneDisconnecting(new Error('Disconnecting timed out'));
 				this.propsIface.off('PropertiesChanged', onPropertiesChanged);
 			};
 			this.disconnectTimeout = setTimeout(timeout, CONNECT_TIMEOUT * 1000);
 
-			try {
-				await this.deviceIface.Disconnect();
-			} catch (err) {
-				this.doneDisconnecting(err);
-			}
+			this.deviceIface.Disconnect().catch((err: Error) => this.doneDisconnecting(err));
 		});
 	}
 
-	private doneConnecting(error?: any) {
+	private doneConnecting(error?: Error) {
 		if (!this.isConnecting) {
 			return;
 		}
@@ -184,7 +174,7 @@ export class DbusPeripheral extends Peripheral {
 
 		this.connecting = [];
 	}
-	private doneDisconnecting(error?: any) {
+	private doneDisconnecting(error?: Error) {
 		if (!this.isDisconnecting) {
 			return;
 		}

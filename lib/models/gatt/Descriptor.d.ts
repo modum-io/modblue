@@ -15,10 +15,7 @@ export declare abstract class GattDescriptor {
     readonly uuid: string;
     constructor(characteristic: GattCharacteristic, uuid: string);
     toString(): string;
-    toJSON(): {
-        uuid: string;
-        characteristic: GattCharacteristic;
-    };
+    toJSON(): Record<string, unknown>;
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
 //# sourceMappingURL=Descriptor.d.ts.map

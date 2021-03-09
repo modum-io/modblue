@@ -13,7 +13,7 @@ export declare class DbusPeripheral extends Peripheral {
     private isDisconnecting;
     private disconnecting;
     private disconnectTimeout;
-    constructor(adapter: DbusAdapter, path: string, id: string, addressType: AddressType, address: string, advertisement: any, rssi: number);
+    constructor(adapter: DbusAdapter, path: string, id: string, addressType: AddressType, address: string, advertisement: Record<string, unknown>, rssi: number);
     private init;
     private prop;
     private isConnected;

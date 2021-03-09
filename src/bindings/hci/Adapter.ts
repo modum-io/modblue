@@ -1,19 +1,21 @@
 import { Adapter, AddressType, GattLocal, Peripheral } from '../../models';
 
 import { HciGattLocal } from './gatt';
-import { Gap, Hci } from './misc';
+import { Advertisement, Gap, Hci } from './misc';
 import { HciPeripheral } from './Peripheral';
 
 const SCAN_ENABLE_TIMEOUT = 1000;
 const ADVERTISING_ENABLE_TIMEOUT = 1000;
 
 export class HciAdapter extends Adapter {
-	private initialized: boolean = false;
-	private scanning: boolean = false;
+	private initialized = false;
+
+	private scanning = false;
 	private scanEnableTimer: NodeJS.Timer;
-	private advertising: boolean = false;
+
+	private advertising = false;
 	private advertisingEnableTimer: NodeJS.Timer;
-	private wasAdvertising: boolean = false;
+	private wasAdvertising = false;
 
 	private hci: Hci;
 	private gap: Gap;
@@ -63,7 +65,7 @@ export class HciAdapter extends Adapter {
 		this.hci.reset().catch((err) => this.emit('error', new Error(`Could not reset HCI controller: ${err}`)));
 	};
 
-	public dispose() {
+	public dispose(): void {
 		if (!this.initialized) {
 			return;
 		}
@@ -122,18 +124,19 @@ export class HciAdapter extends Adapter {
 		address: string,
 		addressType: AddressType,
 		connectable: boolean,
-		advertisement: any,
+		advertisement: Advertisement,
 		rssi: number
 	) => {
 		address = address.toUpperCase();
 		const uuid = address;
+		const adv = (advertisement as unknown) as Record<string, unknown>;
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new HciPeripheral(this, uuid, addressType, address, advertisement, rssi);
+			peripheral = new HciPeripheral(this, uuid, addressType, address, adv, rssi);
 			this.peripherals.set(uuid, peripheral);
 		} else {
-			peripheral.advertisement = advertisement;
+			peripheral.advertisement = adv;
 			peripheral.rssi = rssi;
 		}
 
@@ -146,7 +149,7 @@ export class HciAdapter extends Adapter {
 		maxInterval?: number,
 		latency?: number,
 		supervisionTimeout?: number
-	) {
+	): Promise<void> {
 		// For BLE <= 4.2:
 		// - Disable advertising while we're connected.
 		// - Don't connect if we have a connection in master mode
@@ -197,7 +200,7 @@ export class HciAdapter extends Adapter {
 		}
 	}
 
-	public async disconnect(peripheral: HciPeripheral) {
+	public async disconnect(peripheral: HciPeripheral): Promise<void> {
 		const handle = this.uuidToHandle.get(peripheral.uuid);
 
 		try {

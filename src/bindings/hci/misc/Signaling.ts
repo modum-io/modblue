@@ -17,7 +17,7 @@ export class Signaling {
 		this.hci.on('aclDataPkt', this.onAclStreamData);
 	}
 
-	public dispose() {
+	public dispose(): void {
 		if (this.hci) {
 			this.hci.off('aclDataPkt', this.onAclStreamData);
 			this.hci = null;

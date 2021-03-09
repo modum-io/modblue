@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { GattDescriptor } from '../Descriptor';
 import { GattCharacteristicRemote } from './Characteristic';
+import { GattRemote } from './Gatt';
 /**
  * Represents a descriptor of a remote GATT characterstic.
  */
@@ -9,7 +10,7 @@ export declare class GattDescriptorRemote extends GattDescriptor {
      * The remote GATT characteristic that this descriptor belongs to.
      */
     readonly characteristic: GattCharacteristicRemote;
-    protected get gatt(): import("./Gatt").GattRemote;
+    protected get gatt(): GattRemote;
     /**
      * Read the current value of this descriptor.
      */

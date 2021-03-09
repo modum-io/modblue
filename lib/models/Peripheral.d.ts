@@ -30,7 +30,7 @@ export declare abstract class Peripheral {
     /**
      * Any advertisement data received from the peripheral. Usually a buffer.
      */
-    advertisement: any;
+    advertisement: Record<string, unknown>;
     /**
      * The current RSSI signal strength of the peripheral.
      */
@@ -40,7 +40,7 @@ export declare abstract class Peripheral {
      * The current state of the peripheral.
      */
     get state(): PeripheralState;
-    constructor(adapter: Adapter, uuid: string, addressType: AddressType, address: string, advertisement?: any, rssi?: number);
+    constructor(adapter: Adapter, uuid: string, addressType: AddressType, address: string, advertisement?: Record<string, unknown>, rssi?: number);
     /**
      * Connect to this peripheral. Throws an error when connecting fails.
      * @param minInterval The minimum connection interval.
@@ -69,14 +69,7 @@ export declare abstract class Peripheral {
      */
     abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
     toString(): string;
-    toJSON(): {
-        uuid: string;
-        address: string;
-        addressType: AddressType;
-        rssi: number;
-        state: PeripheralState;
-        adapter: Adapter;
-    };
+    toJSON(): Record<string, unknown>;
     [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
 //# sourceMappingURL=Peripheral.d.ts.map
