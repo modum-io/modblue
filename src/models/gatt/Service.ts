@@ -12,7 +12,7 @@ export abstract class GattService {
 	public readonly gatt: Gatt;
 
 	/**
-	 * The UUID of this service, excluding dashes (-).
+	 * The UUID of this service, no dashes (-).
 	 */
 	public readonly uuid: string;
 

@@ -15,7 +15,7 @@ export declare abstract class GattCharacteristic extends TypedEmitter<GattCharac
      */
     readonly service: GattService;
     /**
-     * The UUID of this characteristic.
+     * The UUID of this characteristic, no dashes (-).
      */
     readonly uuid: string;
     /**
