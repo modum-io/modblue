@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.0.3](https://github.com/modum-io/modblue/compare/v7.0.2...v7.0.3) (2021-03-12)
+
+### Bug Fixes
+
+- **hci:** Make initialize logic more robust ([1a1e6d2](https://github.com/modum-io/modblue/commit/1a1e6d2726debeabff017d5cf7be6eea45803744))
+
 ### [7.0.2](https://github.com/modum-io/modblue/compare/v7.0.1...v7.0.2) (2021-03-12)
 
 ### Bug Fixes
