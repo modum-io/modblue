@@ -54,7 +54,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		this.modblue = modblue;
 		this.id = id;
 		this._name = name || `hci${id.replace('hci', '')}`;
-		this._address = address.toLowerCase();
+		this._address = address?.toLowerCase();
 	}
 
 	/**
