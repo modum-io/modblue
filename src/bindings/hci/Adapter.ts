@@ -273,7 +273,7 @@ export class HciAdapter extends Adapter {
 					})
 					.catch((err) => {
 						this.emit('error', new Error(`Could not re-enable LE scanning: ${err}`));
-						this.scanEnableTimer = setTimeout(enableScanning, SCAN_ENABLE_TIMEOUT);
+						this.scanEnableTimer = setTimeout(() => enableScanning(), SCAN_ENABLE_TIMEOUT);
 					});
 			};
 			enableScanning();
@@ -291,7 +291,7 @@ export class HciAdapter extends Adapter {
 					})
 					.catch((err) => {
 						this.emit('error', new Error(`Could not re-enable LE advertising: ${err}`));
-						this.advertisingEnableTimer = setTimeout(enableAdvertising, ADVERTISING_ENABLE_TIMEOUT);
+						this.advertisingEnableTimer = setTimeout(() => enableAdvertising(), ADVERTISING_ENABLE_TIMEOUT);
 					});
 			};
 			enableAdvertising();
