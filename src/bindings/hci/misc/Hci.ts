@@ -211,7 +211,16 @@ export class Hci extends TypedEmitter<HciEvents> {
 		}
 	}
 
-	public async init(): Promise<void> {
+	private isInitializing = false;
+	public async init(timeoutInSeconds = 2): Promise<void> {
+		if (this.isSocketUp) {
+			return;
+		}
+
+		if (this.isInitializing) {
+			return this.waitForInit(timeoutInSeconds);
+		}
+
 		this.socket = new BluetoothHciSocket();
 		this.socket.on('data', this.onSocketData);
 		this.socket.on('error', this.onSocketError);
@@ -219,23 +228,48 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.deviceId = this.socket.bindRaw(this.deviceId);
 		this.socket.start();
 
-		await this.checkSocketState();
+		this.isInitializing = true;
+
 		this.socketTimer = setInterval(this.checkSocketState, 1000);
+		this.checkSocketState();
 
-		for (let i = 0; i < 5; i++) {
-			if (this.isSocketUp) {
-				break;
-			}
+		return this.waitForInit(timeoutInSeconds);
+	}
 
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-		}
+	private async waitForInit(timeoutInSeconds: number) {
+		return new Promise<void>((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				this.off('error', errorHandler);
+				this.off('stateChange', stateChangeHandler);
 
-		if (!this.isSocketUp) {
-			throw new HciError(
-				`Initializing socket timed out - Are you sure it's running?`,
-				`On unix try \`sudo hciconfig hci${this.deviceId} up\``
-			);
-		}
+				reject(
+					new HciError(
+						`Initializing socket timed out - Are you sure it's running?`,
+						`On unix try \`sudo hciconfig hci${this.deviceId} up\``
+					)
+				);
+			}, timeoutInSeconds * 1000);
+
+			const stateChangeHandler = (newState: string) => {
+				clearTimeout(timeout);
+				this.off('error', errorHandler);
+
+				if (newState === 'poweredOn') {
+					resolve();
+				} else {
+					reject(new Error(`Socket state is ${newState}`));
+				}
+			};
+			this.once('stateChange', stateChangeHandler);
+
+			const errorHandler = (error: Error) => {
+				clearTimeout(timeout);
+				this.off('stateChange', stateChangeHandler);
+
+				reject(new Error(`Error while initializing: ${error}`));
+			};
+			this.once('error', errorHandler);
+		});
 	}
 
 	private checkSocketState = async () => {
@@ -246,34 +280,40 @@ export class Hci extends TypedEmitter<HciEvents> {
 			this.isSocketUp = isUp;
 
 			if (isUp) {
-				// Socket is now up
-				this.setSocketFilter();
+				this.isInitializing = false;
 
-				await this.reset();
+				try {
+					// Socket is now up
+					this.setSocketFilter();
 
-				if (this.state === 'unauthorized') {
-					throw new HciError('Not authorized');
+					await this.reset();
+
+					if (this.state === 'unauthorized') {
+						throw new HciError('Not authorized');
+					}
+
+					await this.setEventMask();
+					await this.setLeEventMask();
+
+					const { hciVer, hciRev } = await this.readLocalVersion();
+					this.hciVersion = hciVer;
+					this.hciRevision = hciRev;
+
+					if (hciVer < 0x06) {
+						throw new HciError(`HCI version ${hciVer}.${hciRev} not supported`);
+					}
+
+					await this.writeLeHostSupported();
+					await this.readLeHostSupported();
+					await this.readBufferSize();
+					await this.readLeBufferSize();
+					await this.readBdAddr();
+
+					this.state = 'poweredOn';
+					this.emit('stateChange', this.state);
+				} catch (err) {
+					this.emit('error', err);
 				}
-
-				await this.setEventMask();
-				await this.setLeEventMask();
-
-				const { hciVer, hciRev } = await this.readLocalVersion();
-				this.hciVersion = hciVer;
-				this.hciRevision = hciRev;
-
-				if (hciVer < 0x06) {
-					throw new HciError(`HCI version ${hciVer}.${hciRev} not supported`);
-				}
-
-				await this.writeLeHostSupported();
-				await this.readLeHostSupported();
-				await this.readBufferSize();
-				await this.readLeBufferSize();
-				await this.readBdAddr();
-
-				this.state = 'poweredOn';
-				this.emit('stateChange', this.state);
 			} else {
 				// Socket went down
 
@@ -304,11 +344,13 @@ export class Hci extends TypedEmitter<HciEvents> {
 			this.socketTimer = null;
 		}
 
-		this.isSocketUp = false;
+		if (this.socket) {
+			this.socket.stop();
+			this.socket.removeAllListeners();
+			this.socket = null;
+		}
 
-		this.socket.stop();
-		this.socket.removeAllListeners();
-		this.socket = null;
+		this.isSocketUp = false;
 
 		this.mutex.cancel();
 	}

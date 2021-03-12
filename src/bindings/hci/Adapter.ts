@@ -32,14 +32,12 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		this.initialized = true;
-
 		this.hci = new Hci(Number(this.id));
-		this.hci.on('error', this.onHciError);
 
 		await this.hci.init();
 
-		// Don't listen for these events until init is done
+		// Don't listen for events until init is done
+		this.hci.on('error', this.onHciError);
 		this.hci.on('stateChange', this.onHciStateChange);
 		this.hci.on('leScanEnable', this.onLeScanEnable);
 		this.hci.on('leAdvertiseEnable', this.onLeAdvertiseEnable);
@@ -49,8 +47,10 @@ export class HciAdapter extends Adapter {
 		this.gap = new Gap(this.hci);
 		this.gap.on('discover', this.onDiscover);
 
+		this._address = this.hci.address?.toLowerCase();
 		this._addressType = this.hci.addressType;
-		this._address = this.hci.address.toLowerCase();
+
+		this.initialized = true;
 	}
 
 	private onHciStateChange = (newState: string) => {
@@ -62,27 +62,31 @@ export class HciAdapter extends Adapter {
 
 	private onHciError = (error: Error) => {
 		this.emit('error', error);
-		this.hci.reset().catch((err) => this.emit('error', new Error(`Could not reset HCI controller: ${err}`)));
+		if (this.initialized) {
+			this.hci.reset().catch((err) => this.emit('error', new Error(`Could not reset HCI controller: ${err}`)));
+		}
 	};
 
 	public dispose(): void {
-		if (!this.initialized) {
-			return;
-		}
-
-		this.initialized = false;
-
 		for (const device of this.connectedDevices.values()) {
 			device.onDisconnect('Underlaying adapter disposed');
 		}
 		this.connectedDevices.clear();
 
-		this.hci.removeAllListeners();
-		this.hci.dispose();
-		this.hci = null;
+		if (this.hci) {
+			this.hci.removeAllListeners();
+			this.hci.dispose();
+			this.hci = null;
+		}
 
-		this.gap.removeAllListeners();
-		this.gap = null;
+		if (this.gap) {
+			this.gap.removeAllListeners();
+			this.gap = null;
+		}
+
+		this._address = null;
+		this._addressType = null;
+		this.initialized = false;
 	}
 
 	public async isScanning(): Promise<boolean> {
