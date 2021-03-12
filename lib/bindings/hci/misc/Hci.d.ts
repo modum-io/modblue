@@ -45,7 +45,9 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     constructor(deviceId?: number, cmdTimeout?: number);
     static getDeviceList(): HciDevice[];
     private acquireMutex;
-    init(): Promise<void>;
+    private isInitializing;
+    init(timeoutInSeconds?: number): Promise<void>;
+    private waitForInit;
     private checkSocketState;
     trackSentAclPackets(handleId: number, packets: number): void;
     dispose(): void;
