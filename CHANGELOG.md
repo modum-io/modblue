@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [7.0.0](https://github.com/modum-io/modblue/compare/v6.0.1...v7.0.0) (2021-03-12)
+
+### ⚠ BREAKING CHANGES
+
+- hci addresses changed from uppercase to lowercase
+
+### Bug Fixes
+
+- **gatt:** Update property docs ([05e9df8](https://github.com/modum-io/modblue/commit/05e9df8cbe0a5882f466ed1ca20d54ba5ca8477e))
+- Make hex address casing consistent ([8ede3f1](https://github.com/modum-io/modblue/commit/8ede3f1b716fa462d98f1c4f05e232bec51971fb))
+
 ### [6.0.1](https://github.com/modum-io/modblue/compare/v6.0.0...v6.0.1) (2021-03-09)
 
 ### Bug Fixes
