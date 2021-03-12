@@ -10,7 +10,7 @@ export declare abstract class GattService {
      */
     readonly gatt: Gatt;
     /**
-     * The UUID of this service, excluding dashes (-).
+     * The UUID of this service, no dashes (-).
      */
     readonly uuid: string;
     constructor(gatt: Gatt, uuid: string);

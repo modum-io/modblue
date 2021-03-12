@@ -10,7 +10,7 @@ export declare abstract class GattDescriptor {
      */
     readonly characteristic: GattCharacteristic;
     /**
-     * The UUID of this descriptor.
+     * The UUID of this descriptor, no dashes (-).
      */
     readonly uuid: string;
     constructor(characteristic: GattCharacteristic, uuid: string);

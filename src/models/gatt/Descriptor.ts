@@ -12,7 +12,7 @@ export abstract class GattDescriptor {
 	public readonly characteristic: GattCharacteristic;
 
 	/**
-	 * The UUID of this descriptor.
+	 * The UUID of this descriptor, no dashes (-).
 	 */
 	public readonly uuid: string;
 

@@ -42,7 +42,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 
 	protected _address: string;
 	/**
-	 * The MAC address of this adapter.
+	 * The MAC address of this adapter. All lowercase, with colon separator between bytes, e.g. 11:22:33:aa:bb:cc
 	 */
 	public get address(): string {
 		return this._address;
@@ -54,7 +54,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		this.modblue = modblue;
 		this.id = id;
 		this._name = name || `hci${id.replace('hci', '')}`;
-		this._address = address;
+		this._address = address.toLowerCase();
 	}
 
 	/**

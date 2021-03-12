@@ -27,7 +27,7 @@ export abstract class Peripheral {
 	 */
 	public readonly addressType: AddressType;
 	/**
-	 * The MAC address of this peripheral.
+	 * The MAC address of this peripheral. All lowercase, with colon separator between bytes, e.g. 11:22:33:aa:bb:cc
 	 */
 	public readonly address: string;
 
