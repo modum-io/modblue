@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.0.2](https://github.com/modum-io/modblue/compare/v7.0.1...v7.0.2) (2021-03-12)
+
+### Bug Fixes
+
+- **hci:** Fix possible scanning issue ([5dfd862](https://github.com/modum-io/modblue/commit/5dfd86272fb157e76c64d405aa6193c538d62d30))
+
 ### [7.0.1](https://github.com/modum-io/modblue/compare/v7.0.0...v7.0.1) (2021-03-12)
 
 ### Bug Fixes
