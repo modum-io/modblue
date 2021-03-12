@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.0.1](https://github.com/modum-io/modblue/compare/v7.0.0...v7.0.1) (2021-03-12)
+
+### Bug Fixes
+
+- **adapter:** Fix issue with no address ([fdf856c](https://github.com/modum-io/modblue/commit/fdf856c639171e96545ed9514b7f6e295c9fac8c))
+
 ## [7.0.0](https://github.com/modum-io/modblue/compare/v6.0.1...v7.0.0) (2021-03-12)
 
 ### ⚠ BREAKING CHANGES
