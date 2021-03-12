@@ -28,7 +28,7 @@ export class DbusAdapter extends Adapter {
 
 		this.path = path;
 		this._name = name;
-		this._address = address;
+		this._address = address.toLowerCase();
 	}
 
 	private async init() {
@@ -95,6 +95,8 @@ export class DbusAdapter extends Adapter {
 			return;
 		}
 
+		this.peripherals.clear();
+
 		const scanning = await this.prop<boolean>(I_BLUEZ_ADAPTER, 'Discovering');
 		if (!scanning) {
 			await this.adapterIface.SetDiscoveryFilter({
@@ -148,7 +150,7 @@ export class DbusAdapter extends Adapter {
 
 		let peripheral = this.peripherals.get(id);
 		if (!peripheral) {
-			const address = data.Address?.value as string;
+			const address = (data.Address?.value as string).toLowerCase();
 			const addressType = data.AddressType?.value as AddressType;
 			const advertisement = data.ManufacturerData?.value as Record<string, unknown>;
 			const rssi = data.RSSI?.value as number;

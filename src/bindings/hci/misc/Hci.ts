@@ -21,7 +21,7 @@ const ACL_START = 0x02;
 
 const EVT_DISCONN_COMPLETE = 0x05;
 const EVT_ENCRYPT_CHANGE = 0x08;
-const EVT_QOS_COMPLETE = 0x0d;
+// const EVT_QOS_COMPLETE = 0x0d;
 const EVT_CMD_COMPLETE = 0x0e;
 const EVT_CMD_STATUS = 0x0f;
 const EVT_HARDWARE_ERROR = 0x10;
@@ -31,7 +31,7 @@ const EVT_LE_META_EVENT = 0x3e;
 const EVT_LE_CONN_COMPLETE = 0x01;
 const EVT_LE_ADVERTISING_REPORT = 0x02;
 const EVT_LE_CONN_UPDATE_COMPLETE = 0x03;
-const EVT_LE_READ_REMOTE_FEATURES_COMPLETE = 0x04;
+// const EVT_LE_READ_REMOTE_FEATURES_COMPLETE = 0x04;
 
 const OGF_LINK_CTL = 0x01;
 const OCF_DISCONNECT = 0x0006;
@@ -53,7 +53,7 @@ const OCF_READ_RSSI = 0x0005;
 const OGF_LE_CTL = 0x08;
 const OCF_LE_SET_EVENT_MASK = 0x0001;
 const OCF_LE_READ_BUFFER_SIZE = 0x0002;
-const OCF_LE_SET_ADVERTISING_PARAMETERS = 0x0006;
+// const OCF_LE_SET_ADVERTISING_PARAMETERS = 0x0006;
 const OCF_LE_SET_ADVERTISING_DATA = 0x0008;
 const OCF_LE_SET_SCAN_RESPONSE_DATA = 0x0009;
 const OCF_LE_SET_ADVERTISE_ENABLE = 0x000a;
@@ -62,8 +62,8 @@ const OCF_LE_SET_SCAN_ENABLE = 0x000c;
 const OCF_LE_CREATE_CONN = 0x000d;
 const OCF_LE_CANCEL_CONN = 0x000e;
 const OCF_LE_CONN_UPDATE = 0x0013;
-const OCF_LE_START_ENCRYPTION = 0x0019;
-const OCF_LE_LTK_NEG_REPLY = 0x001b;
+// const OCF_LE_START_ENCRYPTION = 0x0019;
+// const OCF_LE_LTK_NEG_REPLY = 0x001b;
 
 const DISCONNECT_CMD = OCF_DISCONNECT | (OGF_LINK_CTL << 10);
 
@@ -84,13 +84,13 @@ const LE_SET_SCAN_ENABLE_CMD = OCF_LE_SET_SCAN_ENABLE | (OGF_LE_CTL << 10);
 const LE_CREATE_CONN_CMD = OCF_LE_CREATE_CONN | (OGF_LE_CTL << 10);
 const LE_CANCEL_CONN_CMD = OCF_LE_CANCEL_CONN | (OGF_LE_CTL << 10);
 const LE_CONN_UPDATE_CMD = OCF_LE_CONN_UPDATE | (OGF_LE_CTL << 10);
-const LE_START_ENCRYPTION_CMD = OCF_LE_START_ENCRYPTION | (OGF_LE_CTL << 10);
+// const LE_START_ENCRYPTION_CMD = OCF_LE_START_ENCRYPTION | (OGF_LE_CTL << 10);
 const LE_READ_BUFFER_SIZE_CMD = OCF_LE_READ_BUFFER_SIZE | (OGF_LE_CTL << 10);
-const LE_SET_ADVERTISING_PARAMETERS_CMD = OCF_LE_SET_ADVERTISING_PARAMETERS | (OGF_LE_CTL << 10);
+// const LE_SET_ADVERTISING_PARAMETERS_CMD = OCF_LE_SET_ADVERTISING_PARAMETERS | (OGF_LE_CTL << 10);
 const LE_SET_ADVERTISING_DATA_CMD = OCF_LE_SET_ADVERTISING_DATA | (OGF_LE_CTL << 10);
 const LE_SET_SCAN_RESPONSE_DATA_CMD = OCF_LE_SET_SCAN_RESPONSE_DATA | (OGF_LE_CTL << 10);
 const LE_SET_ADVERTISE_ENABLE_CMD = OCF_LE_SET_ADVERTISE_ENABLE | (OGF_LE_CTL << 10);
-const LE_LTK_NEG_REPLY_CMD = OCF_LE_LTK_NEG_REPLY | (OGF_LE_CTL << 10);
+// const LE_LTK_NEG_REPLY_CMD = OCF_LE_LTK_NEG_REPLY | (OGF_LE_CTL << 10);
 
 const HCI_OE_USER_ENDED_CONNECTION = 0x13;
 
@@ -478,7 +478,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 			.toString('hex')
 			.match(/.{1,2}/g)
 			.reverse()
-			.join(':');
+			.join(':')
+			.toLowerCase();
 	}
 
 	private async setLeEventMask() {
@@ -577,7 +578,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		latency = 0x0000,
 		supervisionTimeout = 0x00c8
 	): Promise<number> {
-		address = address.toUpperCase();
+		address = address.toLowerCase();
 
 		const cmd = Buffer.alloc(29);
 
@@ -1098,7 +1099,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 			.match(/.{1,2}/g)
 			.reverse()
 			.join(':')
-			.toUpperCase();
+			.toLowerCase();
 		const interval = data.readUInt16LE(10) * 1.25;
 		const latency = data.readUInt16LE(12);
 		const supervisionTimeout = data.readUInt16LE(14) * 10;
@@ -1153,7 +1154,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 					.toString('hex')
 					.match(/.{1,2}/g)
 					.reverse()
-					.join(':');
+					.join(':')
+					.toLowerCase();
 				const eirLength = data.readUInt8(8);
 				const eir = data.slice(9, eirLength + 9);
 				const rssi = data.readInt8(eirLength + 9);

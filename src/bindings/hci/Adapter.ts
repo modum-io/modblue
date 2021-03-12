@@ -50,7 +50,7 @@ export class HciAdapter extends Adapter {
 		this.gap.on('discover', this.onDiscover);
 
 		this._addressType = this.hci.addressType;
-		this._address = this.hci.address;
+		this._address = this.hci.address.toLowerCase();
 	}
 
 	private onHciStateChange = (newState: string) => {
@@ -96,6 +96,7 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
+		this.peripherals.clear();
 		await this.gap.startScanning(true);
 
 		this.scanning = true;
@@ -127,7 +128,7 @@ export class HciAdapter extends Adapter {
 		advertisement: Advertisement,
 		rssi: number
 	) => {
-		address = address.toUpperCase();
+		address = address.toLowerCase();
 		const uuid = address;
 		const adv = (advertisement as unknown) as Record<string, unknown>;
 
@@ -309,7 +310,7 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		address = address.toUpperCase();
+		address = address.toLowerCase();
 		const uuid = address;
 
 		const peripheral = new HciPeripheral(this, uuid, addressType, address, null, 0);

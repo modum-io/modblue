@@ -32,7 +32,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
     get addressType(): string;
     protected _address: string;
     /**
-     * The MAC address of this adapter.
+     * The MAC address of this adapter. All lowercase, with colon separator between bytes, e.g. 11:22:33:aa:bb:cc
      */
     get address(): string;
     constructor(modblue: MODblue, id: string, name?: string, address?: string);
