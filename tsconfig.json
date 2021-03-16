@@ -13,7 +13,6 @@
 		"sourceMap": true
 	},
 	"include": ["src/**/*"],
-	"exclude": ["docs", "lib", "tests", "node_modules"],
 	"typedocOptions": {
 		"out": "docs",
 		"listInvalidSymbolLinks": true,
