@@ -4,7 +4,6 @@
 		"module": "CommonJS",
 		"target": "ES2015",
 		"types": ["node"],
-		"lib": ["ES2016", "ES2017"],
 		"outDir": "lib",
 		"noImplicitAny": true,
 		"resolveJsonModule": true,

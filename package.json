@@ -19,7 +19,8 @@
 	"exports": {
 		".": "./lib/index.js",
 		"./hci": "./lib/bindings/hci/index.js",
-		"./dbus": "./lib/bindings/dbus/index.js"
+		"./dbus": "./lib/bindings/dbus/index.js",
+		"./package.json": "./package.json"
 	},
 	"types": "lib/index.d.ts",
 	"typesVersions": {
