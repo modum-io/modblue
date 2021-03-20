@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 import { GattCharacteristic } from './Characteristic';
 /**
  * Represents a GATT Descriptor.
@@ -16,6 +16,6 @@ export declare abstract class GattDescriptor {
     constructor(characteristic: GattCharacteristic, uuid: string);
     toString(): string;
     toJSON(): Record<string, unknown>;
-    [inspect.custom](depth: number, options: InspectOptionsStylized): string;
+    [inspect.custom](depth: number, options: any): string;
 }
 //# sourceMappingURL=Descriptor.d.ts.map

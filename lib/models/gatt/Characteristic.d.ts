@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 import { GattService } from './Service';
 export declare type GattCharacteristicProperty = 'broadcast' | 'read' | 'write-without-response' | 'write' | 'notify' | 'indicate' | 'authenticated-signed-writes' | 'extended-properties' | 'reliable-write' | 'writable-auxiliaries' | 'authorize';
 export interface GattCharacteristicEvents {
@@ -37,6 +37,6 @@ export declare abstract class GattCharacteristic extends TypedEmitter<GattCharac
     constructor(service: GattService, uuid: string, propsOrFlag: number | GattCharacteristicProperty[], secureOrFlag: number | GattCharacteristicProperty[]);
     toString(): string;
     toJSON(): Record<string, unknown>;
-    [inspect.custom](depth: number, options: InspectOptionsStylized): string;
+    [inspect.custom](depth: number, options: any): string;
 }
 //# sourceMappingURL=Characteristic.d.ts.map

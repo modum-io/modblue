@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 import { Adapter } from './Adapter';
 import { AddressType } from './AddressType';
 import { GattRemote } from './gatt';
@@ -70,6 +70,6 @@ export declare abstract class Peripheral {
     abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
     toString(): string;
     toJSON(): Record<string, unknown>;
-    [inspect.custom](depth: number, options: InspectOptionsStylized): string;
+    [inspect.custom](depth: number, options: any): string;
 }
 //# sourceMappingURL=Peripheral.d.ts.map

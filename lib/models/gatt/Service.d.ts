@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 import { Gatt } from './Gatt';
 /**
  * Represents a GATT service.
@@ -16,6 +16,6 @@ export declare abstract class GattService {
     constructor(gatt: Gatt, uuid: string);
     toString(): string;
     toJSON(): Record<string, unknown>;
-    [inspect.custom](depth: number, options: InspectOptionsStylized): string;
+    [inspect.custom](depth: number, options: any): string;
 }
 //# sourceMappingURL=Service.d.ts.map

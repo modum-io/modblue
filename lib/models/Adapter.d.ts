@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 import { AddressType } from './AddressType';
 import { GattLocal } from './gatt';
 import { MODblue } from './MODblue';
@@ -84,6 +84,6 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
     abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
     toString(): string;
     toJSON(): Record<string, unknown>;
-    [inspect.custom](depth: number, options: InspectOptionsStylized): string;
+    [inspect.custom](depth: number, options: any): string;
 }
 //# sourceMappingURL=Adapter.d.ts.map
