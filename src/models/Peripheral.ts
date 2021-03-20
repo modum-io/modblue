@@ -1,4 +1,4 @@
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 
 import { Adapter } from './Adapter';
 import { AddressType } from './AddressType';
@@ -117,7 +117,7 @@ export abstract class Peripheral {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
+	public [inspect.custom](depth: number, options: any): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

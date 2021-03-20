@@ -1,4 +1,4 @@
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 
 import { Gatt } from './Gatt';
 
@@ -33,7 +33,7 @@ export abstract class GattService {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
+	public [inspect.custom](depth: number, options: any): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

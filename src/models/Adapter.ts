@@ -1,5 +1,5 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 
 import { AddressType } from './AddressType';
 import { GattLocal } from './gatt';
@@ -169,7 +169,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
+	public [inspect.custom](depth: number, options: any): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {
