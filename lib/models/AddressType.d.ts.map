@@ -1,1 +1,1 @@
-{"version":3,"file":"AddressType.d.ts","sourceRoot":"","sources":["../../src/models/AddressType.ts"],"names":[],"mappings":"AAAA;;GAEG;AACH,oBAAY,WAAW,GAAG,QAAQ,GAAG,QAAQ,CAAC"}
+{"version":3,"file":"AddressType.d.ts","sourceRoot":"","sources":["../../src/models/AddressType.ts"],"names":[],"mappings":"AAAA;;GAEG;AACH,oBAAY,WAAW,GAAG,QAAQ,GAAG,QAAQ,GAAG,SAAS,CAAC"}

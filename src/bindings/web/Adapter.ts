@@ -1,6 +1,22 @@
-import { Adapter, Gatt, Peripheral } from '../../models';
+import { Adapter, Gatt, MODblue, Peripheral } from '../../models';
+
+import { WebPeripheral } from './Peripheral';
 
 export class WebAdapter extends Adapter {
+	private scan: BluetoothLEScan;
+
+	private peripherals: Map<string, WebPeripheral> = new Map();
+
+	public constructor(modblue: MODblue, id: string, name?: string, address?: string) {
+		super(modblue, id, name, address);
+
+		navigator.bluetooth.addEventListener('advertisementreceived', this.onAdvertisement);
+	}
+
+	public dispose(): void {
+		navigator.bluetooth.removeEventListener('advertisementreceived', this.onAdvertisement);
+	}
+
 	private addDashes(uuid: string): string {
 		return (
 			`${uuid.substring(0, 8)}-` +
@@ -31,10 +47,34 @@ export class WebAdapter extends Adapter {
 		}
 
 		navigator.bluetooth.requestDevice(opts).then((dev) => console.log(dev));
+		this.scan = await navigator.bluetooth.requestLEScan({ ...opts, acceptAllAdvertisements: true });
 	}
 
-	public stopScanning(): Promise<void> {
-		throw new Error('Method not implemented.');
+	private onAdvertisement = ({ device, rssi, manufacturerData }: BluetoothAdvertisementEvent) => {
+		const uuid = device.id;
+
+		const adv: Record<string, unknown> = {};
+		for (const [key, value] of manufacturerData) {
+			adv[key] = value;
+		}
+
+		let peripheral = this.peripherals.get(uuid);
+		if (!peripheral) {
+			peripheral = new WebPeripheral(this, uuid, adv, rssi);
+			this.peripherals.set(uuid, peripheral);
+		} else {
+			peripheral.advertisement = adv;
+			peripheral.rssi = rssi;
+		}
+
+		this.emit('discover', peripheral);
+	};
+
+	public async stopScanning(): Promise<void> {
+		if (this.scan) {
+			this.scan.stop();
+			this.scan = null;
+		}
 	}
 
 	public getScannedPeripherals(): Promise<Peripheral[]> {

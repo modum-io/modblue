@@ -9,7 +9,10 @@ export class WebMODblue extends MODblue {
 	private adapter: WebAdapter;
 
 	public async dispose(): Promise<void> {
-		this.adapter = null;
+		if (this.adapter) {
+			this.adapter.dispose();
+			this.adapter = null;
+		}
 	}
 
 	public async getAdapters(): Promise<Adapter[]> {
