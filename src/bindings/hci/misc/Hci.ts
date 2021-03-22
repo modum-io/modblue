@@ -111,8 +111,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 	private static createSocket() {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const NAME = '@abandonware/bluetooth-hci-socket';
-		return new (require(`${NAME}`))();
+		const NAME = '/bluetooth-hci-socket';
+		return new (require(`@abandonware${NAME}`))();
 	}
 
 	public static getDeviceList(): HciDevice[] {
