@@ -1,8 +1,7 @@
 import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 
 import { Gatt, GattError, Peripheral } from '../../../models';
-import { Hci } from '../misc';
-import * as CONST from './Constants';
+import { Hci, Codes } from '../misc';
 
 import { HciGattCharacteristic } from './Characteristic';
 import { HciGattDescriptor } from './Descriptor';
@@ -77,7 +76,7 @@ export class HciGattRemote extends Gatt {
 	}
 
 	private onAclStreamData = (handle: number, cid: number, data: Buffer) => {
-		if (handle !== this.handle || cid !== CONST.ATT_CID) {
+		if (handle !== this.handle || cid !== Codes.ATT_CID) {
 			return;
 		}
 
@@ -87,14 +86,14 @@ export class HciGattRemote extends Gatt {
 		} else if (data[0] % 2 === 0) {
 			// Invalid request, reply with an error
 			const requestType = data[0];
-			this.queueCommand(this.errorResponse(requestType, 0x0000, CONST.ATT_ECODE_REQ_NOT_SUPP), true).catch(() => null);
-		} else if (data[0] === CONST.ATT_OP_HANDLE_NOTIFY || data[0] === CONST.ATT_OP_HANDLE_IND) {
+			this.queueCommand(this.errorResponse(requestType, 0x0000, Codes.ATT_ECODE_REQ_NOT_SUPP), true).catch(() => null);
+		} else if (data[0] === Codes.ATT_OP_HANDLE_NOTIFY || data[0] === Codes.ATT_OP_HANDLE_IND) {
 			const valueHandle = data.readUInt16LE(1);
 			const valueData = data.slice(3);
 
 			// this.emit('handleNotify', valueHandle, valueData);
 
-			if (data[0] === CONST.ATT_OP_HANDLE_IND) {
+			if (data[0] === Codes.ATT_OP_HANDLE_IND) {
 				// TODO: Possibly a proper error handling is required here?
 				this.handleConfirmation().catch(() => null);
 				// this.emit('handleConfirmation', valueHandle);
@@ -111,10 +110,10 @@ export class HciGattRemote extends Gatt {
 			// NO-OP
 		} else {
 			if (
-				data[0] === CONST.ATT_OP_ERROR &&
-				(data[4] === CONST.ATT_ECODE_AUTHENTICATION ||
-					data[4] === CONST.ATT_ECODE_AUTHORIZATION ||
-					data[4] === CONST.ATT_ECODE_INSUFF_ENC) &&
+				data[0] === Codes.ATT_OP_ERROR &&
+				(data[4] === Codes.ATT_ECODE_AUTHENTICATION ||
+					data[4] === Codes.ATT_ECODE_AUTHORIZATION ||
+					data[4] === Codes.ATT_ECODE_INSUFF_ENC) &&
 				this.security !== 'medium'
 			) {
 				// this.aclStream.encrypt();
@@ -128,7 +127,7 @@ export class HciGattRemote extends Gatt {
 	private errorResponse(opcode: number, handle: number, status: number) {
 		const buf = Buffer.alloc(5);
 
-		buf.writeUInt8(CONST.ATT_OP_ERROR, 0);
+		buf.writeUInt8(Codes.ATT_OP_ERROR, 0);
 		buf.writeUInt8(opcode, 1);
 		buf.writeUInt16LE(handle, 2);
 		buf.writeUInt8(status, 4);
@@ -192,7 +191,7 @@ export class HciGattRemote extends Gatt {
 				buffer: buffer,
 				onResponse: onDone
 			};
-			this.hci.writeAclDataPkt(this.handle, CONST.ATT_CID, buffer);
+			this.hci.writeAclDataPkt(this.handle, Codes.ATT_CID, buffer);
 
 			setTimeout(onTimeout, this.cmdTimeout);
 
@@ -205,7 +204,7 @@ export class HciGattRemote extends Gatt {
 	private mtuRequest(mtu: number) {
 		const buf = Buffer.alloc(3);
 
-		buf.writeUInt8(CONST.ATT_OP_MTU_REQ, 0);
+		buf.writeUInt8(Codes.ATT_OP_MTU_REQ, 0);
 		buf.writeUInt16LE(mtu, 1);
 
 		return this.queueCommand(buf, false);
@@ -214,7 +213,7 @@ export class HciGattRemote extends Gatt {
 	public readByGroupRequest(startHandle: number, endHandle: number, groupUUID: number): Promise<Buffer> {
 		const buf = Buffer.alloc(7);
 
-		buf.writeUInt8(CONST.ATT_OP_READ_BY_GROUP_REQ, 0);
+		buf.writeUInt8(Codes.ATT_OP_READ_BY_GROUP_REQ, 0);
 		buf.writeUInt16LE(startHandle, 1);
 		buf.writeUInt16LE(endHandle, 3);
 		buf.writeUInt16LE(groupUUID, 5);
@@ -225,7 +224,7 @@ export class HciGattRemote extends Gatt {
 	public readByTypeRequest(startHandle: number, endHandle: number, groupUUID: number): Promise<Buffer> {
 		const buf = Buffer.alloc(7);
 
-		buf.writeUInt8(CONST.ATT_OP_READ_BY_TYPE_REQ, 0);
+		buf.writeUInt8(Codes.ATT_OP_READ_BY_TYPE_REQ, 0);
 		buf.writeUInt16LE(startHandle, 1);
 		buf.writeUInt16LE(endHandle, 3);
 		buf.writeUInt16LE(groupUUID, 5);
@@ -236,7 +235,7 @@ export class HciGattRemote extends Gatt {
 	public readRequest(handle: number): Promise<Buffer> {
 		const buf = Buffer.alloc(3);
 
-		buf.writeUInt8(CONST.ATT_OP_READ_REQ, 0);
+		buf.writeUInt8(Codes.ATT_OP_READ_REQ, 0);
 		buf.writeUInt16LE(handle, 1);
 
 		return this.queueCommand(buf, false);
@@ -245,7 +244,7 @@ export class HciGattRemote extends Gatt {
 	public readBlobRequest(handle: number, offset: number): Promise<Buffer> {
 		const buf = Buffer.alloc(5);
 
-		buf.writeUInt8(CONST.ATT_OP_READ_BLOB_REQ, 0);
+		buf.writeUInt8(Codes.ATT_OP_READ_BLOB_REQ, 0);
 		buf.writeUInt16LE(handle, 1);
 		buf.writeUInt16LE(offset, 3);
 
@@ -255,7 +254,7 @@ export class HciGattRemote extends Gatt {
 	public findInfoRequest(startHandle: number, endHandle: number): Promise<Buffer> {
 		const buf = Buffer.alloc(5);
 
-		buf.writeUInt8(CONST.ATT_OP_FIND_INFO_REQ, 0);
+		buf.writeUInt8(Codes.ATT_OP_FIND_INFO_REQ, 0);
 		buf.writeUInt16LE(startHandle, 1);
 		buf.writeUInt16LE(endHandle, 3);
 
@@ -267,7 +266,7 @@ export class HciGattRemote extends Gatt {
 	public writeRequest(handle: number, data: Buffer, withoutResponse: boolean): Promise<Buffer | void> {
 		const buf = Buffer.alloc(3 + data.length);
 
-		buf.writeUInt8(withoutResponse ? CONST.ATT_OP_WRITE_CMD : CONST.ATT_OP_WRITE_REQ, 0);
+		buf.writeUInt8(withoutResponse ? Codes.ATT_OP_WRITE_CMD : Codes.ATT_OP_WRITE_REQ, 0);
 		buf.writeUInt16LE(handle, 1);
 
 		for (let i = 0; i < data.length; i++) {
@@ -284,7 +283,7 @@ export class HciGattRemote extends Gatt {
 	private prepareWriteRequest(handle: number, offset: number, data: Buffer) {
 		const buf = Buffer.alloc(5 + data.length);
 
-		buf.writeUInt8(CONST.ATT_OP_PREPARE_WRITE_REQ, 0);
+		buf.writeUInt8(Codes.ATT_OP_PREPARE_WRITE_REQ, 0);
 		buf.writeUInt16LE(handle, 1);
 		buf.writeUInt16LE(offset, 3);
 
@@ -298,7 +297,7 @@ export class HciGattRemote extends Gatt {
 	private executeWriteRequest(handle: number, cancelPreparedWrites?: boolean) {
 		const buf = Buffer.alloc(2);
 
-		buf.writeUInt8(CONST.ATT_OP_EXECUTE_WRITE_REQ, 0);
+		buf.writeUInt8(Codes.ATT_OP_EXECUTE_WRITE_REQ, 0);
 		buf.writeUInt8(cancelPreparedWrites ? 0 : 1, 1);
 
 		return this.queueCommand(buf, false);
@@ -307,7 +306,7 @@ export class HciGattRemote extends Gatt {
 	private handleConfirmation() {
 		const buf = Buffer.alloc(1);
 
-		buf.writeUInt8(CONST.ATT_OP_HANDLE_CNF, 0);
+		buf.writeUInt8(Codes.ATT_OP_HANDLE_CNF, 0);
 
 		return this.queueCommand(buf, true);
 	}
@@ -320,7 +319,7 @@ export class HciGattRemote extends Gatt {
 		const data = await this.mtuRequest(mtu);
 		const opcode = data[0];
 
-		if (opcode === CONST.ATT_OP_MTU_RESP) {
+		if (opcode === Codes.ATT_OP_MTU_RESP) {
 			const newMtu = data.readUInt16LE(1);
 			this._mtu = Math.min(mtu, newMtu);
 			this.mtuWasExchanged = true;
@@ -337,11 +336,11 @@ export class HciGattRemote extends Gatt {
 
 		const run = true;
 		while (run) {
-			const data = await this.readByGroupRequest(startHandle, 0xffff, CONST.GATT_PRIM_SVC_UUID);
+			const data = await this.readByGroupRequest(startHandle, 0xffff, Codes.GATT_PRIM_SVC_UUID);
 
 			const opcode = data[0];
 
-			if (opcode === CONST.ATT_OP_READ_BY_GROUP_RESP) {
+			if (opcode === Codes.ATT_OP_READ_BY_GROUP_RESP) {
 				const type = data[1];
 				const num = (data.length - 2) / type;
 
@@ -366,7 +365,7 @@ export class HciGattRemote extends Gatt {
 				}
 			}
 
-			if (opcode !== CONST.ATT_OP_READ_BY_GROUP_RESP || newServices[newServices.length - 1].endHandle === 0xffff) {
+			if (opcode !== Codes.ATT_OP_READ_BY_GROUP_RESP || newServices[newServices.length - 1].endHandle === 0xffff) {
 				break;
 			} else {
 				startHandle = newServices[newServices.length - 1].endHandle + 1;
@@ -388,11 +387,11 @@ export class HciGattRemote extends Gatt {
 
 		const run = true;
 		while (run) {
-			const data = await this.readByTypeRequest(startHandle, service.endHandle, CONST.GATT_CHARAC_UUID);
+			const data = await this.readByTypeRequest(startHandle, service.endHandle, Codes.GATT_CHARAC_UUID);
 
 			const opcode = data[0];
 
-			if (opcode === CONST.ATT_OP_READ_BY_TYPE_RESP) {
+			if (opcode === Codes.ATT_OP_READ_BY_TYPE_RESP) {
 				const type = data[1];
 				const num = (data.length - 2) / type;
 
@@ -428,7 +427,7 @@ export class HciGattRemote extends Gatt {
 			}
 
 			if (
-				opcode !== CONST.ATT_OP_READ_BY_TYPE_RESP ||
+				opcode !== Codes.ATT_OP_READ_BY_TYPE_RESP ||
 				newChars[newChars.length - 1].valueHandle === service.endHandle
 			) {
 				break;
@@ -471,7 +470,7 @@ export class HciGattRemote extends Gatt {
 
 		const run = true;
 		while (run) {
-			if (opcode !== CONST.ATT_OP_READ_RESP && opcode !== CONST.ATT_OP_READ_BLOB_RESP) {
+			if (opcode !== Codes.ATT_OP_READ_RESP && opcode !== Codes.ATT_OP_READ_BLOB_RESP) {
 				return readData;
 			}
 
@@ -510,7 +509,7 @@ export class HciGattRemote extends Gatt {
 			const respData = await this.writeRequest(characteristic.valueHandle, data, false);
 			const opcode = respData[0];
 
-			if (opcode !== CONST.ATT_OP_WRITE_RESP) {
+			if (opcode !== Codes.ATT_OP_WRITE_RESP) {
 				throw new GattError(this.peripheral, `Write error, opcode ${opcode}`);
 			}
 		}
@@ -545,7 +544,7 @@ export class HciGattRemote extends Gatt {
 
 			const chunkOpcode = chunkRespData[0];
 
-			if (chunkOpcode !== CONST.ATT_OP_PREPARE_WRITE_RESP) {
+			if (chunkOpcode !== Codes.ATT_OP_PREPARE_WRITE_RESP) {
 				throw new GattError(this.peripheral, `Long write chunk failed, invalid opcode ${chunkOpcode}`);
 			} else {
 				const expectedLength = chunk.length + 5;
@@ -562,7 +561,7 @@ export class HciGattRemote extends Gatt {
 		const respData = await this.executeWriteRequest(characteristic.valueHandle);
 		const opcode = respData[0];
 
-		if (opcode !== CONST.ATT_OP_EXECUTE_WRITE_RESP && !withoutResponse) {
+		if (opcode !== Codes.ATT_OP_EXECUTE_WRITE_RESP && !withoutResponse) {
 			throw new GattError(this.peripheral, `Long write failed, invalid opcode ${opcode}`);
 		}
 	}
@@ -585,11 +584,11 @@ export class HciGattRemote extends Gatt {
 		const data = await this.readByTypeRequest(
 			characteristic.startHandle,
 			characteristic.endHandle,
-			CONST.GATT_SERVER_CHARAC_CFG_UUID
+			Codes.GATT_SERVER_CHARAC_CFG_UUID
 		);
 
 		const opcode = data[0];
-		if (opcode !== CONST.ATT_OP_READ_BY_TYPE_RESP) {
+		if (opcode !== Codes.ATT_OP_READ_BY_TYPE_RESP) {
 			throw new GattError(this.peripheral, `Broadcast error, opcode ${opcode}`);
 		}
 
@@ -610,7 +609,7 @@ export class HciGattRemote extends Gatt {
 		const moreData = await this.writeRequest(handle, valueBuffer, false);
 		const moreOpcode = moreData[0];
 
-		if (moreOpcode !== CONST.ATT_OP_WRITE_RESP) {
+		if (moreOpcode !== Codes.ATT_OP_WRITE_RESP) {
 			throw new GattError(this.peripheral, `Broadcast error, opcode ${opcode}`);
 		}
 	}
@@ -629,11 +628,11 @@ export class HciGattRemote extends Gatt {
 		const data = await this.readByTypeRequest(
 			characteristic.startHandle,
 			characteristic.endHandle,
-			CONST.GATT_CLIENT_CHARAC_CFG_UUID
+			Codes.GATT_CLIENT_CHARAC_CFG_UUID
 		);
 
 		const opcode = data[0];
-		if (opcode === CONST.ATT_OP_READ_BY_TYPE_RESP) {
+		if (opcode === Codes.ATT_OP_READ_BY_TYPE_RESP) {
 			const handle = data.readUInt16LE(2);
 			let value = data.readUInt16LE(4);
 
@@ -662,7 +661,7 @@ export class HciGattRemote extends Gatt {
 			const moreData = await this.writeRequest(handle, valueBuffer, false);
 			const moreOpcode = moreData[0];
 
-			if (moreOpcode !== CONST.ATT_OP_WRITE_RESP) {
+			if (moreOpcode !== Codes.ATT_OP_WRITE_RESP) {
 				throw new GattError(this.peripheral, `Notify error, opcode ${opcode}`);
 			}
 		}
@@ -688,7 +687,7 @@ export class HciGattRemote extends Gatt {
 			const data = await this.findInfoRequest(startHandle, characteristic.endHandle);
 			const opcode = data[0];
 
-			if (opcode === CONST.ATT_OP_FIND_INFO_RESP) {
+			if (opcode === Codes.ATT_OP_FIND_INFO_RESP) {
 				const num = data[1];
 
 				for (let i = 0; i < num; i++) {
@@ -700,7 +699,7 @@ export class HciGattRemote extends Gatt {
 				}
 			}
 
-			if (opcode !== CONST.ATT_OP_FIND_INFO_RESP || newDescs[newDescs.length - 1].handle === characteristic.endHandle) {
+			if (opcode !== Codes.ATT_OP_FIND_INFO_RESP || newDescs[newDescs.length - 1].handle === characteristic.endHandle) {
 				break;
 			} else {
 				startHandle = newDescs[newDescs.length - 1].handle + 1;
@@ -740,7 +739,7 @@ export class HciGattRemote extends Gatt {
 
 		const run = true;
 		while (run) {
-			if (opcode !== CONST.ATT_OP_READ_RESP && opcode !== CONST.ATT_OP_READ_BLOB_RESP) {
+			if (opcode !== Codes.ATT_OP_READ_RESP && opcode !== Codes.ATT_OP_READ_BLOB_RESP) {
 				return readData;
 			}
 
@@ -782,7 +781,7 @@ export class HciGattRemote extends Gatt {
 		const respData = await this.writeRequest(descriptor.handle, data, false);
 		const opcode = respData[0];
 
-		if (opcode !== CONST.ATT_OP_WRITE_RESP) {
+		if (opcode !== Codes.ATT_OP_WRITE_RESP) {
 			throw new GattError(this.peripheral, `WriteValue error, opcode ${opcode}`);
 		}
 	}

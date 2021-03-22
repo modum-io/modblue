@@ -1,3 +1,6 @@
-export { Gap } from './Gap';
-export { Hci } from './Hci';
-export { Signaling } from './Signaling';
+export * from './Gap';
+export * from './Hci';
+export * from './HciError';
+export * as Codes from './HciCodes';
+export * from './HciStatus';
+export * from './Signaling';

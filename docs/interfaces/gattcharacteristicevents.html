@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>GattDescriptorInput | @modum-io/modblue - v7.0.3</title>
+	<title>GattCharacteristicEvents | @modum-io/modblue - v7.0.3</title>
 	<meta name="description" content="Documentation for @modum-io/modblue - v7.0.3">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,10 +55,10 @@
 					<a href="../modules.html">@modum-io/modblue - v7.0.3</a>
 				</li>
 				<li>
-					<a href="gattdescriptorinput.html">GattDescriptorInput</a>
+					<a href="gattcharacteristicevents.html">GattCharacteristicEvents</a>
 				</li>
 			</ul>
-			<h1>Interface GattDescriptorInput</h1>
+			<h1>Interface GattCharacteristicEvents</h1>
 		</div>
 	</div>
 </header>
@@ -69,7 +69,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">GattDescriptorInput</span>
+						<span class="target">GattCharacteristicEvents</span>
 					</li>
 				</ul>
 			</section>
@@ -80,8 +80,7 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="gattdescriptorinput.html#uuid" class="tsd-kind-icon">uuid</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="gattdescriptorinput.html#value" class="tsd-kind-icon">value</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="gattcharacteristicevents.html#notification" class="tsd-kind-icon">notification</a></li>
 							</ul>
 						</section>
 					</div>
@@ -90,24 +89,35 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="uuid" class="tsd-anchor"></a>
-					<h3>uuid</h3>
-					<div class="tsd-signature tsd-kind-icon">uuid<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="notification" class="tsd-anchor"></a>
+					<h3>notification</h3>
+					<div class="tsd-signature tsd-kind-icon">notification<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/84d3887/src/models/gatt/local/Gatt.ts#L45">src/models/gatt/local/Gatt.ts:45</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/f4bcff8/src/models/gatt/Characteristic.ts#L27">src/models/gatt/Characteristic.ts:27</a></li>
 						</ul>
 					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="value" class="tsd-anchor"></a>
-					<h3>value</h3>
-					<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/84d3887/src/models/gatt/local/Gatt.ts#L46">src/models/gatt/local/Gatt.ts:46</a></li>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-signature">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-interface">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-parameters-title">Parameters</h4>
+										<ul class="tsd-parameters">
+											<li>
+												<h5>data: <span class="tsd-signature-type">Buffer</span></h5>
+											</li>
+										</ul>
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+									</li>
+								</ul>
+							</li>
 						</ul>
-					</aside>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -131,37 +141,13 @@
 						<a href="../classes/gattcharacteristic.html" class="tsd-kind-icon">Gatt<wbr>Characteristic</a>
 					</li>
 					<li class=" tsd-kind-class">
-						<a href="../classes/gattcharacteristiclocal.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Local</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="../classes/gattcharacteristicremote.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Remote</a>
-					</li>
-					<li class=" tsd-kind-class">
 						<a href="../classes/gattdescriptor.html" class="tsd-kind-icon">Gatt<wbr>Descriptor</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="../classes/gattdescriptorlocal.html" class="tsd-kind-icon">Gatt<wbr>Descriptor<wbr>Local</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="../classes/gattdescriptorremote.html" class="tsd-kind-icon">Gatt<wbr>Descriptor<wbr>Remote</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="../classes/gatterror.html" class="tsd-kind-icon">Gatt<wbr>Error</a>
 					</li>
 					<li class=" tsd-kind-class">
-						<a href="../classes/gattlocal.html" class="tsd-kind-icon">Gatt<wbr>Local</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="../classes/gattremote.html" class="tsd-kind-icon">Gatt<wbr>Remote</a>
-					</li>
-					<li class=" tsd-kind-class">
 						<a href="../classes/gattservice.html" class="tsd-kind-icon">Gatt<wbr>Service</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="../classes/gattservicelocal.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Local</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="../classes/gattserviceremote.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Remote</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="../classes/modblue.html" class="tsd-kind-icon">MODblue</a>
@@ -170,25 +156,22 @@
 						<a href="../classes/peripheral.html" class="tsd-kind-icon">Peripheral</a>
 					</li>
 					<li class=" tsd-kind-interface">
-						<a href="gattcharacteristicinput.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Input</a>
+						<a href="adapterevents.html" class="tsd-kind-icon">Adapter<wbr>Events</a>
 					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface">
-						<a href="gattdescriptorinput.html" class="tsd-kind-icon">Gatt<wbr>Descriptor<wbr>Input</a>
+						<a href="gattcharacteristicevents.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Events</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="gattdescriptorinput.html#uuid" class="tsd-kind-icon">uuid</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="gattdescriptorinput.html#value" class="tsd-kind-icon">value</a>
+								<a href="gattcharacteristicevents.html#notification" class="tsd-kind-icon">notification</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-interface">
-						<a href="gattserviceinput.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Input</a>
+						<a href="inspectoptionsstylized.html" class="tsd-kind-icon">Inspect<wbr>Options<wbr>Stylized</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="../modules.html#addresstype" class="tsd-kind-icon">Address<wbr>Type</a>
@@ -198,6 +181,15 @@
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="../modules.html#peripheralstate" class="tsd-kind-icon">Peripheral<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#readfunction" class="tsd-kind-icon">Read<wbr>Function</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#writefunction" class="tsd-kind-icon">Write<wbr>Function</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="../modules.html#custom" class="tsd-kind-icon">CUSTOM</a>
 					</li>
 				</ul>
 			</nav>
@@ -214,12 +206,11 @@
 				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
 			</ul>
 		</div>
 	</div>

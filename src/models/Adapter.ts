@@ -63,7 +63,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	 * If the timeout is reached before finding a peripheral the returned promise will be rejected.
 	 * @param isTarget A function that returns `true` if the specified peripheral is the peripheral we're looking for.
 	 * @param timeoutInSeconds The timeout in seconds. The returned promise will reject once the timeout is reached.
-	 * @param serviceUUIDs The UUIDs of the {@link GattServiceRemote}s that must be contained in the advertisement data.
+	 * @param serviceUUIDs The UUIDs of the {@link GattService}s that must be contained in the advertisement data.
 	 */
 	public async scanFor(
 		isTarget: (peripheral: Peripheral) => boolean,
@@ -121,7 +121,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 
 	/**
 	 * Start scanning for nearby {@link Peripheral}s.
-	 * @param serviceUUIDs The UUIDs of the {@link GattServiceRemote} that an advertising
+	 * @param serviceUUIDs The UUIDs of the {@link GattService} that an advertising
 	 * packet must advertise to emit a `discover` event.
 	 * @param allowDuplicates True if advertisements for the same peripheral should emit multiple `discover` events.
 	 */
@@ -144,7 +144,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
 	 * Start advertising on this adapter.
 	 * @param deviceName The device name that is included in the advertisement.
-	 * @param serviceUUIDs The UUIDs of the {@link GattServiceLocal}s that are included in the advertisement.
+	 * @param serviceUUIDs The UUIDs of the {@link GattService}s that are included in the advertisement.
 	 */
 	public abstract startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
 	/**

@@ -8,9 +8,7 @@ import {
 	WriteFunction
 } from '../../../models';
 import { HciAdapter } from '../Adapter';
-import { Hci } from '../misc';
-
-import * as CONST from './Constants';
+import { Hci, Codes } from '../misc';
 
 // 512 bytes is max char size + 1 byte att opcode + 2 bytes handle + 2 bytes offset for long writes
 const DEFAULT_MAX_MTU = 517;
@@ -233,7 +231,7 @@ export class HciGattLocal extends Gatt {
 	};
 
 	private onAclStreamData = async (handle: number, cid: number, data: Buffer) => {
-		if (cid !== CONST.ATT_CID) {
+		if (cid !== Codes.ATT_CID) {
 			return;
 		}
 
@@ -242,53 +240,53 @@ export class HciGattLocal extends Gatt {
 
 		try {
 			switch (requestType) {
-				case CONST.ATT_OP_MTU_REQ:
+				case Codes.ATT_OP_MTU_REQ:
 					response = await this.handleMtuRequest(handle, cid, data);
 					break;
 
-				case CONST.ATT_OP_FIND_INFO_REQ:
+				case Codes.ATT_OP_FIND_INFO_REQ:
 					response = await this.handleFindInfoRequest(handle, cid, data);
 					break;
 
-				case CONST.ATT_OP_FIND_BY_TYPE_REQ:
+				case Codes.ATT_OP_FIND_BY_TYPE_REQ:
 					response = await this.handleFindByTypeRequest(handle, cid, data);
 					break;
 
-				case CONST.ATT_OP_READ_BY_TYPE_REQ:
+				case Codes.ATT_OP_READ_BY_TYPE_REQ:
 					response = await this.handleReadByTypeRequest(handle, cid, data);
 					break;
 
-				case CONST.ATT_OP_READ_REQ:
-				case CONST.ATT_OP_READ_BLOB_REQ:
+				case Codes.ATT_OP_READ_REQ:
+				case Codes.ATT_OP_READ_BLOB_REQ:
 					response = await this.handleReadOrReadBlobRequest(handle, cid, data);
 					break;
 
-				case CONST.ATT_OP_READ_BY_GROUP_REQ:
+				case Codes.ATT_OP_READ_BY_GROUP_REQ:
 					response = await this.handleReadByGroupRequest(handle, cid, data);
 					break;
 
-				case CONST.ATT_OP_WRITE_REQ:
-				case CONST.ATT_OP_WRITE_CMD:
+				case Codes.ATT_OP_WRITE_REQ:
+				case Codes.ATT_OP_WRITE_CMD:
 					response = await this.handleWriteRequestOrCommand(handle, cid, data);
 					break;
 
-				case CONST.ATT_OP_PREPARE_WRITE_REQ:
+				case Codes.ATT_OP_PREPARE_WRITE_REQ:
 					response = await this.handlePrepareWriteRequest(handle, cid, data);
 					break;
 
-				case CONST.ATT_OP_EXECUTE_WRITE_REQ:
+				case Codes.ATT_OP_EXECUTE_WRITE_REQ:
 					response = await this.handleExecuteWriteRequest(handle, cid, data);
 					break;
 
-				case CONST.ATT_OP_HANDLE_CNF:
+				case Codes.ATT_OP_HANDLE_CNF:
 					response = await this.handleConfirmation(handle, cid, data);
 					break;
 
 				default:
-				case CONST.ATT_OP_READ_MULTI_REQ:
-				case CONST.ATT_OP_SIGNED_WRITE_CMD:
+				case Codes.ATT_OP_READ_MULTI_REQ:
+				case Codes.ATT_OP_SIGNED_WRITE_CMD:
 					// console.log('[ACL]', 'UNSUPPORTED', requestType, data);
-					response = this.errorResponse(requestType, 0x0000, CONST.ATT_ECODE_REQ_NOT_SUPP);
+					response = this.errorResponse(requestType, 0x0000, Codes.ATT_ECODE_REQ_NOT_SUPP);
 					break;
 			}
 		} catch (err) {
@@ -304,7 +302,7 @@ export class HciGattLocal extends Gatt {
 	private errorResponse(opcode: number, handle: number, status: number) {
 		const buf = Buffer.alloc(5);
 
-		buf.writeUInt8(CONST.ATT_OP_ERROR, 0);
+		buf.writeUInt8(Codes.ATT_OP_ERROR, 0);
 		buf.writeUInt8(opcode, 1);
 		buf.writeUInt16LE(handle, 2);
 		buf.writeUInt8(status, 4);
@@ -324,7 +322,7 @@ export class HciGattLocal extends Gatt {
 
 		const response = Buffer.alloc(3);
 
-		response.writeUInt8(CONST.ATT_OP_MTU_RESP, 0);
+		response.writeUInt8(Codes.ATT_OP_MTU_RESP, 0);
 		response.writeUInt16LE(mtu, 1);
 
 		return response;
@@ -377,7 +375,7 @@ export class HciGattLocal extends Gatt {
 
 			response = Buffer.alloc(2 + numInfo * lengthPerInfo);
 
-			response[0] = CONST.ATT_OP_FIND_INFO_RESP;
+			response[0] = Codes.ATT_OP_FIND_INFO_RESP;
 			response[1] = uuidSize === 2 ? 0x01 : 0x2;
 
 			for (let i = 0; i < numInfo; i++) {
@@ -397,7 +395,7 @@ export class HciGattLocal extends Gatt {
 				}
 			}
 		} else {
-			response = this.errorResponse(CONST.ATT_OP_FIND_INFO_REQ, startHandle, CONST.ATT_ECODE_ATTR_NOT_FOUND);
+			response = this.errorResponse(Codes.ATT_OP_FIND_INFO_REQ, startHandle, Codes.ATT_ECODE_ATTR_NOT_FOUND);
 		}
 
 		return response;
@@ -442,7 +440,7 @@ export class HciGattLocal extends Gatt {
 
 			response = Buffer.alloc(1 + numHandles * lengthPerHandle);
 
-			response[0] = CONST.ATT_OP_FIND_BY_TYPE_RESP;
+			response[0] = Codes.ATT_OP_FIND_BY_TYPE_RESP;
 
 			for (let i = 0; i < numHandles; i++) {
 				const handle = handles[i];
@@ -451,7 +449,7 @@ export class HciGattLocal extends Gatt {
 				response.writeUInt16LE(handle.end, 1 + i * lengthPerHandle + 2);
 			}
 		} else {
-			response = this.errorResponse(CONST.ATT_OP_FIND_BY_TYPE_REQ, startHandle, CONST.ATT_ECODE_ATTR_NOT_FOUND);
+			response = this.errorResponse(Codes.ATT_OP_FIND_BY_TYPE_REQ, startHandle, Codes.ATT_ECODE_ATTR_NOT_FOUND);
 		}
 
 		return response;
@@ -499,7 +497,7 @@ export class HciGattLocal extends Gatt {
 
 				response = Buffer.alloc(2 + numServices * lengthPerService);
 
-				response[0] = CONST.ATT_OP_READ_BY_GROUP_RESP;
+				response[0] = Codes.ATT_OP_READ_BY_GROUP_RESP;
 				response[1] = lengthPerService;
 
 				for (let i = 0; i < numServices; i++) {
@@ -520,10 +518,10 @@ export class HciGattLocal extends Gatt {
 					}
 				}
 			} else {
-				response = this.errorResponse(CONST.ATT_OP_READ_BY_GROUP_REQ, startHandle, CONST.ATT_ECODE_ATTR_NOT_FOUND);
+				response = this.errorResponse(Codes.ATT_OP_READ_BY_GROUP_REQ, startHandle, Codes.ATT_ECODE_ATTR_NOT_FOUND);
 			}
 		} else {
-			response = this.errorResponse(CONST.ATT_OP_READ_BY_GROUP_REQ, startHandle, CONST.ATT_ECODE_UNSUPP_GRP_TYPE);
+			response = this.errorResponse(Codes.ATT_OP_READ_BY_GROUP_REQ, startHandle, Codes.ATT_ECODE_UNSUPP_GRP_TYPE);
 		}
 
 		return response;
@@ -570,7 +568,7 @@ export class HciGattLocal extends Gatt {
 
 				response = Buffer.alloc(2 + numCharacteristics * lengthPerCharacteristic);
 
-				response[0] = CONST.ATT_OP_READ_BY_TYPE_RESP;
+				response[0] = Codes.ATT_OP_READ_BY_TYPE_RESP;
 				response[1] = lengthPerCharacteristic;
 
 				for (let i = 0; i < numCharacteristics; i++) {
@@ -592,7 +590,7 @@ export class HciGattLocal extends Gatt {
 					}
 				}
 			} else {
-				response = this.errorResponse(CONST.ATT_OP_READ_BY_TYPE_REQ, startHandle, CONST.ATT_ECODE_ATTR_NOT_FOUND);
+				response = this.errorResponse(Codes.ATT_OP_READ_BY_TYPE_REQ, startHandle, Codes.ATT_ECODE_ATTR_NOT_FOUND);
 			}
 		} else {
 			let handleId = startHandle;
@@ -615,7 +613,7 @@ export class HciGattLocal extends Gatt {
 			}
 
 			if (secure /*&& !this._aclStream.encrypted*/) {
-				response = this.errorResponse(CONST.ATT_OP_READ_BY_TYPE_REQ, startHandle, CONST.ATT_ECODE_AUTHENTICATION);
+				response = this.errorResponse(Codes.ATT_OP_READ_BY_TYPE_REQ, startHandle, Codes.ATT_ECODE_AUTHENTICATION);
 			} else if (handleObject) {
 				let responseStatus = 0;
 				let responseBuffer: Buffer = null;
@@ -623,25 +621,25 @@ export class HciGattLocal extends Gatt {
 				if (handleObject instanceof GattCharacteristic) {
 					[responseStatus, responseBuffer] = await handleObject.handleRead(0);
 				} else {
-					responseStatus = CONST.ATT_OP_READ_BY_TYPE_RESP;
+					responseStatus = Codes.ATT_OP_READ_BY_TYPE_RESP;
 					responseBuffer = (await handleObject.handleRead(0))[1];
 				}
 
-				if (responseStatus === CONST.ATT_ECODE_SUCCESS) {
+				if (responseStatus === Codes.ATT_ECODE_SUCCESS) {
 					const dataLength = Math.min(responseBuffer.length, this.getMtu(_handle) - 4);
 					response = Buffer.alloc(4 + dataLength);
 
-					response[0] = CONST.ATT_OP_READ_BY_TYPE_RESP;
+					response[0] = Codes.ATT_OP_READ_BY_TYPE_RESP;
 					response[1] = dataLength + 2;
 					response.writeUInt16LE(handleId, 2);
 					for (let i = 0; i < dataLength; i++) {
 						response[4 + i] = responseBuffer[i];
 					}
 				} else {
-					response = this.errorResponse(CONST.ATT_OP_READ_BY_TYPE_REQ, handleId, responseStatus);
+					response = this.errorResponse(Codes.ATT_OP_READ_BY_TYPE_REQ, handleId, responseStatus);
 				}
 			} else {
-				response = this.errorResponse(CONST.ATT_OP_READ_BY_TYPE_REQ, startHandle, CONST.ATT_ECODE_ATTR_NOT_FOUND);
+				response = this.errorResponse(Codes.ATT_OP_READ_BY_TYPE_REQ, startHandle, Codes.ATT_ECODE_ATTR_NOT_FOUND);
 			}
 		}
 
@@ -653,7 +651,7 @@ export class HciGattLocal extends Gatt {
 
 		const requestType = request[0];
 		const valueHandle = request.readUInt16LE(1);
-		const offset = requestType === CONST.ATT_OP_READ_BLOB_REQ ? request.readUInt16LE(3) : 0;
+		const offset = requestType === Codes.ATT_OP_READ_BLOB_REQ ? request.readUInt16LE(3) : 0;
 
 		const handle = this.handles[valueHandle];
 
@@ -662,7 +660,7 @@ export class HciGattLocal extends Gatt {
 			let data: Buffer = null;
 
 			if (handle.type === 'service') {
-				result = CONST.ATT_ECODE_SUCCESS;
+				result = Codes.ATT_ECODE_SUCCESS;
 				data = Buffer.from(
 					handle.object.uuid
 						.match(/.{1,2}/g)
@@ -679,7 +677,7 @@ export class HciGattLocal extends Gatt {
 					'hex'
 				);
 
-				result = CONST.ATT_ECODE_SUCCESS;
+				result = Codes.ATT_ECODE_SUCCESS;
 				data = Buffer.alloc(3 + uuid.length);
 				data.writeUInt8(handle.object.propertyFlag, 0);
 				data.writeUInt16LE(handle.value, 1);
@@ -690,26 +688,26 @@ export class HciGattLocal extends Gatt {
 			} else if (handle.type === 'characteristicValue') {
 				if (handle.object.properties.includes('read')) {
 					if (handle.object.secure.includes('read') /*&& !this._aclStream.encrypted*/) {
-						result = CONST.ATT_ECODE_AUTHENTICATION;
+						result = Codes.ATT_ECODE_AUTHENTICATION;
 					} else {
 						[result, data] = await handle.object.handleRead(offset);
 					}
 				} else {
-					result = CONST.ATT_ECODE_READ_NOT_PERM; // non-readable
+					result = Codes.ATT_ECODE_READ_NOT_PERM; // non-readable
 				}
 			} else if (handle.type === 'descriptor') {
 				// TODO: Descriptors are always read-only and not secure
-				result = CONST.ATT_ECODE_SUCCESS;
+				result = Codes.ATT_ECODE_SUCCESS;
 				data = (await handle.object.handleRead(offset))[1];
 			}
 
 			if (result !== null) {
-				if (result === CONST.ATT_ECODE_SUCCESS) {
+				if (result === Codes.ATT_ECODE_SUCCESS) {
 					const dataLength = Math.min(data.length, this.getMtu(_handle) - 1);
 					response = Buffer.alloc(1 + dataLength);
 
 					response[0] =
-						requestType === CONST.ATT_OP_READ_BLOB_REQ ? CONST.ATT_OP_READ_BLOB_RESP : CONST.ATT_OP_READ_RESP;
+						requestType === Codes.ATT_OP_READ_BLOB_REQ ? Codes.ATT_OP_READ_BLOB_RESP : Codes.ATT_OP_READ_RESP;
 					for (let i = 0; i < dataLength; i++) {
 						response[1 + i] = data[i];
 					}
@@ -718,7 +716,7 @@ export class HciGattLocal extends Gatt {
 				}
 			}
 		} else {
-			response = this.errorResponse(requestType, valueHandle, CONST.ATT_ECODE_INVALID_HANDLE);
+			response = this.errorResponse(requestType, valueHandle, Codes.ATT_ECODE_INVALID_HANDLE);
 		}
 
 		return response;
@@ -728,7 +726,7 @@ export class HciGattLocal extends Gatt {
 		let response: Buffer = null;
 
 		const requestType = request[0];
-		const withoutResponse = requestType === CONST.ATT_OP_WRITE_CMD;
+		const withoutResponse = requestType === Codes.ATT_OP_WRITE_CMD;
 		const valueHandle = request.readUInt16LE(1);
 		const requestData = request.slice(3);
 		const offset = 0;
@@ -748,7 +746,7 @@ export class HciGattLocal extends Gatt {
 						? handle.object.secure.includes('write-without-response')
 						: handle.object.secure.includes('write')) /*&& !this._aclStream.encrypted*/
 				) {
-					response = this.errorResponse(requestType, valueHandle, CONST.ATT_ECODE_AUTHENTICATION);
+					response = this.errorResponse(requestType, valueHandle, Codes.ATT_ECODE_AUTHENTICATION);
 				} else if (handle.type === 'descriptor' || handle.object.uuid === '2902') {
 					let result = null;
 					let data: Buffer = null;
@@ -756,7 +754,7 @@ export class HciGattLocal extends Gatt {
 					console.log('write req 1', requestData);
 
 					if (requestData.length !== 2) {
-						result = CONST.ATT_ECODE_INVAL_ATTR_VALUE_LEN;
+						result = Codes.ATT_ECODE_INVAL_ATTR_VALUE_LEN;
 					} else {
 						const value = requestData.readUInt16LE(0);
 
@@ -774,7 +772,7 @@ export class HciGattLocal extends Gatt {
 							if (useNotify) {
 								data = Buffer.alloc(3);
 
-								data.writeUInt8(CONST.ATT_OP_HANDLE_NOTIFY, 0);
+								data.writeUInt8(Codes.ATT_OP_HANDLE_NOTIFY, 0);
 								data.writeUInt16LE(valueHandle, 1);
 							} /*else if (useIndicate) {
 								const indicateMessage = Buffer.alloc(3 + dataLength);
@@ -796,15 +794,15 @@ export class HciGattLocal extends Gatt {
 							data = Buffer.alloc(0);
 						}
 
-						result = CONST.ATT_ECODE_SUCCESS;
+						result = Codes.ATT_ECODE_SUCCESS;
 					}
 
 					if (result !== null) {
-						if (result === CONST.ATT_ECODE_SUCCESS) {
+						if (result === Codes.ATT_ECODE_SUCCESS) {
 							const dataLength = Math.min(data.length, this.getMtu(_handle) - 1);
 							response = Buffer.alloc(1 + dataLength);
 
-							response[0] = CONST.ATT_OP_WRITE_RESP;
+							response[0] = Codes.ATT_OP_WRITE_RESP;
 							for (let i = 0; i < dataLength; i++) {
 								response[1 + i] = data[i];
 							}
@@ -815,15 +813,15 @@ export class HciGattLocal extends Gatt {
 				} else {
 					const result = await handle.object.handleWrite(offset, requestData, withoutResponse);
 					response =
-						result === CONST.ATT_ECODE_SUCCESS
-							? Buffer.from([CONST.ATT_OP_WRITE_RESP])
+						result === Codes.ATT_ECODE_SUCCESS
+							? Buffer.from([Codes.ATT_OP_WRITE_RESP])
 							: this.errorResponse(requestType, valueHandle, result);
 				}
 			} else {
-				response = this.errorResponse(requestType, valueHandle, CONST.ATT_ECODE_WRITE_NOT_PERM);
+				response = this.errorResponse(requestType, valueHandle, Codes.ATT_ECODE_WRITE_NOT_PERM);
 			}
 		} else {
-			response = this.errorResponse(requestType, valueHandle, CONST.ATT_ECODE_INVALID_HANDLE);
+			response = this.errorResponse(requestType, valueHandle, Codes.ATT_ECODE_INVALID_HANDLE);
 		}
 
 		return response;
