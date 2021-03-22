@@ -12,5 +12,10 @@ export declare abstract class MODblue {
      * List all currenctly detected adapters.
      */
     abstract getAdapters(): Promise<Adapter[]>;
+    /**
+     * Tries to automatically detect the current platform and use the most appropriate BLE bindings.
+     * @returns The MODblue instance for this platform
+     */
+    static autoDetectBindings(): MODblue;
 }
 //# sourceMappingURL=MODblue.d.ts.map

@@ -3,11 +3,12 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 
 import { AddressType } from '../../../models';
 
-import STATUS_MAPPER from './hci-status.json';
 import { HciError } from './HciError';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const BluetoothHciSocket = require('@abandonware/bluetooth-hci-socket');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const STATUS_MAPPER = require('./hci-status.json');
 
 // tslint:disable: no-bitwise
 
