@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"moduleResolution": "Node",
-		"module": "ES2020",
+		"module": "CommonJS",
 		"target": "ES2015",
 		"outDir": "lib",
 		"types": ["node", "web-bluetooth"],
