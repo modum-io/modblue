@@ -31,22 +31,24 @@ export class WebAdapter extends Adapter {
 		throw new Error('Method not implemented.');
 	}
 	public async startScanning(serviceUUIDs?: string[]): Promise<void> {
-		const opts: RequestDeviceOptions = { filters: [] };
+		let opts: RequestLEScanOptions;
 
 		if (serviceUUIDs) {
 			// web bluetooth requires 4 char hex service names to be passed in as integers
 			const mappedServiceUUIDs = serviceUUIDs.map((service) => {
 				if (service.length === 4) {
-					return parseInt(`0x${service}`);
+					return { services: [parseInt(`0x${service}`)] };
 				} else if (service.length === 6 && service.indexOf('0x') === 0) {
-					return parseInt(service);
+					return { services: [parseInt(service)] };
 				}
-				return this.addDashes(service);
+				return { services: [this.addDashes(service)] };
 			});
-			opts.filters = mappedServiceUUIDs.map((srv) => ({ services: [srv] }));
+			opts = { filters: mappedServiceUUIDs };
+		} else {
+			opts = { acceptAllAdvertisements: true };
 		}
 
-		this.scan = await navigator.bluetooth.requestLEScan({ ...opts, acceptAllAdvertisements: true });
+		this.scan = await navigator.bluetooth.requestLEScan(opts);
 	}
 
 	private onAdvertisement = ({ device, rssi, manufacturerData }: BluetoothAdvertisementEvent) => {
