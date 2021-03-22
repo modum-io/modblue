@@ -1,4 +1,3 @@
-import { Variant } from 'dbus-next';
 declare const MAPPINGS: {
     string: string;
     int16: string;
@@ -8,6 +7,6 @@ declare const MAPPINGS: {
     array: string;
     variant: string;
 };
-export declare function buildTypedValue(types: keyof typeof MAPPINGS | (keyof typeof MAPPINGS)[], value: unknown): Variant;
+export declare function buildTypedValue(types: keyof typeof MAPPINGS | (keyof typeof MAPPINGS)[], value: unknown): unknown;
 export {};
 //# sourceMappingURL=TypeValue.d.ts.map
