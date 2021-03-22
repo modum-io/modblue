@@ -1,11 +1,20 @@
 import { Adapter, AddressType, GattLocal, Peripheral } from '../../models';
 
 import { HciGattLocal } from './gatt';
-import { Advertisement, Gap, Hci } from './misc';
+import { Gap, Hci } from './misc';
 import { HciPeripheral } from './Peripheral';
 
 const SCAN_ENABLE_TIMEOUT = 1000;
 const ADVERTISING_ENABLE_TIMEOUT = 1000;
+
+interface Advertisement {
+	localName: string;
+	txPowerLevel: number;
+	manufacturerData: Buffer;
+	serviceData: { uuid: string; data: Buffer }[];
+	serviceUuids: string[];
+	solicitationServiceUuids: string[];
+}
 
 export class HciAdapter extends Adapter {
 	private initialized = false;
