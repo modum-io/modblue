@@ -110,7 +110,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 	}
 
 	private static createSocket() {
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		// This fixes an issue with webpack trying to load the module at compile time
 		const NAME = '/bluetooth-hci-socket';
 		return new (require(`@abandonware${NAME}`))();
 	}

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+// This fixes an issue with webpack trying to load the module at compile time
 let Variant: new (...args: unknown[]) => unknown;
 
 // https://dbus.freedesktop.org/doc/dbus-specification.html
@@ -18,8 +20,8 @@ export function buildTypedValue(types: keyof typeof MAPPINGS | (keyof typeof MAP
 	}
 
 	if (!Variant) {
+		// This fixes an issue with webpack trying to load the module at compile time
 		const END = 't';
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		Variant = require(`dbus-nex${END}`).Variant;
 	}
 	return new Variant(dbusTypes.join(''), value);
