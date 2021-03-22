@@ -46,7 +46,6 @@ export class WebAdapter extends Adapter {
 			opts.filters = mappedServiceUUIDs.map((srv) => ({ services: [srv] }));
 		}
 
-		navigator.bluetooth.requestDevice(opts).then((dev) => console.log(dev));
 		this.scan = await navigator.bluetooth.requestLEScan({ ...opts, acceptAllAdvertisements: true });
 	}
 
