@@ -16,6 +16,6 @@ export declare abstract class MODblue {
      * Tries to automatically detect the current platform and use the most appropriate BLE bindings.
      * @returns The MODblue instance for this platform
      */
-    static autoDetectBindings(): MODblue;
+    static autoDetectBindings(): Promise<MODblue>;
 }
 //# sourceMappingURL=MODblue.d.ts.map

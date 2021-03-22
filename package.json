@@ -23,6 +23,7 @@
 		"./web": "./lib/bindings/web/index.js",
 		"./package.json": "./package.json"
 	},
+	"type": "commonjs",
 	"types": "lib/index.d.ts",
 	"typesVersions": {
 		"*": {

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+import os from 'os';
 
 import { Adapter } from './Adapter';
 
@@ -21,12 +22,11 @@ export abstract class MODblue {
 	 * Tries to automatically detect the current platform and use the most appropriate BLE bindings.
 	 * @returns The MODblue instance for this platform
 	 */
-	public static autoDetectBindings(): MODblue {
-		const platform = require('os')?.platform();
+	public static async autoDetectBindings(): Promise<MODblue> {
+		const platform = os.platform();
 
 		if (typeof navigator !== 'undefined' && navigator.bluetooth) {
-			console.log('using web');
-			return new (require('../bindings/web').WebMODblue)();
+			return new (await import('../bindings/web')).WebMODblue();
 		} /*else if (platform === 'darwin') {
 			console.log('using mac');
 			return new (require('../bindings/mac').MacMODblue)();
@@ -35,7 +35,7 @@ export abstract class MODblue {
 			platform === 'freebsd' ||
 			platform === 'win32'
 		) {
-			return new (require('../bindings/hci').HciMODblue)();
+			return new (await import('../bindings/hci')).HciMODblue();
 		} else {
 			throw new Error('Unsupported platform');
 		}
