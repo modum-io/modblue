@@ -1,6 +1,4 @@
-const END = 't';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Variant = require(`dbus-nex${END}`).Variant;
+let Variant: new (...args: unknown[]) => unknown;
 
 // https://dbus.freedesktop.org/doc/dbus-specification.html
 const MAPPINGS = {
@@ -19,5 +17,10 @@ export function buildTypedValue(types: keyof typeof MAPPINGS | (keyof typeof MAP
 		throw new Error(`Unknown type ${types} for value ${value}`);
 	}
 
+	if (!Variant) {
+		const END = 't';
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		Variant = require(`dbus-nex${END}`).Variant;
+	}
 	return new Variant(dbusTypes.join(''), value);
 }
