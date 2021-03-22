@@ -1,4 +1,4 @@
-import { Adapter, AddressType, GattLocal, Peripheral } from '../../models';
+import { Adapter, AddressType, Gatt, Peripheral } from '../../models';
 
 import { HciGattLocal } from './gatt';
 import { Gap, Hci } from './misc';
@@ -267,7 +267,7 @@ export class HciAdapter extends Adapter {
 		this.advertising = false;
 	}
 
-	public async setupGatt(maxMtu?: number): Promise<GattLocal> {
+	public async setupGatt(maxMtu?: number): Promise<Gatt> {
 		await this.init();
 
 		this.gatt = new HciGattLocal(this, this.hci, maxMtu);

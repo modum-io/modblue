@@ -1,2 +1,2 @@
-export { WebAdapter } from './Adapter';
-export { WebMODblue } from './MODblue';
+export * from './Adapter';
+export * from './MODblue';

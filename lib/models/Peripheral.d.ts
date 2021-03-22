@@ -1,8 +1,6 @@
-/// <reference types="node" />
-import { inspect } from 'util';
 import { Adapter } from './Adapter';
 import { AddressType } from './AddressType';
-import { GattRemote } from './gatt';
+import { Gatt } from './gatt';
 /**
  * The current state of the peripheral.
  */
@@ -67,9 +65,8 @@ export declare abstract class Peripheral {
      * Requires an existing connection.
      * @param requestMtu The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.
      */
-    abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
+    abstract setupGatt(requestMtu?: number): Promise<Gatt>;
     toString(): string;
     toJSON(): Record<string, unknown>;
-    [inspect.custom](depth: number, options: any): string;
 }
 //# sourceMappingURL=Peripheral.d.ts.map

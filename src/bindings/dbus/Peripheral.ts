@@ -1,9 +1,9 @@
 import { ClientInterface } from 'dbus-next';
 
-import { AddressType, GattRemote, Peripheral } from '../../models';
+import { AddressType, Gatt, Peripheral } from '../../models';
 
 import { DbusAdapter } from './Adapter';
-import { DbusGattRemote } from './gatt';
+import { DbusGatt } from './gatt';
 import { DbusObject, I_BLUEZ_DEVICE, I_PROPERTIES } from './misc';
 
 const CONNECT_TIMEOUT = 10; // in seconds
@@ -16,7 +16,7 @@ export class DbusPeripheral extends Peripheral {
 	private propsIface: ClientInterface;
 	private _init = false;
 
-	private gatt: DbusGattRemote;
+	private gatt: DbusGatt;
 
 	private isConnecting = false;
 	private connecting: [() => void, (error?: Error) => void][] = [];
@@ -191,7 +191,7 @@ export class DbusPeripheral extends Peripheral {
 		this.disconnecting = [];
 	}
 
-	public async setupGatt(requestMtu?: number): Promise<GattRemote> {
+	public async setupGatt(requestMtu?: number): Promise<Gatt> {
 		if (this.gatt) {
 			return this.gatt;
 		}
@@ -200,7 +200,7 @@ export class DbusPeripheral extends Peripheral {
 			throw new Error(`MTU requests are not accepted for dbus`);
 		}
 
-		this.gatt = new DbusGattRemote(this);
+		this.gatt = new DbusGatt(this);
 		return this.gatt;
 	}
 }

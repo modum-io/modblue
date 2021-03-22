@@ -1,11 +1,14 @@
 import { inspect } from 'util';
 
+import { CUSTOM, InspectOptionsStylized } from '../Inspect';
+
+import { GattCharacteristic } from './Characteristic';
 import { Gatt } from './Gatt';
 
 /**
  * Represents a GATT service.
  */
-export abstract class GattService {
+export class GattService {
 	/**
 	 * The GATT server this service belongs to.
 	 */
@@ -16,10 +19,42 @@ export abstract class GattService {
 	 */
 	public readonly uuid: string;
 
-	public constructor(gatt: Gatt, uuid: string) {
-		this.gatt = gatt;
+	/**
+	 * True if this is a remote service, false otherwise.
+	 */
+	public readonly isRemote: boolean;
 
+	/**
+	 * The characteristics that belong to this service, mapped by UUID.
+	 * If this is a remote service use {@link discoverCharacteristics} to discover them.
+	 */
+	public readonly characteristics: Map<string, GattCharacteristic> = new Map();
+
+	public constructor(gatt: Gatt, uuid: string, isRemote: boolean, characteristics?: GattCharacteristic[]) {
+		this.gatt = gatt;
 		this.uuid = uuid;
+		this.isRemote = isRemote;
+
+		if (characteristics) {
+			for (const char of characteristics) {
+				this.characteristics.set(char.uuid, char);
+			}
+		}
+	}
+
+	/**
+	 * Discover all charactersitics of this service.
+	 */
+	public async discoverCharacteristics(): Promise<GattCharacteristic[]> {
+		if (!this.isRemote) {
+			throw new Error('Ĉannot discover characteristics of a local service');
+		}
+
+		const characteristics = await this.gatt.discoverCharacteristics(this.uuid);
+		for (const characteristic of characteristics) {
+			this.characteristics.set(characteristic.uuid, characteristic);
+		}
+		return [...this.characteristics.values()];
 	}
 
 	public toString(): string {
@@ -33,7 +68,7 @@ export abstract class GattService {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: any): string {
+	public [CUSTOM](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

@@ -1,8 +1,6 @@
-/// <reference types="node" />
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { inspect } from 'util';
 import { AddressType } from './AddressType';
-import { GattLocal } from './gatt';
+import { Gatt } from './gatt';
 import { MODblue } from './MODblue';
 import { Peripheral } from './Peripheral';
 export interface AdapterEvents {
@@ -81,9 +79,8 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
      * Setup the GATT server for this adapter to communicate with connecting remote peripherals.
      * @param maxMtu The maximum MTU that will be negotiated in case the remote peripheral starts an MTU negotation.
      */
-    abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
+    abstract setupGatt(maxMtu?: number): Promise<Gatt>;
     toString(): string;
     toJSON(): Record<string, unknown>;
-    [inspect.custom](depth: number, options: any): string;
 }
 //# sourceMappingURL=Adapter.d.ts.map

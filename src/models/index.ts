@@ -1,6 +1,6 @@
-export { Adapter } from './Adapter';
-export { AddressType } from './AddressType';
-export { MODblue } from './MODblue';
-export { Peripheral, PeripheralState } from './Peripheral';
-
 export * from './gatt';
+export * from './Adapter';
+export * from './AddressType';
+export * from './Inspect';
+export * from './MODblue';
+export * from './Peripheral';

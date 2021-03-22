@@ -2,7 +2,8 @@ import { inspect } from 'util';
 
 import { Adapter } from './Adapter';
 import { AddressType } from './AddressType';
-import { GattRemote } from './gatt';
+import { Gatt } from './gatt';
+import { CUSTOM, InspectOptionsStylized } from './Inspect';
 
 /**
  * The current state of the peripheral.
@@ -100,7 +101,7 @@ export abstract class Peripheral {
 	 * Requires an existing connection.
 	 * @param requestMtu The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.
 	 */
-	public abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
+	public abstract setupGatt(requestMtu?: number): Promise<Gatt>;
 
 	public toString(): string {
 		return JSON.stringify(this.toJSON());
@@ -117,7 +118,7 @@ export abstract class Peripheral {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: any): string {
+	public [CUSTOM](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

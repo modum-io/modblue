@@ -1,11 +1,4 @@
-export { HciAdapter } from './Adapter';
-export { HciMODblue } from './MODblue';
-export { HciPeripheral } from './Peripheral';
-
-export {
-	HciGattRemote,
-	HciGattLocal,
-	HciGattServiceRemote,
-	HciGattCharacteristicRemote,
-	HciGattDescriptorRemote
-} from './gatt';
+export * from './gatt';
+export * from './Adapter';
+export * from './MODblue';
+export * from './Peripheral';

@@ -1,5 +1,5 @@
-export { DbusAdapter } from './Adapter';
-export { DbusMODblue } from './MODblue';
-export { DbusPeripheral } from './Peripheral';
+export * from './gatt';
 
-export { DbusGattCharacteristicRemote, DbusGattRemote, DbusGattServiceRemote } from './gatt';
+export * from './Adapter';
+export * from './MODblue';
+export * from './Peripheral';

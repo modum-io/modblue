@@ -1,4 +1,4 @@
-import { GattRemote, Peripheral } from '../../models';
+import { Gatt, Peripheral } from '../../models';
 import { HciAdapter } from './Adapter';
 import { Hci } from './misc';
 export declare class HciPeripheral extends Peripheral {
@@ -14,6 +14,6 @@ export declare class HciPeripheral extends Peripheral {
     onConnect(isMaster: boolean, hci: Hci, handle: number): void;
     disconnect(): Promise<void>;
     onDisconnect(reason?: string): void;
-    setupGatt(requestMtu?: number): Promise<GattRemote>;
+    setupGatt(requestMtu?: number): Promise<Gatt>;
 }
 //# sourceMappingURL=Peripheral.d.ts.map

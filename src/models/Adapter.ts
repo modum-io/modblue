@@ -2,7 +2,8 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 import { inspect } from 'util';
 
 import { AddressType } from './AddressType';
-import { GattLocal } from './gatt';
+import { Gatt } from './gatt';
+import { CUSTOM, InspectOptionsStylized } from './Inspect';
 import { MODblue } from './MODblue';
 import { Peripheral } from './Peripheral';
 
@@ -155,7 +156,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	 * Setup the GATT server for this adapter to communicate with connecting remote peripherals.
 	 * @param maxMtu The maximum MTU that will be negotiated in case the remote peripheral starts an MTU negotation.
 	 */
-	public abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
+	public abstract setupGatt(maxMtu?: number): Promise<Gatt>;
 
 	public toString(): string {
 		return JSON.stringify(this.toJSON());
@@ -169,7 +170,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: any): string {
+	public [CUSTOM](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

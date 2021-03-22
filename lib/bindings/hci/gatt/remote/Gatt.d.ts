@@ -1,10 +1,10 @@
 /// <reference types="node" />
-import { GattRemote, Peripheral } from '../../../../models';
+import { Gatt, Peripheral } from '../../../../models';
 import { Hci } from '../../misc';
-import { HciGattCharacteristicRemote } from './Characteristic';
-import { HciGattDescriptorRemote } from './Descriptor';
-import { HciGattServiceRemote } from './Service';
-export declare class HciGattRemote extends GattRemote {
+import { HciGattCharacteristic } from '../Characteristic';
+import { HciGattDescriptor } from '../Descriptor';
+import { HciGattService } from '../Service';
+export declare class HciGattRemote extends Gatt {
     private hci;
     private handle;
     private security;
@@ -14,7 +14,7 @@ export declare class HciGattRemote extends GattRemote {
     private mutexStack;
     private currentCmd;
     private cmdTimeout;
-    services: Map<string, HciGattServiceRemote>;
+    services: Map<string, HciGattService>;
     constructor(peripheral: Peripheral, hci: Hci, handle: number, cmdTimeout?: number);
     private acquireMutex;
     dispose(reason?: string): void;
@@ -33,15 +33,15 @@ export declare class HciGattRemote extends GattRemote {
     private executeWriteRequest;
     private handleConfirmation;
     exchangeMtu(mtu: number): Promise<number>;
-    protected doDiscoverServices(): Promise<HciGattServiceRemote[]>;
-    discoverCharacteristics(serviceUUID: string): Promise<HciGattCharacteristicRemote[]>;
-    read(serviceUUID: string, characteristicUUID: string): Promise<Buffer>;
-    write(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean): Promise<void>;
+    protected doDiscoverServices(): Promise<HciGattService[]>;
+    discoverCharacteristics(serviceUUID: string): Promise<HciGattCharacteristic[]>;
+    readCharacteristic(serviceUUID: string, characteristicUUID: string): Promise<Buffer>;
+    writeCharacteristic(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean): Promise<void>;
     private longWrite;
-    broadcast(serviceUUID: string, characteristicUUID: string, broadcast: boolean): Promise<void>;
-    notify(serviceUUID: string, characteristicUUID: string, notify: boolean): Promise<void>;
-    discoverDescriptors(serviceUUID: string, characteristicUUID: string): Promise<HciGattDescriptorRemote[]>;
-    readValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): Promise<Buffer>;
-    writeValue(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer): Promise<void>;
+    broadcastCharacteristic(serviceUUID: string, characteristicUUID: string, broadcast: boolean): Promise<void>;
+    notifyCharacteristic(serviceUUID: string, characteristicUUID: string, notify: boolean): Promise<void>;
+    discoverDescriptors(serviceUUID: string, characteristicUUID: string): Promise<HciGattDescriptor[]>;
+    readDescriptor(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): Promise<Buffer>;
+    writeDescriptor(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer): Promise<void>;
 }
 //# sourceMappingURL=Gatt.d.ts.map

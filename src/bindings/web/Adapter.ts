@@ -1,4 +1,4 @@
-import { Adapter, GattLocal, Peripheral } from '../../models';
+import { Adapter, Gatt, Peripheral } from '../../models';
 
 export class WebAdapter extends Adapter {
 	private addDashes(uuid: string): string {
@@ -53,7 +53,7 @@ export class WebAdapter extends Adapter {
 		throw new Error('Method not implemented.');
 	}
 
-	public setupGatt(maxMtu?: number): Promise<GattLocal> {
+	public setupGatt(maxMtu?: number): Promise<Gatt> {
 		throw new Error('Method not implemented.');
 	}
 }
