@@ -4,11 +4,10 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 import { AddressType } from '../../../models';
 
 import { HciError } from './HciError';
+import { HciStatus } from './HciStatus';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const BluetoothHciSocket = require('@abandonware/bluetooth-hci-socket');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const STATUS_MAPPER = require('./hci-status.json');
 
 // tslint:disable: no-bitwise
 
@@ -380,7 +379,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 			let timeout: NodeJS.Timeout;
 			const onComplete = (status: number, responseData?: Buffer) => {
 				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					const errStatus = `${HciStatus[status]} (0x${status.toString(16).padStart(2, '0')})`;
 					rejectHandler(new HciError(`HCI Command ${this.currentCmd.cmd} failed`, errStatus));
 				} else {
 					resolveHandler(responseData);
@@ -667,7 +666,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 				}
 
 				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					const errStatus = `${HciStatus[status]} (0x${status.toString(16).padStart(2, '0')})`;
 					rejectHandler(new HciError(`LE conn failed`, errStatus));
 					return;
 				}
@@ -788,7 +787,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 				this.off('disconnectComplete', onComplete);
 
 				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					const errStatus = `${HciStatus[status]} (0x${status.toString(16).padStart(2, '0')})`;
 					rejectHandler(new HciError(`Disconnect failed`, errStatus));
 					return;
 				}
@@ -1070,7 +1069,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		// Remove all pending packets for this handle from the queue
 		this.aclPacketQueue = this.aclPacketQueue.filter(({ handle }) => handle.id !== handleId);
 
-		const reasonStr = `${STATUS_MAPPER[reason]} (0x${reason.toString(16).padStart(2, '0')})`;
+		const reasonStr = `${HciStatus[reason]} (0x${reason.toString(16).padStart(2, '0')})`;
 		this.emit('disconnectComplete', status, handleId, reasonStr);
 
 		// Process acl packet queue because we may have more space now
