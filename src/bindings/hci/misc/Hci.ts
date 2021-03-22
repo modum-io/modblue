@@ -6,9 +6,6 @@ import { AddressType } from '../../../models';
 import { HciError } from './HciError';
 import { HciStatus } from './HciStatus';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const BluetoothHciSocket = require('@abandonware/bluetooth-hci-socket');
-
 // tslint:disable: no-bitwise
 
 const HCI_COMMAND_PKT = 0x01;
@@ -196,8 +193,13 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.currentCmd = null;
 	}
 
+	private static createSocket() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		return new (require('@abandonware/bluetooth-hci-socket'))();
+	}
+
 	public static getDeviceList(): HciDevice[] {
-		const socket = new BluetoothHciSocket();
+		const socket = Hci.createSocket();
 		return socket.getDeviceList();
 	}
 
@@ -221,7 +223,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 			return this.waitForInit(timeoutInSeconds);
 		}
 
-		this.socket = new BluetoothHciSocket();
+		this.socket = Hci.createSocket();
 		this.socket.on('data', this.onSocketData);
 		this.socket.on('error', this.onSocketError);
 
