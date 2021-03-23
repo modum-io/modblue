@@ -1,18 +1,16 @@
-import { Adapter, Gatt, MODblue, Peripheral } from '../../models';
+import { Adapter, Gatt, Peripheral } from '../../models';
 export declare class WebAdapter extends Adapter {
-    private scan;
     private peripherals;
-    constructor(modblue: MODblue, id: string, name?: string, address?: string);
     dispose(): void;
-    private addDashes;
     isScanning(): Promise<boolean>;
-    startScanning(serviceUUIDs?: string[]): Promise<void>;
-    private onAdvertisement;
+    startScanning(): Promise<void>;
+    scanFor(isTarget: (peripheral: Peripheral) => boolean, timeoutInSeconds?: number, serviceUUIDs?: string[]): Promise<Peripheral>;
     stopScanning(): Promise<void>;
     getScannedPeripherals(): Promise<Peripheral[]>;
     isAdvertising(): Promise<boolean>;
-    startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
+    startAdvertising(): Promise<void>;
     stopAdvertising(): Promise<void>;
-    setupGatt(maxMtu?: number): Promise<Gatt>;
+    setupGatt(): Promise<Gatt>;
+    private addDashes;
 }
 //# sourceMappingURL=Adapter.d.ts.map

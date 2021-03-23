@@ -41,7 +41,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
      * @param timeoutInSeconds The timeout in seconds. The returned promise will reject once the timeout is reached.
      * @param serviceUUIDs The UUIDs of the {@link GattService}s that must be contained in the advertisement data.
      */
-    scanFor(isTarget: (peripheral: Peripheral) => boolean, timeoutInSeconds?: number, serviceUUIDs?: []): Promise<Peripheral>;
+    scanFor(isTarget: (peripheral: Peripheral) => boolean, timeoutInSeconds?: number, serviceUUIDs?: string[]): Promise<Peripheral>;
     /**
      * Returns `true` if this adapter is currently scanning, `false` otherwise.
      */

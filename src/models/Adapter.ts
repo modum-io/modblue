@@ -68,7 +68,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	public async scanFor(
 		isTarget: (peripheral: Peripheral) => boolean,
 		timeoutInSeconds = 10,
-		serviceUUIDs?: []
+		serviceUUIDs?: string[]
 	): Promise<Peripheral> {
 		const origScope = new Error();
 
