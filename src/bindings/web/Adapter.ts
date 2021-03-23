@@ -40,7 +40,7 @@ export class WebAdapter extends Adapter {
 		}
 
 		const start = new Date().getTime();
-		while (start + timeoutInSeconds * 1000 < new Date().getTime()) {
+		do {
 			const device = await navigator.bluetooth.requestDevice(opts);
 			if (!device) {
 				throw new Error(`No device found`);
@@ -58,7 +58,7 @@ export class WebAdapter extends Adapter {
 				throw new Error(`Device not found`);
 			}
 			return peripheral;
-		}
+		} while (start + timeoutInSeconds * 1000 >= new Date().getTime());
 	}
 
 	public async stopScanning(): Promise<void> {
