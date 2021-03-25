@@ -4,10 +4,9 @@ import { inspect } from 'util';
 import { CUSTOM, InspectOptionsStylized } from '../Inspect';
 
 import { GattDescriptor } from './Descriptor';
-import { Gatt } from './Gatt';
 import { GattService } from './Service';
 
-export type ReadFunction = (offset: number) => Promise<[number, Buffer]>;
+export type ReadFunction = (offset: number) => Promise<Buffer>;
 export type WriteFunction = (offset: number, data: Buffer, withoutResponse: boolean) => Promise<number>;
 
 export type GattCharacteristicProperty =
@@ -30,12 +29,9 @@ export interface GattCharacteristicEvents {
 /**
  * Represents a GATT Characteristic.
  */
-export class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
+export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
 	private readonly readFunc: ReadFunction;
 	private readonly writeFunc: WriteFunction;
-	private get gatt(): Gatt {
-		return this.service.gatt;
-	}
 
 	/**
 	 * The GATT service that this characteristic belongs to.
@@ -85,8 +81,7 @@ export class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
 		propsOrFlag: number | GattCharacteristicProperty[],
 		secureOrFlag: number | GattCharacteristicProperty[],
 		readFunc?: ReadFunction,
-		writeFunc?: WriteFunction,
-		descriptors?: GattDescriptor[]
+		writeFunc?: WriteFunction
 	) {
 		super();
 
@@ -200,76 +195,36 @@ export class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
 
 		this.readFunc = readFunc;
 		this.writeFunc = writeFunc;
-
-		if (descriptors) {
-			for (const descriptor of descriptors) {
-				this.descriptors.set(descriptor.uuid, descriptor);
-			}
-		}
 	}
 
 	/**
 	 * Discover all descriptors of this characteristic.
 	 */
-	public async discoverDescriptors(): Promise<GattDescriptor[]> {
-		if (!this.isRemote) {
-			throw new Error('Can only be used for remote characteristic');
-		}
-
-		const descriptors = await this.gatt.discoverDescriptors(this.service.uuid, this.uuid);
-		for (const descriptor of descriptors) {
-			this.descriptors.set(descriptor.uuid, descriptor);
-		}
-		return [...this.descriptors.values()];
-	}
+	public abstract discoverDescriptors(): Promise<GattDescriptor[]>;
 
 	/**
 	 * Read the current value of this characteristic.
 	 */
-	public async read(): Promise<Buffer> {
-		if (!this.isRemote) {
-			throw new Error('Can only be used for remote characteristic');
-		}
-
-		return this.gatt.readCharacteristic(this.service.uuid, this.uuid);
-	}
+	public abstract read(): Promise<Buffer>;
 
 	/**
 	 * Write the specified data to this characteristic.
 	 * @param data The data to write.
 	 * @param withoutResponse Do not require a response from the remote GATT server for this write.
 	 */
-	public async write(data: Buffer, withoutResponse: boolean): Promise<void> {
-		if (!this.isRemote) {
-			throw new Error('Can only be used for remote characteristic');
-		}
-
-		await this.gatt.writeCharacteristic(this.service.uuid, this.uuid, data, withoutResponse);
-	}
+	public abstract write(data: Buffer, withoutResponse: boolean): Promise<void>;
 
 	/**
 	 * Enable or disable broadcasts.
 	 * @param broadcast True to enable broadcasts, false otherwise.
 	 */
-	public async broadcast(broadcast: boolean): Promise<void> {
-		if (!this.isRemote) {
-			throw new Error('Can only be used for remote characteristic');
-		}
-
-		await this.gatt.broadcastCharacteristic(this.service.uuid, this.uuid, broadcast);
-	}
+	public abstract broadcast(broadcast: boolean): Promise<void>;
 
 	/**
 	 * Enable or disable notifications.
 	 * @param notify True to enable notifies, false otherwise.
 	 */
-	public async notify(notify: boolean): Promise<void> {
-		if (!this.isRemote) {
-			throw new Error('Can only be used for remote characteristic');
-		}
-
-		await this.gatt.notifyCharacteristic(this.service.uuid, this.uuid, notify);
-	}
+	public abstract notify(notify: boolean): Promise<void>;
 
 	/**
 	 * Enable notifications. Equivalent to calling {@link notify} with `true`.
@@ -293,7 +248,7 @@ export class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
 		await this.notify(false);
 	}
 
-	public async handleRead(offset: number): Promise<[number, Buffer]> {
+	public async handleRead(offset: number): Promise<Buffer> {
 		if (this.isRemote) {
 			throw new Error('Can only be used for local characteristic');
 		}

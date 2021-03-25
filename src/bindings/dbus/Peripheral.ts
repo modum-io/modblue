@@ -1,6 +1,6 @@
 import { ClientInterface } from 'dbus-next';
 
-import { AddressType, Gatt, Peripheral } from '../../models';
+import { AddressType, Peripheral } from '../../models';
 
 import { DbusAdapter } from './Adapter';
 import { DbusGatt } from './gatt';
@@ -16,10 +16,10 @@ export class DbusPeripheral extends Peripheral {
 	private propsIface: ClientInterface;
 	private _init = false;
 
-	private gatt: DbusGatt;
+	protected _gatt: DbusGatt;
 
 	private isConnecting = false;
-	private connecting: [() => void, (error?: Error) => void][] = [];
+	private connecting: [(gatt: DbusGatt) => void, (error?: Error) => void][] = [];
 	private connectTimeout: NodeJS.Timer;
 	private isDisconnecting = false;
 	private disconnecting: [() => void, (error?: Error) => void][] = [];
@@ -61,7 +61,7 @@ export class DbusPeripheral extends Peripheral {
 		return this.prop<boolean>(I_BLUEZ_DEVICE, 'Connected');
 	}
 
-	public async connect(): Promise<void> {
+	public async connect(): Promise<DbusGatt> {
 		if (await this.isConnected()) {
 			return;
 		}
@@ -71,7 +71,7 @@ export class DbusPeripheral extends Peripheral {
 		}
 
 		if (this.isConnecting) {
-			return new Promise<void>((resolve, reject) => this.connecting.push([resolve, reject]));
+			return new Promise<DbusGatt>((resolve, reject) => this.connecting.push([resolve, reject]));
 		}
 
 		this.connecting = [];
@@ -169,7 +169,8 @@ export class DbusPeripheral extends Peripheral {
 		if (error) {
 			this.connecting.forEach(([, rej]) => rej(error));
 		} else {
-			this.connecting.forEach(([res]) => res());
+			this._gatt = new DbusGatt(this);
+			this.connecting.forEach(([res]) => res(this._gatt));
 		}
 
 		this.connecting = [];
@@ -189,18 +190,5 @@ export class DbusPeripheral extends Peripheral {
 		}
 
 		this.disconnecting = [];
-	}
-
-	public async setupGatt(requestMtu?: number): Promise<Gatt> {
-		if (this.gatt) {
-			return this.gatt;
-		}
-
-		if (requestMtu) {
-			throw new Error(`MTU requests are not accepted for dbus`);
-		}
-
-		this.gatt = new DbusGatt(this);
-		return this.gatt;
 	}
 }

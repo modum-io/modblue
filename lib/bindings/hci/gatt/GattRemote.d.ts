@@ -1,10 +1,13 @@
 /// <reference types="node" />
 import { Gatt, Peripheral } from '../../../models';
 import { Hci } from '../misc';
+import { HciPeripheral } from '../Peripheral';
 import { HciGattCharacteristic } from './Characteristic';
 import { HciGattDescriptor } from './Descriptor';
 import { HciGattService } from './Service';
 export declare class HciGattRemote extends Gatt {
+    readonly peripheral: HciPeripheral;
+    readonly services: Map<string, HciGattService>;
     private hci;
     private handle;
     private security;
@@ -14,7 +17,6 @@ export declare class HciGattRemote extends Gatt {
     private mutexStack;
     private currentCmd;
     private cmdTimeout;
-    services: Map<string, HciGattService>;
     constructor(peripheral: Peripheral, hci: Hci, handle: number, cmdTimeout?: number);
     private acquireMutex;
     dispose(reason?: string): void;
@@ -33,7 +35,7 @@ export declare class HciGattRemote extends Gatt {
     private executeWriteRequest;
     private handleConfirmation;
     exchangeMtu(mtu: number): Promise<number>;
-    protected doDiscoverServices(): Promise<HciGattService[]>;
+    discoverServices(): Promise<HciGattService[]>;
     discoverCharacteristics(serviceUUID: string): Promise<HciGattCharacteristic[]>;
     readCharacteristic(serviceUUID: string, characteristicUUID: string): Promise<Buffer>;
     writeCharacteristic(serviceUUID: string, characteristicUUID: string, data: Buffer, withoutResponse: boolean): Promise<void>;

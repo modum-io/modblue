@@ -1,12 +1,13 @@
-import { AddressType, Gatt, Peripheral } from '../../models';
+import { AddressType, Peripheral } from '../../models';
 import { DbusAdapter } from './Adapter';
+import { DbusGatt } from './gatt';
 export declare class DbusPeripheral extends Peripheral {
     adapter: DbusAdapter;
     readonly path: string;
     private deviceIface;
     private propsIface;
     private _init;
-    private gatt;
+    protected _gatt: DbusGatt;
     private isConnecting;
     private connecting;
     private connectTimeout;
@@ -17,10 +18,9 @@ export declare class DbusPeripheral extends Peripheral {
     private init;
     private prop;
     private isConnected;
-    connect(): Promise<void>;
+    connect(): Promise<DbusGatt>;
     disconnect(): Promise<void>;
     private doneConnecting;
     private doneDisconnecting;
-    setupGatt(requestMtu?: number): Promise<Gatt>;
 }
 //# sourceMappingURL=Peripheral.d.ts.map

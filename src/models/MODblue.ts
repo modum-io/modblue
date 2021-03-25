@@ -20,7 +20,6 @@ export abstract class MODblue {
 
 	/**
 	 * Tries to automatically detect the current platform and use the most appropriate BLE bindings.
-	 * @returns The MODblue instance for this platform
 	 */
 	public static async autoDetectBindings(): Promise<MODblue> {
 		const platform = os.platform();

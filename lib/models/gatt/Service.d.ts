@@ -3,7 +3,7 @@ import { Gatt } from './Gatt';
 /**
  * Represents a GATT service.
  */
-export declare class GattService {
+export declare abstract class GattService {
     /**
      * The GATT server this service belongs to.
      */
@@ -21,11 +21,11 @@ export declare class GattService {
      * If this is a remote service use {@link discoverCharacteristics} to discover them.
      */
     readonly characteristics: Map<string, GattCharacteristic>;
-    constructor(gatt: Gatt, uuid: string, isRemote: boolean, characteristics?: GattCharacteristic[]);
+    constructor(gatt: Gatt, uuid: string, isRemote: boolean);
     /**
      * Discover all charactersitics of this service.
      */
-    discoverCharacteristics(): Promise<GattCharacteristic[]>;
+    abstract discoverCharacteristics(): Promise<GattCharacteristic[]>;
     toString(): string;
     toJSON(): Record<string, unknown>;
 }

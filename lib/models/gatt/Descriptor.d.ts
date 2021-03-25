@@ -3,9 +3,8 @@ import { GattCharacteristic } from './Characteristic';
 /**
  * Represents a GATT Descriptor.
  */
-export declare class GattDescriptor {
+export declare abstract class GattDescriptor {
     private value;
-    private get gatt();
     /**
      * The GATT characteristic that this descriptor belongs to
      */
@@ -22,13 +21,13 @@ export declare class GattDescriptor {
     /**
      * Read the current value of this descriptor.
      */
-    read(): Promise<Buffer>;
+    abstract read(): Promise<Buffer>;
     /**
      * Writes the specified data to this descriptor.
      * @param data The data to write.
      */
-    write(data: Buffer): Promise<void>;
-    handleRead(offset: number): Promise<[number, Buffer]>;
+    abstract write(data: Buffer): Promise<void>;
+    handleRead(offset: number): Promise<Buffer>;
     handleWrite(offset: number, data: Buffer): Promise<number>;
     toString(): string;
     toJSON(): Record<string, unknown>;

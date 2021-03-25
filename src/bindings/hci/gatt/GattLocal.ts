@@ -9,26 +9,26 @@ import {
 } from '../../../models';
 import { HciAdapter } from '../Adapter';
 import { Hci, Codes } from '../misc';
+import { HciPeripheral } from '../Peripheral';
+
+import { HciGattCharacteristic } from './Characteristic';
+import { HciGattDescriptor } from './Descriptor';
+import { HciGattService } from './Service';
 
 // 512 bytes is max char size + 1 byte att opcode + 2 bytes handle + 2 bytes offset for long writes
 const DEFAULT_MAX_MTU = 517;
 
 interface ServiceHandle {
 	type: 'service';
-	start: number;
-	end: number;
-	object: GattService;
+	object: HciGattService;
 }
 interface CharacteristicHandle {
 	type: 'characteristic' | 'characteristicValue';
-	start: number;
-	value: number;
-	object: GattCharacteristic;
+	object: HciGattCharacteristic;
 }
 interface DescriptorHandle {
 	type: 'descriptor';
-	value: number;
-	object: GattDescriptor;
+	object: HciGattDescriptor;
 }
 
 type Handle = ServiceHandle | CharacteristicHandle | DescriptorHandle;
@@ -54,6 +54,8 @@ export interface GattDescriptorInput {
 }
 
 export class HciGattLocal extends Gatt {
+	public readonly peripheral: HciPeripheral;
+
 	private hci: Hci;
 	private handles: Handle[];
 
@@ -129,30 +131,20 @@ export class HciGattLocal extends Gatt {
 
 		let handle = 1;
 		for (const service of allServices) {
-			const newChars: GattCharacteristic[] = [];
-			const newService = new GattService(this, service.uuid, false, newChars);
-
 			const serviceStartHandle = handle++;
-			const serviceHandle: ServiceHandle = {
-				type: 'service',
-				start: serviceStartHandle,
-				end: 0, // Determined below
-				object: newService
-			};
+			const newService = new HciGattService(this, service.uuid, false, serviceStartHandle, 0); // End handle determined below
+
+			const serviceHandle: ServiceHandle = { type: 'service', object: newService };
 			handles[serviceStartHandle] = serviceHandle;
 
 			for (const char of service.characteristics) {
-				const newDescriptors: GattDescriptor[] = [];
-
 				if (char.properties.includes('read') && !char.value && !char.onRead) {
 					throw new Error(
 						`Characteristic ${char.uuid} has the 'read' property and needs either a value or an 'onRead' function`
 					);
 				}
 
-				const onRead: ReadFunction = char.onRead
-					? char.onRead
-					: async (offset: number) => [0, char.value.slice(offset)];
+				const onRead: ReadFunction = char.onRead ? char.onRead : async (offset: number) => char.value.slice(offset);
 
 				if (
 					(char.properties.includes('write') || char.properties.includes('write-without-response')) &&
@@ -165,61 +157,65 @@ export class HciGattLocal extends Gatt {
 
 				const onWrite: WriteFunction = char.onWrite;
 
-				const newChar = new GattCharacteristic(
+				const charStartHandle = handle++;
+				const charValueHandle = handle++;
+
+				const newChar = new HciGattCharacteristic(
 					newService,
 					char.uuid,
 					false,
 					char.properties,
 					char.secure,
+					charStartHandle,
+					charValueHandle,
 					onRead,
-					onWrite,
-					newDescriptors
+					onWrite
 				);
-
-				const charStartHandle = handle++;
-				const charValueHandle = handle++;
 
 				handles[charStartHandle] = {
 					type: 'characteristic',
-					start: charStartHandle,
-					value: charValueHandle,
 					object: newChar
 				};
 				handles[charValueHandle] = {
 					type: 'characteristicValue',
-					start: charStartHandle,
-					value: charValueHandle,
 					object: newChar
 				};
 
 				if (char.properties.includes('indicate') || char.properties.includes('notify')) {
-					// notify or indicate: add client characteristic configuration descriptor
-					const newDescr = new GattDescriptor(newChar, '2902', false, Buffer.from([0x00, 0x00]));
-
 					const clientCharacteristicConfigurationDescriptorHandle = handle++;
+
+					// notify or indicate: add client characteristic configuration descriptor
+					const newDescr = new HciGattDescriptor(
+						newChar,
+						'2902',
+						false,
+						clientCharacteristicConfigurationDescriptorHandle,
+						Buffer.from([0x00, 0x00])
+					);
+
 					handles[clientCharacteristicConfigurationDescriptorHandle] = {
 						type: 'descriptor',
-						object: newDescr,
-						value: clientCharacteristicConfigurationDescriptorHandle
+						object: newDescr
 					};
 				}
 
 				if (char.descriptors) {
 					for (const descr of char.descriptors) {
-						const newDescr = new GattDescriptor(newChar, descr.uuid, false, descr.value);
-
 						const descrHandle = handle++;
-						handles[descrHandle] = { type: 'descriptor', value: descrHandle, object: newDescr };
 
-						newDescriptors.push(newDescr);
+						const newDescr = new HciGattDescriptor(newChar, descr.uuid, false, descrHandle, descr.value);
+
+						handles[descrHandle] = { type: 'descriptor', object: newDescr };
+
+						newChar.descriptors.set(newDescr.uuid, newDescr);
 					}
 				}
 
-				newChars.push(newChar);
+				newService.characteristics.set(newChar.uuid, newChar);
 			}
 
-			// Set end handle
-			serviceHandle.end = handle - 1;
+			// Set service end handle
+			newService.endHandle = handle - 1;
 		}
 
 		this.handles = handles;
@@ -427,8 +423,8 @@ export class HciGattLocal extends Gatt {
 
 			if ('2800' === uuid && handle.type === 'service' && handle.object.uuid === value) {
 				handles.push({
-					start: handle.start,
-					end: handle.end
+					start: handle.object.startHandle,
+					end: handle.object.endHandle
 				});
 			}
 		}
@@ -469,23 +465,23 @@ export class HciGattLocal extends Gatt {
 			.join('');
 
 		if (uuid === '2800' || uuid === '2802') {
-			const services = [];
+			const srvHandles: ServiceHandle[] = [];
 			const type = uuid === '2800' ? 'service' : 'includedService';
 
 			for (let i = startHandle; i <= endHandle; i++) {
 				const handle = this.handles[i];
 
 				if (handle.type === type) {
-					services.push(handle);
+					srvHandles.push(handle);
 				}
 			}
 
-			if (services.length) {
-				const uuidSize = services[0].object.uuid.length / 2;
+			if (srvHandles.length) {
+				const uuidSize = srvHandles[0].object.uuid.length / 2;
 				let numServices = 1;
 
-				for (let i = 1; i < services.length; i++) {
-					if (services[0].object.uuid.length !== services[i].object.uuid.length) {
+				for (let i = 1; i < srvHandles.length; i++) {
+					if (srvHandles[0].object.uuid.length !== srvHandles[i].object.uuid.length) {
 						break;
 					}
 					numServices++;
@@ -501,13 +497,13 @@ export class HciGattLocal extends Gatt {
 				response[1] = lengthPerService;
 
 				for (let i = 0; i < numServices; i++) {
-					const service = services[i];
+					const srvHandle = srvHandles[i];
 
-					response.writeUInt16LE(service.start, 2 + i * lengthPerService);
-					response.writeUInt16LE(service.end, 2 + i * lengthPerService + 2);
+					response.writeUInt16LE(srvHandle.object.startHandle, 2 + i * lengthPerService);
+					response.writeUInt16LE(srvHandle.object.endHandle, 2 + i * lengthPerService + 2);
 
 					const serviceUuid = Buffer.from(
-						service.object.uuid
+						srvHandle.object.uuid
 							.match(/.{1,2}/g)
 							.reverse()
 							.join(''),
@@ -541,22 +537,22 @@ export class HciGattLocal extends Gatt {
 			.join('');
 
 		if (uuid === '2803') {
-			const characteristics = [];
+			const charHandles: CharacteristicHandle[] = [];
 
 			for (let i = startHandle; i <= endHandle; i++) {
 				const handle = this.handles[i];
 
 				if (handle.type === 'characteristic') {
-					characteristics.push(handle);
+					charHandles.push(handle);
 				}
 			}
 
-			if (characteristics.length) {
-				const uuidSize = characteristics[0].object.uuid.length / 2;
+			if (charHandles.length) {
+				const uuidSize = charHandles[0].object.uuid.length / 2;
 				let numCharacteristics = 1;
 
-				for (let i = 1; i < characteristics.length; i++) {
-					if (characteristics[0].object.uuid.length !== characteristics[i].object.uuid.length) {
+				for (let i = 1; i < charHandles.length; i++) {
+					if (charHandles[0].object.uuid.length !== charHandles[i].object.uuid.length) {
 						break;
 					}
 					numCharacteristics++;
@@ -572,14 +568,14 @@ export class HciGattLocal extends Gatt {
 				response[1] = lengthPerCharacteristic;
 
 				for (let i = 0; i < numCharacteristics; i++) {
-					const characteristic = characteristics[i];
+					const charHandle = charHandles[i];
 
-					response.writeUInt16LE(characteristic.start, 2 + i * lengthPerCharacteristic);
-					response.writeUInt8(characteristic.object.propertyFlag, 2 + i * lengthPerCharacteristic + 2);
-					response.writeUInt16LE(characteristic.value, 2 + i * lengthPerCharacteristic + 3);
+					response.writeUInt16LE(charHandle.object.startHandle, 2 + i * lengthPerCharacteristic);
+					response.writeUInt8(charHandle.object.propertyFlag, 2 + i * lengthPerCharacteristic + 2);
+					response.writeUInt16LE(charHandle.object.valueHandle, 2 + i * lengthPerCharacteristic + 3);
 
 					const characteristicUuid = Buffer.from(
-						characteristic.object.uuid
+						charHandle.object.uuid
 							.match(/.{1,2}/g)
 							.reverse()
 							.join(''),
@@ -602,7 +598,7 @@ export class HciGattLocal extends Gatt {
 
 				if (handle.type === 'characteristic' && handle.object.uuid === uuid) {
 					handleObject = handle.object;
-					handleId = handle.value;
+					handleId = handle.object.valueHandle;
 					secure = handle.object.secure.includes('read');
 					break;
 				} else if (handle.type === 'descriptor' && handle.object.uuid === uuid) {
@@ -619,10 +615,16 @@ export class HciGattLocal extends Gatt {
 				let responseBuffer: Buffer = null;
 
 				if (handleObject instanceof GattCharacteristic) {
-					[responseStatus, responseBuffer] = await handleObject.handleRead(0);
+					try {
+						responseBuffer = await handleObject.handleRead(0);
+						responseStatus = Codes.ATT_ECODE_SUCCESS;
+					} catch {
+						responseStatus = Codes.ATT_ECODE_UNLIKELY;
+						responseBuffer = null;
+					}
 				} else {
 					responseStatus = Codes.ATT_OP_READ_BY_TYPE_RESP;
-					responseBuffer = (await handleObject.handleRead(0))[1];
+					responseBuffer = await handleObject.handleRead(0);
 				}
 
 				if (responseStatus === Codes.ATT_ECODE_SUCCESS) {
@@ -680,7 +682,7 @@ export class HciGattLocal extends Gatt {
 				result = Codes.ATT_ECODE_SUCCESS;
 				data = Buffer.alloc(3 + uuid.length);
 				data.writeUInt8(handle.object.propertyFlag, 0);
-				data.writeUInt16LE(handle.value, 1);
+				data.writeUInt16LE(handle.object.valueHandle, 1);
 
 				for (let i = 0; i < uuid.length; i++) {
 					data[i + 3] = uuid[i];
@@ -690,7 +692,13 @@ export class HciGattLocal extends Gatt {
 					if (handle.object.secure.includes('read') /*&& !this._aclStream.encrypted*/) {
 						result = Codes.ATT_ECODE_AUTHENTICATION;
 					} else {
-						[result, data] = await handle.object.handleRead(offset);
+						try {
+							data = await handle.object.handleRead(offset);
+							result = Codes.ATT_ECODE_SUCCESS;
+						} catch {
+							result = Codes.ATT_ECODE_UNLIKELY;
+							data = null;
+						}
 					}
 				} else {
 					result = Codes.ATT_ECODE_READ_NOT_PERM; // non-readable
@@ -698,7 +706,7 @@ export class HciGattLocal extends Gatt {
 			} else if (handle.type === 'descriptor') {
 				// TODO: Descriptors are always read-only and not secure
 				result = Codes.ATT_ECODE_SUCCESS;
-				data = (await handle.object.handleRead(offset))[1];
+				data = await handle.object.handleRead(offset);
 			}
 
 			if (result !== null) {
@@ -950,31 +958,7 @@ export class HciGattLocal extends Gatt {
 		return undefined;*/
 	}
 
-	protected doDiscoverServices(): Promise<GattService[]> {
-		throw new Error('Method not implemented.');
-	}
-	public discoverCharacteristics(): Promise<GattCharacteristic[]> {
-		throw new Error('Method not implemented.');
-	}
-	public readCharacteristic(): Promise<Buffer> {
-		throw new Error('Method not implemented.');
-	}
-	public writeCharacteristic(): Promise<void> {
-		throw new Error('Method not implemented.');
-	}
-	public broadcastCharacteristic(): Promise<void> {
-		throw new Error('Method not implemented.');
-	}
-	public notifyCharacteristic(): Promise<void> {
-		throw new Error('Method not implemented.');
-	}
-	public discoverDescriptors(): Promise<GattDescriptor[]> {
-		throw new Error('Method not implemented.');
-	}
-	public readDescriptor(): Promise<Buffer> {
-		throw new Error('Method not implemented.');
-	}
-	public writeDescriptor(): Promise<void> {
+	public discoverServices(): Promise<GattService[]> {
 		throw new Error('Method not implemented.');
 	}
 }

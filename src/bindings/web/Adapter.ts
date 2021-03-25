@@ -50,7 +50,7 @@ export class WebAdapter extends Adapter {
 
 			let peripheral = this.peripherals.get(uuid);
 			if (!peripheral) {
-				peripheral = new WebPeripheral(this, uuid, {}, 0);
+				peripheral = new WebPeripheral(this, uuid, device);
 				this.peripherals.set(uuid, peripheral);
 			}
 

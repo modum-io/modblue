@@ -2,6 +2,7 @@ import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 
 import { Gatt, GattError, Peripheral } from '../../../models';
 import { Hci, Codes } from '../misc';
+import { HciPeripheral } from '../Peripheral';
 
 import { HciGattCharacteristic } from './Characteristic';
 import { HciGattDescriptor } from './Descriptor';
@@ -15,6 +16,9 @@ interface GattCommand {
 }
 
 export class HciGattRemote extends Gatt {
+	public readonly peripheral: HciPeripheral;
+	public readonly services: Map<string, HciGattService> = new Map();
+
 	private hci: Hci;
 	private handle: number;
 
@@ -26,8 +30,6 @@ export class HciGattRemote extends Gatt {
 	private mutexStack: Error;
 	private currentCmd: GattCommand = null;
 	private cmdTimeout: number;
-
-	public services: Map<string, HciGattService> = new Map();
 
 	public constructor(peripheral: Peripheral, hci: Hci, handle: number, cmdTimeout: number = GATT_CMD_TIMEOUT) {
 		super(peripheral, null);
@@ -330,9 +332,10 @@ export class HciGattRemote extends Gatt {
 		return this.mtu;
 	}
 
-	protected async doDiscoverServices(): Promise<HciGattService[]> {
-		const newServices: HciGattService[] = [];
+	public async discoverServices(): Promise<HciGattService[]> {
 		let startHandle = 0x0001;
+
+		const newServices: HciGattService[] = [];
 
 		const run = true;
 		while (run) {
@@ -370,6 +373,11 @@ export class HciGattRemote extends Gatt {
 			} else {
 				startHandle = newServices[newServices.length - 1].endHandle + 1;
 			}
+		}
+
+		this.services.clear();
+		for (const service of newServices) {
+			this.services.set(service.uuid, service);
 		}
 
 		return newServices;

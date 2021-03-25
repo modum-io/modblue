@@ -8,7 +8,7 @@ import { Gatt } from './Gatt';
 /**
  * Represents a GATT service.
  */
-export class GattService {
+export abstract class GattService {
 	/**
 	 * The GATT server this service belongs to.
 	 */
@@ -30,32 +30,16 @@ export class GattService {
 	 */
 	public readonly characteristics: Map<string, GattCharacteristic> = new Map();
 
-	public constructor(gatt: Gatt, uuid: string, isRemote: boolean, characteristics?: GattCharacteristic[]) {
+	public constructor(gatt: Gatt, uuid: string, isRemote: boolean) {
 		this.gatt = gatt;
 		this.uuid = uuid;
 		this.isRemote = isRemote;
-
-		if (characteristics) {
-			for (const char of characteristics) {
-				this.characteristics.set(char.uuid, char);
-			}
-		}
 	}
 
 	/**
 	 * Discover all charactersitics of this service.
 	 */
-	public async discoverCharacteristics(): Promise<GattCharacteristic[]> {
-		if (!this.isRemote) {
-			throw new Error('Ĉannot discover characteristics of a local service');
-		}
-
-		const characteristics = await this.gatt.discoverCharacteristics(this.uuid);
-		for (const characteristic of characteristics) {
-			this.characteristics.set(characteristic.uuid, characteristic);
-		}
-		return [...this.characteristics.values()];
-	}
+	public abstract discoverCharacteristics(): Promise<GattCharacteristic[]>;
 
 	public toString(): string {
 		return JSON.stringify(this.toJSON());

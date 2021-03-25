@@ -3,16 +3,12 @@ import { inspect } from 'util';
 import { CUSTOM, InspectOptionsStylized } from '../Inspect';
 
 import { GattCharacteristic } from './Characteristic';
-import { Gatt } from './Gatt';
 
 /**
  * Represents a GATT Descriptor.
  */
-export class GattDescriptor {
+export abstract class GattDescriptor {
 	private value: Buffer;
-	private get gatt(): Gatt {
-		return this.characteristic.service.gatt;
-	}
 
 	/**
 	 * The GATT characteristic that this descriptor belongs to
@@ -40,37 +36,28 @@ export class GattDescriptor {
 	/**
 	 * Read the current value of this descriptor.
 	 */
-	public read(): Promise<Buffer> {
-		if (!this.isRemote) {
-			throw new Error('Can only be used for remote descriptors');
-		}
-
-		return this.gatt.readDescriptor(this.characteristic.service.uuid, this.characteristic.uuid, this.uuid);
-	}
+	public abstract read(): Promise<Buffer>;
 
 	/**
 	 * Writes the specified data to this descriptor.
 	 * @param data The data to write.
 	 */
-	public write(data: Buffer): Promise<void> {
-		if (!this.isRemote) {
-			throw new Error('Can only be used for remote descriptors');
-		}
+	public abstract write(data: Buffer): Promise<void>;
 
-		return this.gatt.writeDescriptor(this.characteristic.service.uuid, this.characteristic.uuid, this.uuid, data);
-	}
-
-	public async handleRead(offset: number): Promise<[number, Buffer]> {
+	public async handleRead(offset: number): Promise<Buffer> {
 		if (this.isRemote) {
 			throw new Error('Can only be used for local descriptors');
 		}
 
-		return [0, this.value.slice(offset)];
+		return this.value.slice(offset);
 	}
 
 	public async handleWrite(offset: number, data: Buffer): Promise<number> {
 		if (this.isRemote) {
 			throw new Error('Can only be used for local descriptors');
+		}
+		if (offset) {
+			throw new Error('Writing offset for discriptors is not supported');
 		}
 
 		this.value = data;

@@ -1,7 +1,8 @@
 /// <reference types="node" />
-import { Gatt, GattCharacteristic, GattCharacteristicProperty, GattDescriptor, GattService, ReadFunction, WriteFunction } from '../../../models';
+import { Gatt, GattCharacteristicProperty, GattService, ReadFunction, WriteFunction } from '../../../models';
 import { HciAdapter } from '../Adapter';
 import { Hci } from '../misc';
+import { HciPeripheral } from '../Peripheral';
 export interface GattServiceInput {
     uuid: string;
     characteristics: GattCharacteristicInput[];
@@ -20,6 +21,7 @@ export interface GattDescriptorInput {
     value: Buffer;
 }
 export declare class HciGattLocal extends Gatt {
+    readonly peripheral: HciPeripheral;
     private hci;
     private handles;
     private negotiatedMtus;
@@ -48,14 +50,6 @@ export declare class HciGattLocal extends Gatt {
     private handlePrepareWriteRequest;
     private handleExecuteWriteRequest;
     private handleConfirmation;
-    protected doDiscoverServices(): Promise<GattService[]>;
-    discoverCharacteristics(): Promise<GattCharacteristic[]>;
-    readCharacteristic(): Promise<Buffer>;
-    writeCharacteristic(): Promise<void>;
-    broadcastCharacteristic(): Promise<void>;
-    notifyCharacteristic(): Promise<void>;
-    discoverDescriptors(): Promise<GattDescriptor[]>;
-    readDescriptor(): Promise<Buffer>;
-    writeDescriptor(): Promise<void>;
+    discoverServices(): Promise<GattService[]>;
 }
 //# sourceMappingURL=GattLocal.d.ts.map

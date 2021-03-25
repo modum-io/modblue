@@ -1,10 +1,13 @@
-import { Gatt, Peripheral } from '../../models';
+/// <reference types="web-bluetooth" />
+import { Peripheral } from '../../models';
 import { WebAdapter } from './Adapter';
+import { WebGatt } from './gatt';
 export declare class WebPeripheral extends Peripheral {
     adapter: WebAdapter;
-    constructor(adapter: WebAdapter, id: string, advertisement: Record<string, unknown>, rssi: number);
-    connect(minInterval?: number, maxInterval?: number, latency?: number, supervisionTimeout?: number): Promise<void>;
+    private device;
+    protected _gatt: WebGatt;
+    constructor(adapter: WebAdapter, id: string, device: BluetoothDevice);
+    connect(): Promise<WebGatt>;
     disconnect(): Promise<void>;
-    setupGatt(requestMtu?: number): Promise<Gatt>;
 }
 //# sourceMappingURL=Peripheral.d.ts.map

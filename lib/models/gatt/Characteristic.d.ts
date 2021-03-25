@@ -2,7 +2,7 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
 import { GattDescriptor } from './Descriptor';
 import { GattService } from './Service';
-export declare type ReadFunction = (offset: number) => Promise<[number, Buffer]>;
+export declare type ReadFunction = (offset: number) => Promise<Buffer>;
 export declare type WriteFunction = (offset: number, data: Buffer, withoutResponse: boolean) => Promise<number>;
 export declare type GattCharacteristicProperty = 'broadcast' | 'read' | 'write-without-response' | 'write' | 'notify' | 'indicate' | 'authenticated-signed-writes' | 'extended-properties' | 'reliable-write' | 'writable-auxiliaries' | 'authorize';
 export interface GattCharacteristicEvents {
@@ -11,10 +11,9 @@ export interface GattCharacteristicEvents {
 /**
  * Represents a GATT Characteristic.
  */
-export declare class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
+export declare abstract class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
     private readonly readFunc;
     private readonly writeFunc;
-    private get gatt();
     /**
      * The GATT service that this characteristic belongs to.
      */
@@ -48,31 +47,31 @@ export declare class GattCharacteristic extends TypedEmitter<GattCharacteristicE
      * If this is a remote characteristic use {@link discoverDescriptors} to discover them.
      */
     readonly descriptors: Map<string, GattDescriptor>;
-    constructor(service: GattService, uuid: string, isRemote: boolean, propsOrFlag: number | GattCharacteristicProperty[], secureOrFlag: number | GattCharacteristicProperty[], readFunc?: ReadFunction, writeFunc?: WriteFunction, descriptors?: GattDescriptor[]);
+    constructor(service: GattService, uuid: string, isRemote: boolean, propsOrFlag: number | GattCharacteristicProperty[], secureOrFlag: number | GattCharacteristicProperty[], readFunc?: ReadFunction, writeFunc?: WriteFunction);
     /**
      * Discover all descriptors of this characteristic.
      */
-    discoverDescriptors(): Promise<GattDescriptor[]>;
+    abstract discoverDescriptors(): Promise<GattDescriptor[]>;
     /**
      * Read the current value of this characteristic.
      */
-    read(): Promise<Buffer>;
+    abstract read(): Promise<Buffer>;
     /**
      * Write the specified data to this characteristic.
      * @param data The data to write.
      * @param withoutResponse Do not require a response from the remote GATT server for this write.
      */
-    write(data: Buffer, withoutResponse: boolean): Promise<void>;
+    abstract write(data: Buffer, withoutResponse: boolean): Promise<void>;
     /**
      * Enable or disable broadcasts.
      * @param broadcast True to enable broadcasts, false otherwise.
      */
-    broadcast(broadcast: boolean): Promise<void>;
+    abstract broadcast(broadcast: boolean): Promise<void>;
     /**
      * Enable or disable notifications.
      * @param notify True to enable notifies, false otherwise.
      */
-    notify(notify: boolean): Promise<void>;
+    abstract notify(notify: boolean): Promise<void>;
     /**
      * Enable notifications. Equivalent to calling {@link notify} with `true`.
      */
@@ -81,7 +80,7 @@ export declare class GattCharacteristic extends TypedEmitter<GattCharacteristicE
      * Disable nofitications. Equivalent to calling {@link notify} with `false`.
      */
     unsubscribe(): Promise<void>;
-    handleRead(offset: number): Promise<[number, Buffer]>;
+    handleRead(offset: number): Promise<Buffer>;
     handleWrite(offset: number, data: Buffer, withoutResponse: boolean): Promise<number>;
     toString(): string;
     toJSON(): Record<string, unknown>;

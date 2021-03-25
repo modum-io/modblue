@@ -11,6 +11,33 @@ import { CUSTOM, InspectOptionsStylized } from './Inspect';
 export type PeripheralState = 'connecting' | 'connected' | 'disconnecting' | 'disconnected';
 
 /**
+ * Connection options used to establish the BLE connection.
+ * Certain options are only supported on certain platforms / bindings.
+ */
+export interface ConnectOptions {
+	/**
+	 * The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.
+	 */
+	mtu?: number;
+	/**
+	 * The minimum connection interval.
+	 */
+	minInterval?: number;
+	/**
+	 * The maximum connection interval
+	 */
+	maxInterval?: number;
+	/**
+	 * The connection latency.
+	 */
+	latency?: number;
+	/**
+	 * The supervision timeout.
+	 */
+	supervisionTimeout?: number;
+}
+
+/**
  * Represents a peripheral that was found during scanning.
  */
 export abstract class Peripheral {
@@ -18,6 +45,17 @@ export abstract class Peripheral {
 	 * The adapter that this peripheral was found by.
 	 */
 	public readonly adapter: Adapter;
+
+	/**
+	 * The remote gatt server. Only available after connecting.
+	 */
+	protected _gatt: Gatt;
+	public get gatt(): Gatt {
+		if (this.state !== 'connected') {
+			throw new Error('GATT is only available when connected');
+		}
+		return this.gatt;
+	}
 
 	/**
 	 * The unique identifier for this peripheral.
@@ -69,22 +107,15 @@ export abstract class Peripheral {
 	}
 
 	/**
-	 * Connect to this peripheral. Throws an error when connecting fails.
-	 * @param minInterval The minimum connection interval.
-	 * @param maxInterval The maximum connection interval.
-	 * @param latency The connection latency.
-	 * @param supervisionTimeout The supervision timeout.
+	 * Connect to this peripheral and setup GATT. Throws an error when connecting fails.
+	 * Some connection settings may not be supported on certain platforms and wil be ignored.
+	 * @param options The connection options.
 	 */
-	public abstract connect(
-		minInterval?: number,
-		maxInterval?: number,
-		latency?: number,
-		supervisionTimeout?: number
-	): Promise<void>;
+	public abstract connect(options?: ConnectOptions): Promise<Gatt>;
 
 	/**
 	 * Disconnect from this peripheral. Does nothing if not connected. This method **never** throws an error.
-	 * When connecting to a peripheral you should always wrap your calls in try-catch and call this method at the end.
+	 * When connecting to a peripheral you should always wrap your calls in try-catch-finally and call this method at the end.
 	 * ```
 	 * try {
 	 *   peripheral.connect()
@@ -95,13 +126,6 @@ export abstract class Peripheral {
 	 * }```
 	 */
 	public abstract disconnect(): Promise<void>;
-
-	/**
-	 * Setup the local GATT server to send and receive data from the remote GATT server of the peripheral.
-	 * Requires an existing connection.
-	 * @param requestMtu The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.
-	 */
-	public abstract setupGatt(requestMtu?: number): Promise<Gatt>;
 
 	public toString(): string {
 		return JSON.stringify(this.toJSON());
