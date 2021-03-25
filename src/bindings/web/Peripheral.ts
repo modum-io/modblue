@@ -16,12 +16,32 @@ export class WebPeripheral extends Peripheral {
 	}
 
 	public async connect(): Promise<WebGatt> {
+		if (this._state === 'connected') {
+			return;
+		}
+
+		this._state = 'connecting';
+
 		const gatt = await this.device.gatt.connect();
 		this._gatt = new WebGatt(this, gatt);
+
+		this._state = 'connected';
+
 		return this._gatt;
 	}
 
 	public async disconnect(): Promise<void> {
-		this._gatt.disconnect();
+		if (this._state === 'disconnected') {
+			return;
+		}
+
+		this._state = 'disconnecting';
+
+		if (this._gatt) {
+			this._gatt.disconnect();
+			this._gatt = null;
+		}
+
+		this._state = 'disconnected';
 	}
 }
