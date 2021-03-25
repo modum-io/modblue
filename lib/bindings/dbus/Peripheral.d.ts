@@ -8,16 +8,13 @@ export declare class DbusPeripheral extends Peripheral {
     private propsIface;
     private _init;
     protected _gatt: DbusGatt;
-    private isConnecting;
     private connecting;
     private connectTimeout;
-    private isDisconnecting;
     private disconnecting;
     private disconnectTimeout;
     constructor(adapter: DbusAdapter, path: string, id: string, addressType: AddressType, address: string, advertisement: Record<string, unknown>, rssi: number);
     private init;
     private prop;
-    private isConnected;
     connect(): Promise<DbusGatt>;
     disconnect(): Promise<void>;
     private doneConnecting;

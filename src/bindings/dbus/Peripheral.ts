@@ -18,10 +18,9 @@ export class DbusPeripheral extends Peripheral {
 
 	protected _gatt: DbusGatt;
 
-	private isConnecting = false;
 	private connecting: [(gatt: DbusGatt) => void, (error?: Error) => void][] = [];
 	private connectTimeout: NodeJS.Timer;
-	private isDisconnecting = false;
+
 	private disconnecting: [() => void, (error?: Error) => void][] = [];
 	private disconnectTimeout: NodeJS.Timer;
 
@@ -57,25 +56,19 @@ export class DbusPeripheral extends Peripheral {
 		return rawProp.value;
 	}
 
-	private async isConnected() {
-		return this.prop<boolean>(I_BLUEZ_DEVICE, 'Connected');
-	}
-
 	public async connect(): Promise<DbusGatt> {
-		if (await this.isConnected()) {
+		if (this._state === 'connected') {
 			return;
 		}
-
-		if (this.isDisconnecting) {
+		if (this._state === 'disconnecting') {
 			throw new Error(`Device is currently disconnecting, cannot connect`);
 		}
-
-		if (this.isConnecting) {
+		if (this._state === 'connecting') {
 			return new Promise<DbusGatt>((resolve, reject) => this.connecting.push([resolve, reject]));
 		}
 
 		this.connecting = [];
-		this.isConnecting = true;
+		this._state = 'connecting';
 
 		await this.init();
 
@@ -114,20 +107,18 @@ export class DbusPeripheral extends Peripheral {
 	}
 
 	public async disconnect(): Promise<void> {
-		if (!(await this.isConnected())) {
+		if (this._state === 'disconnected') {
 			return;
 		}
-
-		if (this.isConnecting) {
+		if (this._state === 'connecting') {
 			throw new Error(`Device is currently connecting, cannot disconnect`);
 		}
-
-		if (this.isDisconnecting) {
+		if (this.state === 'disconnecting') {
 			return new Promise<void>((resolve, reject) => this.disconnecting.push([resolve, reject]));
 		}
 
 		this.disconnecting = [];
-		this.isDisconnecting = true;
+		this._state = 'disconnecting';
 
 		await this.init();
 
@@ -159,11 +150,11 @@ export class DbusPeripheral extends Peripheral {
 	}
 
 	private doneConnecting(error?: Error) {
-		if (!this.isConnecting) {
+		if (this._state !== 'connecting') {
 			return;
 		}
 
-		this.isConnecting = false;
+		this._state = 'connected';
 		clearTimeout(this.connectTimeout);
 
 		if (error) {
@@ -176,11 +167,11 @@ export class DbusPeripheral extends Peripheral {
 		this.connecting = [];
 	}
 	private doneDisconnecting(error?: Error) {
-		if (!this.isDisconnecting) {
+		if (this._state !== 'disconnecting') {
 			return;
 		}
 
-		this.isDisconnecting = false;
+		this._state = 'disconnected';
 		clearTimeout(this.disconnectTimeout);
 
 		if (error) {
