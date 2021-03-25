@@ -62,6 +62,10 @@ export abstract class Peripheral {
 	 */
 	public readonly uuid: string;
 	/**
+	 * The advertised name of the peripheral.
+	 */
+	public readonly name: string;
+	/**
 	 * The MAC address type of this peripheral.
 	 */
 	public readonly addressType: AddressType;
@@ -90,6 +94,7 @@ export abstract class Peripheral {
 	public constructor(
 		adapter: Adapter,
 		uuid: string,
+		name: string,
 		addressType: AddressType,
 		address: string,
 		advertisement?: Record<string, unknown>,
@@ -97,6 +102,7 @@ export abstract class Peripheral {
 	) {
 		this.adapter = adapter;
 		this.uuid = uuid;
+		this.name = name;
 		this.addressType = addressType;
 		this.address = address;
 

@@ -147,7 +147,7 @@ export class HciAdapter extends Adapter {
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new HciPeripheral(this, uuid, addressType, address, adv, rssi);
+			peripheral = new HciPeripheral(this, uuid, adv.localName as string, addressType, address, adv, rssi);
 			this.peripherals.set(uuid, peripheral);
 		} else {
 			peripheral.advertisement = adv;
@@ -326,7 +326,7 @@ export class HciAdapter extends Adapter {
 		address = address.toLowerCase();
 		const uuid = address;
 
-		const peripheral = new HciPeripheral(this, uuid, addressType, address, null, 0);
+		const peripheral = new HciPeripheral(this, uuid, undefined, addressType, address, null, 0);
 		peripheral.onConnect(true, this.hci, handle);
 
 		this.connectedDevices.set(handle, peripheral);

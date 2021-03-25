@@ -61,12 +61,12 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
 	 * Scans for a specific {@link Peripheral} using the specified matching function and returns the peripheral once found.
 	 * If the timeout is reached before finding a peripheral the returned promise will be rejected.
-	 * @param isTarget A function that returns `true` if the specified peripheral is the peripheral we're looking for.
+	 * @param filter Either a string that is used as name prefix, or a function that returns `true` if the specified peripheral is the peripheral we're looking for.
 	 * @param timeoutInSeconds The timeout in seconds. The returned promise will reject once the timeout is reached.
 	 * @param serviceUUIDs The UUIDs of the {@link GattService}s that must be contained in the advertisement data.
 	 */
 	public async scanFor(
-		isTarget: (peripheral: Peripheral) => boolean,
+		filter: string | ((peripheral: Peripheral) => boolean),
 		timeoutInSeconds = 10,
 		serviceUUIDs?: string[]
 	): Promise<Peripheral> {
@@ -75,8 +75,14 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		return new Promise<Peripheral>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
 			const onDiscover = (peripheral: Peripheral) => {
-				if (isTarget(peripheral)) {
-					resolveHandler(peripheral);
+				if (typeof filter === 'function') {
+					if (filter(peripheral)) {
+						resolveHandler(peripheral);
+					}
+				} else {
+					if (peripheral.name && peripheral.name.toLowerCase().startsWith(filter.toLowerCase())) {
+						resolveHandler(peripheral);
+					}
 				}
 			};
 

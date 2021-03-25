@@ -150,11 +150,12 @@ export class DbusAdapter extends Adapter {
 
 		let peripheral = this.peripherals.get(id);
 		if (!peripheral) {
+			const name = data.Name?.value as string;
 			const address = (data.Address?.value as string).toLowerCase();
 			const addressType = data.AddressType?.value as AddressType;
 			const advertisement = data.ManufacturerData?.value as Record<string, unknown>;
 			const rssi = data.RSSI?.value as number;
-			peripheral = new DbusPeripheral(this, path, id, addressType, address, advertisement, rssi);
+			peripheral = new DbusPeripheral(this, path, id, name, addressType, address, advertisement, rssi);
 			this.peripherals.set(id, peripheral);
 		}
 

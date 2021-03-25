@@ -41,12 +41,10 @@ export class WebAdapter extends Adapter {
 				throw new Error(`No device found`);
 			}
 
-			const uuid = device.id;
-
-			let peripheral = this.peripherals.get(uuid);
+			let peripheral = this.peripherals.get(device.id);
 			if (!peripheral) {
-				peripheral = new WebPeripheral(this, uuid, device);
-				this.peripherals.set(uuid, peripheral);
+				peripheral = new WebPeripheral(this, device);
+				this.peripherals.set(device.id, peripheral);
 			}
 
 			if (!isTarget(peripheral)) {

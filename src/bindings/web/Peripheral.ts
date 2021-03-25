@@ -9,8 +9,8 @@ export class WebPeripheral extends Peripheral {
 	private device: BluetoothDevice;
 	protected _gatt: WebGatt;
 
-	public constructor(adapter: WebAdapter, id: string, device: BluetoothDevice) {
-		super(adapter, id, 'unknown', null, {}, 0);
+	public constructor(adapter: WebAdapter, device: BluetoothDevice) {
+		super(adapter, device.id, device.name, 'unknown', null, {}, 0);
 
 		this.device = device;
 	}

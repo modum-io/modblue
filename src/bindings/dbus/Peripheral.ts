@@ -28,12 +28,13 @@ export class DbusPeripheral extends Peripheral {
 		adapter: DbusAdapter,
 		path: string,
 		id: string,
+		name: string,
 		addressType: AddressType,
 		address: string,
 		advertisement: Record<string, unknown>,
 		rssi: number
 	) {
-		super(adapter, id, addressType, address, advertisement, rssi);
+		super(adapter, id, name, addressType, address, advertisement, rssi);
 
 		this.path = path;
 	}
