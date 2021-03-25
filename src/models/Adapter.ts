@@ -72,19 +72,17 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	): Promise<Peripheral> {
 		const origScope = new Error();
 
+		let filterFunc: (p: Peripheral) => boolean;
+		if (typeof filter === 'string') {
+			const lowFilter = filter.toLowerCase();
+			filterFunc = (p: Peripheral) => p.name && p.name.toLowerCase().startsWith(lowFilter);
+		} else {
+			filterFunc = filter;
+		}
+
 		return new Promise<Peripheral>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
-			const onDiscover = (peripheral: Peripheral) => {
-				if (typeof filter === 'function') {
-					if (filter(peripheral)) {
-						resolveHandler(peripheral);
-					}
-				} else {
-					if (peripheral.name && peripheral.name.toLowerCase().startsWith(filter.toLowerCase())) {
-						resolveHandler(peripheral);
-					}
-				}
-			};
+			const onDiscover = (p: Peripheral) => filterFunc(p) && resolveHandler(p);
 
 			const cleanup = () => {
 				this.stopScanning();

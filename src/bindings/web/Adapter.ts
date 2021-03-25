@@ -18,7 +18,7 @@ export class WebAdapter extends Adapter {
 	}
 
 	public async scanFor(
-		isTarget: (peripheral: Peripheral) => boolean,
+		filter: string | ((peripheral: Peripheral) => boolean),
 		timeoutInSeconds = 10,
 		serviceUUIDs?: string[]
 	): Promise<Peripheral> {
@@ -32,7 +32,12 @@ export class WebAdapter extends Adapter {
 			return this.addDashes(service);
 		});
 
-		const opts: RequestDeviceOptions = { acceptAllDevices: true, optionalServices: mappedServiceUUIDs };
+		let opts: RequestDeviceOptions;
+		if (typeof filter === 'function') {
+			opts = { acceptAllDevices: true, optionalServices: mappedServiceUUIDs };
+		} else {
+			opts = { filters: [{ namePrefix: filter }], optionalServices: mappedServiceUUIDs };
+		}
 
 		const start = new Date().getTime();
 		do {
@@ -47,7 +52,7 @@ export class WebAdapter extends Adapter {
 				this.peripherals.set(device.id, peripheral);
 			}
 
-			if (!isTarget(peripheral)) {
+			if (typeof filter === 'function' && !filter(peripheral)) {
 				throw new Error(`Device not found`);
 			}
 			return peripheral;

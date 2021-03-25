@@ -4,7 +4,7 @@ export declare class WebAdapter extends Adapter {
     dispose(): void;
     isScanning(): Promise<boolean>;
     startScanning(): Promise<void>;
-    scanFor(isTarget: (peripheral: Peripheral) => boolean, timeoutInSeconds?: number, serviceUUIDs?: string[]): Promise<Peripheral>;
+    scanFor(filter: string | ((peripheral: Peripheral) => boolean), timeoutInSeconds?: number, serviceUUIDs?: string[]): Promise<Peripheral>;
     stopScanning(): Promise<void>;
     getScannedPeripherals(): Promise<Peripheral[]>;
     isAdvertising(): Promise<boolean>;
