@@ -22,22 +22,17 @@ export class WebAdapter extends Adapter {
 		timeoutInSeconds = 10,
 		serviceUUIDs?: string[]
 	): Promise<Peripheral> {
-		let opts: RequestDeviceOptions;
+		// web bluetooth requires 4 char hex service names to be passed in as integers
+		const mappedServiceUUIDs = (serviceUUIDs || []).map((service) => {
+			if (service.length === 4) {
+				return parseInt(`0x${service}`);
+			} else if (service.length === 6 && service.indexOf('0x') === 0) {
+				return parseInt(service);
+			}
+			return this.addDashes(service);
+		});
 
-		if (serviceUUIDs) {
-			// web bluetooth requires 4 char hex service names to be passed in as integers
-			const mappedServiceUUIDs = serviceUUIDs.map((service) => {
-				if (service.length === 4) {
-					return { services: [parseInt(`0x${service}`)] };
-				} else if (service.length === 6 && service.indexOf('0x') === 0) {
-					return { services: [parseInt(service)] };
-				}
-				return { services: [this.addDashes(service)] };
-			});
-			opts = { filters: mappedServiceUUIDs };
-		} else {
-			opts = { acceptAllDevices: true };
-		}
+		const opts: RequestDeviceOptions = { acceptAllDevices: true, optionalServices: mappedServiceUUIDs };
 
 		const start = new Date().getTime();
 		do {
