@@ -131,7 +131,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 	}
 
 	private isInitializing = false;
-	public async init(timeoutInSeconds = 2): Promise<void> {
+	public init(timeoutInSeconds = 2): Promise<void> {
 		if (this.isSocketUp) {
 			return;
 		}
@@ -155,7 +155,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		return this.waitForInit(timeoutInSeconds);
 	}
 
-	private async waitForInit(timeoutInSeconds: number) {
+	private waitForInit(timeoutInSeconds: number) {
 		return new Promise<void>((resolve, reject) => {
 			const timeout = setTimeout(() => {
 				this.off('error', errorHandler);
