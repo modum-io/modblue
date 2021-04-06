@@ -46,7 +46,7 @@ export class HciAdapter extends Adapter {
 		await this.hci.init();
 
 		// Don't listen for events until init is done
-		this.hci.on('error', this.onHciError);
+		this.hci.on('hciError', this.onHciError);
 		this.hci.on('stateChange', this.onHciStateChange);
 		this.hci.on('leScanEnable', this.onLeScanEnable);
 		this.hci.on('leAdvertiseEnable', this.onLeAdvertiseEnable);

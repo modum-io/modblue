@@ -20,7 +20,7 @@ interface HciEvents {
     cmdStatus: (status: number) => void;
     cmdComplete: (status: number, data: Buffer) => void;
     hciEvent: (eventCode: number, data: Buffer) => void;
-    error: (error: Error) => void;
+    hciError: (error: Error) => void;
 }
 export declare class Hci extends TypedEmitter<HciEvents> {
     state: string;
