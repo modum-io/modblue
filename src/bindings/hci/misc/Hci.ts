@@ -149,7 +149,7 @@ interface HciEvents {
 	cmdComplete: (status: number, data: Buffer) => void;
 
 	hciEvent: (eventCode: number, data: Buffer) => void;
-	error: (error: Error) => void;
+	hciError: (error: Error) => void;
 }
 
 export class Hci extends TypedEmitter<HciEvents> {
@@ -228,7 +228,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 	private waitForInit(timeoutInSeconds: number) {
 		return new Promise<void>((resolve, reject) => {
 			const timeout = setTimeout(() => {
-				this.off('error', errorHandler);
+				this.off('hciError', errorHandler);
 				this.off('stateChange', stateChangeHandler);
 
 				reject(
@@ -241,7 +241,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 			const stateChangeHandler = (newState: string) => {
 				clearTimeout(timeout);
-				this.off('error', errorHandler);
+				this.off('hciError', errorHandler);
 
 				if (newState === 'poweredOn') {
 					resolve();
@@ -257,7 +257,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 				reject(new Error(`Error while initializing: ${error}`));
 			};
-			this.once('error', errorHandler);
+			this.once('hciError', errorHandler);
 		});
 	}
 
@@ -274,10 +274,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 				try {
 					// Socket is now up
 					this.setSocketFilter();
-
-					if (this.state === 'unauthorized') {
-						throw new HciError('Not authorized');
-					}
 
 					await this.reset();
 
@@ -301,7 +297,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 					this.state = 'poweredOn';
 					this.emit('stateChange', this.state);
 				} catch (err) {
-					this.emit('error', err);
+					this.emit('hciError', err);
 				}
 			} else {
 				// Socket went down
@@ -1172,7 +1168,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 		const handle = this.handles.get(handleId);
 		if (!handle) {
-			this.emit('error', new HciError(`Received connection update packet for unknown handle ${handleId}`));
+			this.emit('hciError', new HciError(`Received connection update packet for unknown handle ${handleId}`));
 		}
 
 		if (status === 0) {
@@ -1232,7 +1228,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 	private handleHardwareErrorPkt(data: Buffer) {
 		const errorCode = data.readUInt8(0);
-		this.emit('error', new HciError(`Hardware error`, `${errorCode}`));
+		this.emit('hciError', new HciError(`Hardware error`, `${errorCode}`));
 	}
 
 	private handleAclDataPkt(data: Buffer) {
@@ -1315,6 +1311,14 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 	private onSocketError = (error: NodeJS.ErrnoException) => {
 		if (error.code === 'EPERM') {
+			// Cancel any pending commands
+			if (this.currentCmd) {
+				// 0x03 means "Hardware failure"
+				this.emit('cmdStatus', 0x03);
+				this.emit('cmdComplete', 0x03, null);
+				this.currentCmd = null;
+			}
+
 			this.state = 'unauthorized';
 			this.emit('stateChange', this.state);
 		} else if (error.message === 'Network is down') {
