@@ -34,7 +34,6 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private isSocketUp;
     private handles;
     private mutex;
-    private mutexStack;
     private currentCmd;
     private cmdTimeout;
     private aclDataPacketLength;
@@ -44,7 +43,6 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private aclPacketQueue;
     constructor(deviceId?: number, cmdTimeout?: number);
     static getDeviceList(): HciDevice[];
-    private acquireMutex;
     private isInitializing;
     init(timeoutInSeconds?: number): Promise<void>;
     private waitForInit;

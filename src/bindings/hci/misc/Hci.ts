@@ -169,7 +169,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 	private handles: Map<number, Handle>;
 
 	private mutex: MutexInterface;
-	private mutexStack: Error;
 	private currentCmd: HciCommand;
 	private cmdTimeout: number;
 
@@ -199,16 +198,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 	public static getDeviceList(): HciDevice[] {
 		const socket = new BluetoothHciSocket();
 		return socket.getDeviceList();
-	}
-
-	private async acquireMutex() {
-		try {
-			const release = await this.mutex.acquire();
-			this.mutexStack = new Error();
-			return release;
-		} catch {
-			throw new HciError(`Could not acquire HCI command mutex`, this.mutexStack?.stack);
-		}
 	}
 
 	private isInitializing = false;
@@ -355,83 +344,88 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.mutex.cancel();
 	}
 
-	private async sendCommand(data: Buffer, statusOnly?: false, customMutex?: boolean): Promise<Buffer>;
-	private async sendCommand(data: Buffer, statusOnly?: true, customMutex?: boolean): Promise<void>;
-	private async sendCommand(data: Buffer, statusOnly?: boolean, customMutex?: boolean): Promise<Buffer | void> {
-		// Check if our socket is available
-		if (!this.isSocketUp) {
-			throw new HciError('HCI socket not available');
-		}
-
-		const release = customMutex ? null : await this.acquireMutex();
-
-		// Our socket might have been disposed while waiting for the mutex
-		if (!this.isSocketUp) {
-			if (release) {
-				release();
-			}
-			throw new HciError('HCI socket not available');
-		}
-
+	private sendCommand(data: Buffer, statusOnly?: false, customMutex?: boolean): Promise<Buffer>;
+	private sendCommand(data: Buffer, statusOnly?: true, customMutex?: boolean): Promise<void>;
+	private sendCommand(data: Buffer, statusOnly?: boolean, customMutex?: boolean): Promise<Buffer | void> {
+		// Capture original scope of function call
 		const origScope = new Error();
 
-		return new Promise<Buffer | void>((resolve, reject) => {
-			let timeout: NodeJS.Timeout;
-			const onComplete = (status: number, responseData?: Buffer) => {
-				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					rejectHandler(new HciError(`HCI Command ${this.currentCmd.cmd} failed`, errStatus));
-				} else {
-					resolveHandler(responseData);
-				}
-			};
-
-			const cleanup = () => {
-				if (statusOnly) {
-					this.off('cmdStatus', onComplete);
-				} else {
-					this.off('cmdComplete', onComplete);
-				}
-
-				this.mutexStack = null;
-
-				if (timeout) {
-					clearTimeout(timeout);
-					timeout = null;
-				}
-
-				this.currentCmd = null;
+		const run = (release: MutexInterface.Releaser) => {
+			// Our socket might have been disposed while waiting for the mutex
+			if (!this.isSocketUp) {
 				if (release) {
 					release();
 				}
-			};
-
-			const resolveHandler = (response?: Buffer) => {
-				cleanup();
-				resolve(response);
-			};
-
-			const rejectHandler = (error?: Error) => {
-				if (error) {
-					error.stack = error.stack + '\n' + origScope.stack;
-				}
-				cleanup();
-				reject(error);
-			};
-
-			this.currentCmd = { cmd: data.readUInt16LE(1), data };
-			if (statusOnly) {
-				this.once('cmdStatus', onComplete);
-			} else {
-				this.once('cmdComplete', onComplete);
+				throw new HciError('HCI socket not available');
 			}
 
-			const timeoutError = new HciError(`HCI command timed out`);
-			timeout = setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
+			return new Promise<Buffer | void>((resolve, reject) => {
+				let timeout: NodeJS.Timeout;
+				const onComplete = (status: number, responseData?: Buffer) => {
+					if (status !== 0) {
+						const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+						rejectHandler(new HciError(`HCI Command ${this.currentCmd.cmd} failed`, errStatus));
+					} else {
+						resolveHandler(responseData);
+					}
+				};
 
-			// console.log('->', 'hci', data);
-			this.socket.write(data);
-		});
+				const cleanup = () => {
+					if (statusOnly) {
+						this.off('cmdStatus', onComplete);
+					} else {
+						this.off('cmdComplete', onComplete);
+					}
+
+					if (timeout) {
+						clearTimeout(timeout);
+						timeout = null;
+					}
+
+					this.currentCmd = null;
+					if (release) {
+						release();
+					}
+				};
+
+				const resolveHandler = (response?: Buffer) => {
+					cleanup();
+					resolve(response);
+				};
+
+				const rejectHandler = (error?: Error) => {
+					if (error) {
+						error.stack = error.stack + '\n' + origScope.stack;
+					}
+					cleanup();
+					reject(error);
+				};
+
+				this.currentCmd = { cmd: data.readUInt16LE(1), data };
+				if (statusOnly) {
+					this.once('cmdStatus', onComplete);
+				} else {
+					this.once('cmdComplete', onComplete);
+				}
+
+				const timeoutError = new HciError(`HCI command timed out`);
+				timeout = setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
+
+				// console.log('->', 'hci', data);
+				this.socket.write(data);
+			});
+		};
+
+		// Check if our socket is available
+		if (!this.isSocketUp) {
+			return Promise.reject('HCI socket not available');
+		}
+
+		if (customMutex) {
+			return run(null);
+		} else {
+			return this.mutex.acquire().then((release) => run(release));
+		}
 	}
 
 	private setSocketFilter() {
@@ -612,7 +606,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		await this.sendCommand(cmd);
 	}
 
-	public async createLeConn(
+	public createLeConn(
 		address: string,
 		addressType: AddressType,
 		minInterval = 0x0006,
@@ -648,75 +642,79 @@ export class Hci extends TypedEmitter<HciEvents> {
 		cmd.writeUInt16LE(0x0004, 25); // min ce length
 		cmd.writeUInt16LE(0x0006, 27); // max ce length
 
-		const release = await this.acquireMutex();
-
-		try {
-			await this.cancelLeConn(true);
-		} catch {
-			// NO-OP
-		}
-
 		const origScope = new Error();
 
-		return new Promise<number>((resolve, reject) => {
-			let timeout: NodeJS.Timeout;
-			const onComplete: HciEvents['leConnComplete'] = (status, handle, role, _addressType, _address) => {
-				if (_address !== address || _addressType !== addressType) {
-					return;
-				}
+		const run = (release: MutexInterface.Releaser) => {
+			return new Promise<number>((resolve, reject) => {
+				let timeout: NodeJS.Timeout;
+				const onComplete: HciEvents['leConnComplete'] = (status, handle, role, _addressType, _address) => {
+					if (_address !== address || _addressType !== addressType) {
+						return;
+					}
 
-				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					rejectHandler(new HciError(`LE conn failed`, errStatus));
-					return;
-				}
+					if (status !== 0) {
+						const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+						rejectHandler(new HciError(`LE conn failed`, errStatus));
+						return;
+					}
 
-				if (role !== 0) {
-					rejectHandler(new HciError(`Could not acquire le connection as master role`));
-					return;
-				}
+					if (role !== 0) {
+						rejectHandler(new HciError(`Could not acquire le connection as master role`));
+						return;
+					}
 
-				resolveHandler(handle);
-			};
+					resolveHandler(handle);
+				};
 
-			const cleanup = () => {
-				this.off('leConnComplete', onComplete);
+				const cleanup = () => {
+					this.off('leConnComplete', onComplete);
 
-				if (timeout) {
-					clearTimeout(timeout);
-					timeout = null;
-				}
+					if (timeout) {
+						clearTimeout(timeout);
+						timeout = null;
+					}
 
-				release();
-			};
+					release();
+				};
 
-			const resolveHandler = (handle: number) => {
-				cleanup();
-				resolve(handle);
-			};
+				const resolveHandler = (handle: number) => {
+					cleanup();
+					resolve(handle);
+				};
 
-			const rejectHandler = async (error?: Error) => {
-				cleanup();
+				const rejectHandler = async (error?: Error) => {
+					cleanup();
 
-				try {
-					await this.cancelLeConn(true);
-				} catch {
-					// NO-OP
-				}
+					try {
+						await this.cancelLeConn(true);
+					} catch {
+						// NO-OP
+					}
 
-				if (error) {
-					error.stack = error.stack + '\n' + origScope.stack;
-				}
+					if (error) {
+						error.stack = error.stack + '\n' + origScope.stack;
+					}
 
-				reject(error);
-			};
+					reject(error);
+				};
 
-			this.on('leConnComplete', onComplete);
+				this.on('leConnComplete', onComplete);
 
-			const timeoutError = new HciError(`Creating connection timed out`);
-			timeout = setTimeout(() => rejectHandler(timeoutError), 2 * this.cmdTimeout);
+				const timeoutError = new HciError(`Creating connection timed out`);
+				timeout = setTimeout(() => rejectHandler(timeoutError), 2 * this.cmdTimeout);
 
-			this.sendCommand(cmd, true, true).catch((err) => rejectHandler(err));
+				this.sendCommand(cmd, true, true).catch((err) => rejectHandler(err));
+			});
+		};
+
+		return this.mutex.acquire().then(async (release) => {
+			try {
+				await this.cancelLeConn(true);
+			} catch {
+				// NO-OP
+			}
+
+			return run(release);
 		});
 	}
 
