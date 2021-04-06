@@ -286,11 +286,11 @@ export class Hci extends TypedEmitter<HciEvents> {
 					// Socket is now up
 					this.setSocketFilter();
 
-					await this.reset();
-
 					if (this.state === 'unauthorized') {
 						throw new HciError('Not authorized');
 					}
+
+					await this.reset();
 
 					await this.setEventMask();
 					await this.setLeEventMask();
