@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>InspectOptionsStylized | @modum-io/modblue - v8.0.0</title>
+	<title>ConnectOptions | @modum-io/modblue - v8.0.0</title>
 	<meta name="description" content="Documentation for @modum-io/modblue - v8.0.0">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,21 +55,29 @@
 					<a href="../modules.html">@modum-io/modblue - v8.0.0</a>
 				</li>
 				<li>
-					<a href="inspectoptionsstylized.html">InspectOptionsStylized</a>
+					<a href="connectoptions.html">ConnectOptions</a>
 				</li>
 			</ul>
-			<h1>Interface InspectOptionsStylized</h1>
+			<h1>Interface ConnectOptions</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Connection options used to establish the BLE connection.
+						Certain options are only supported on certain platforms / bindings.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">InspectOptionsStylized</span>
+						<span class="target">ConnectOptions</span>
 					</li>
 				</ul>
 			</section>
@@ -80,13 +88,11 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="inspectoptionsstylized.html#depth" class="tsd-kind-icon">depth</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section ">
-							<h3>Methods</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="inspectoptionsstylized.html#stylize" class="tsd-kind-icon">stylize</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="connectoptions.html#latency" class="tsd-kind-icon">latency</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="connectoptions.html#maxinterval" class="tsd-kind-icon">max<wbr>Interval</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="connectoptions.html#mininterval" class="tsd-kind-icon">min<wbr>Interval</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="connectoptions.html#mtu" class="tsd-kind-icon">mtu</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="connectoptions.html#supervisiontimeout" class="tsd-kind-icon">supervision<wbr>Timeout</a></li>
 							</ul>
 						</section>
 					</div>
@@ -95,43 +101,79 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="depth" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> depth</h3>
-					<div class="tsd-signature tsd-kind-icon">depth<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<a name="latency" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> latency</h3>
+					<div class="tsd-signature tsd-kind-icon">latency<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/66ddb28/src/models/Inspect.ts#L19">src/models/Inspect.ts:19</a></li>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/66ddb28/src/models/Peripheral.ts#L33">src/models/Peripheral.ts:33</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The connection latency.</p>
+						</div>
+					</div>
 				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="stylize" class="tsd-anchor"></a>
-					<h3>stylize</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">stylize<span class="tsd-signature-symbol">(</span>text<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, styleType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Style</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/66ddb28/src/models/Inspect.ts#L20">src/models/Inspect.ts:20</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>text: <span class="tsd-signature-type">string</span></h5>
-								</li>
-								<li>
-									<h5>styleType: <span class="tsd-signature-type">Style</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
-						</li>
-					</ul>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="maxinterval" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> max<wbr>Interval</h3>
+					<div class="tsd-signature tsd-kind-icon">max<wbr>Interval<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/66ddb28/src/models/Peripheral.ts#L29">src/models/Peripheral.ts:29</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The maximum connection interval</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="mininterval" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> min<wbr>Interval</h3>
+					<div class="tsd-signature tsd-kind-icon">min<wbr>Interval<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/66ddb28/src/models/Peripheral.ts#L25">src/models/Peripheral.ts:25</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The minimum connection interval.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="mtu" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> mtu</h3>
+					<div class="tsd-signature tsd-kind-icon">mtu<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/66ddb28/src/models/Peripheral.ts#L21">src/models/Peripheral.ts:21</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="supervisiontimeout" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> supervision<wbr>Timeout</h3>
+					<div class="tsd-signature tsd-kind-icon">supervision<wbr>Timeout<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/66ddb28/src/models/Peripheral.ts#L37">src/models/Peripheral.ts:37</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The supervision timeout.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -172,27 +214,36 @@
 					<li class=" tsd-kind-interface">
 						<a href="adapterevents.html" class="tsd-kind-icon">Adapter<wbr>Events</a>
 					</li>
-					<li class=" tsd-kind-interface">
-						<a href="connectoptions.html" class="tsd-kind-icon">Connect<wbr>Options</a>
-					</li>
-					<li class=" tsd-kind-interface">
-						<a href="gattcharacteristicevents.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Events</a>
-					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface">
-						<a href="inspectoptionsstylized.html" class="tsd-kind-icon">Inspect<wbr>Options<wbr>Stylized</a>
+						<a href="connectoptions.html" class="tsd-kind-icon">Connect<wbr>Options</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="inspectoptionsstylized.html#depth" class="tsd-kind-icon">depth</a>
+								<a href="connectoptions.html#latency" class="tsd-kind-icon">latency</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="inspectoptionsstylized.html#stylize" class="tsd-kind-icon">stylize</a>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="connectoptions.html#maxinterval" class="tsd-kind-icon">max<wbr>Interval</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="connectoptions.html#mininterval" class="tsd-kind-icon">min<wbr>Interval</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="connectoptions.html#mtu" class="tsd-kind-icon">mtu</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="connectoptions.html#supervisiontimeout" class="tsd-kind-icon">supervision<wbr>Timeout</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
+					<li class=" tsd-kind-interface">
+						<a href="gattcharacteristicevents.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Events</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="inspectoptionsstylized.html" class="tsd-kind-icon">Inspect<wbr>Options<wbr>Stylized</a>
+					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="../modules.html#addresstype" class="tsd-kind-icon">Address<wbr>Type</a>
 					</li>

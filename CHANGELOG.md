@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [8.0.0](https://github.com/modum-io/modblue/compare/v7.0.3...v8.0.0) (2021-04-07)
+
+### ⚠ BREAKING CHANGES
+
+- **web:** Include GATT setup when connecting
+
+### Features
+
+- Allow string filter in scanFor function ([17ca406](https://github.com/modum-io/modblue/commit/17ca406d0139dd85290bba30e250ef8117df96d3))
+- **web:** More web functions ([64d95da](https://github.com/modum-io/modblue/commit/64d95dad3d3c7558a18c2056bf0135b33f895e3b))
+- **web:** Start implementing scan ([808960a](https://github.com/modum-io/modblue/commit/808960ad51a2d803c5ba07556c72bd471c34f5cf))
+- Merge remote and local GATT ([f4bcff8](https://github.com/modum-io/modblue/commit/f4bcff84ae209cc67436be3273638a2f54164449))
+- **web:** Add web-bluetooth support [WIP] ([ebc8fc9](https://github.com/modum-io/modblue/commit/ebc8fc99aff9411ea7bd91d3eb8b20c37cebcb6a))
+
+### Bug Fixes
+
+- Possible error when handling errors ([9b8c0e1](https://github.com/modum-io/modblue/commit/9b8c0e1de70a1b75b32e55a6aa8e8d78dbfc1279))
+- **dbus:** Fix peripheral state ([bd05dc5](https://github.com/modum-io/modblue/commit/bd05dc53d105479c4994185c75928f2a008577f7))
+- **hci:** Correctly detect unauthorized state ([7cac72b](https://github.com/modum-io/modblue/commit/7cac72b59af2967e55bb05af866a3c7e5c85ad03))
+- **hci:** Fix possible unhandled promise rejection ([72ec2c7](https://github.com/modum-io/modblue/commit/72ec2c7b35bd9fef8afcd7cb7d10986a7a83cb46))
+- **hci:** Hide require in function ([02c931c](https://github.com/modum-io/modblue/commit/02c931ca0f21c845e37a592700797ce37f305a5f))
+- **hci:** Hide require in function ([d4df616](https://github.com/modum-io/modblue/commit/d4df61644f440b368c79cc112d1b1f39302e726c))
+- **hci:** Improve error handling ([32555ce](https://github.com/modum-io/modblue/commit/32555cecc7e160d6440015754551216b2d44996b))
+- **hci:** Possibly fix unhandled exception ([4d93fed](https://github.com/modum-io/modblue/commit/4d93fedfb5f39c7821edb55a45c917e1a5bd0f98))
+- Correctly implement scanFor string filter ([c31b425](https://github.com/modum-io/modblue/commit/c31b4254b674a253f73f4b43f237463ecac43689))
+- **dbus:** Don't load class until needed ([7de2950](https://github.com/modum-io/modblue/commit/7de29505f07303877fa2a9a54014e319542f6ff2))
+- **dbus:** More fixes for web ([b9c219f](https://github.com/modum-io/modblue/commit/b9c219fb6c0e1c1dafcd2399918ab2dcc28576a2))
+- **web:** Fix disconnect errors ([c36744c](https://github.com/modum-io/modblue/commit/c36744ca10784523578424ed30d23c52d37ff379))
+- **web:** Fix settings filters ([b184206](https://github.com/modum-io/modblue/commit/b1842060d8137087c0b651006fdf3a6e2539a49e))
+- **web:** Implement scanFor ([f4b3866](https://github.com/modum-io/modblue/commit/f4b386662ce5cae279288ba338eeaf1a2380a09b))
+- **web:** Make scan run at least once ([3f63a38](https://github.com/modum-io/modblue/commit/3f63a385fdd3d3ca77984ef916c98fd29848fadc))
+- **web:** Provide services as optional ([b81ac9b](https://github.com/modum-io/modblue/commit/b81ac9b3a403f57d23b36d69ad8e7084d258630c))
+- **web:** Remove old call ([18bf772](https://github.com/modum-io/modblue/commit/18bf772327e90624e0d56e9b3025a6f639c97cc5))
+- Change tsconfig ([e0e3860](https://github.com/modum-io/modblue/commit/e0e3860645992a075accb87815f487cfe43fc699))
+- Clean up code & docs ([c52c2c0](https://github.com/modum-io/modblue/commit/c52c2c0dd77f79f6850d36f0e457cb32bfaf918f))
+- ES2020 except imports ([2bde317](https://github.com/modum-io/modblue/commit/2bde31718335719dcc6393e64e05d13c31014386))
+- HCI status json ([d4313ad](https://github.com/modum-io/modblue/commit/d4313adc65b3f6912762c71e83ad9098fe82964b))
+- Possible fix web errors ([31b849f](https://github.com/modum-io/modblue/commit/31b849f53703075906571dbc79c0099a48ae558a))
+- Remove unknown inspect type ([20b75b3](https://github.com/modum-io/modblue/commit/20b75b3eb6fd8d6fc1bd7dffa24664b2411be733))
+- Try es2020 ([d801f2a](https://github.com/modum-io/modblue/commit/d801f2a640327bfe4535032048c3034e5c93474c))
+- Updated type files ([ee45724](https://github.com/modum-io/modblue/commit/ee45724bc6727343789b09bcca818fceb9f96bf5))
+- Use new import ([787f84c](https://github.com/modum-io/modblue/commit/787f84ce37eb82581f26aa558cd336483af100da))
+- Webpack errors & warnings ([d23f56c](https://github.com/modum-io/modblue/commit/d23f56c3892bdb25a2dff76a5767747c0c08cdad))
+
 ### [7.0.3](https://github.com/modum-io/modblue/compare/v7.0.2...v7.0.3) (2021-03-12)
 
 ### Bug Fixes
