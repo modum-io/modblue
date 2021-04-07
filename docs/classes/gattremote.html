@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Gatt | @modum-io/modblue - v8.0.1</title>
+	<title>GattRemote | @modum-io/modblue - v8.0.1</title>
 	<meta name="description" content="Documentation for @modum-io/modblue - v8.0.1">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,10 +55,10 @@
 					<a href="../modules.html">@modum-io/modblue - v8.0.1</a>
 				</li>
 				<li>
-					<a href="gatt.html">Gatt</a>
+					<a href="gattremote.html">GattRemote</a>
 				</li>
 			</ul>
-			<h1>Class Gatt</h1>
+			<h1>Class GattRemote</h1>
 		</div>
 	</div>
 </header>
@@ -68,7 +68,7 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>A local or remote GATT server.</p>
+						<p>A remote GATT server.</p>
 					</div>
 				</div>
 			</section>
@@ -76,13 +76,10 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Gatt</span>
+						<a href="gatt.html" class="tsd-signature-type" data-tsd-kind="Class">Gatt</a>
 						<ul class="tsd-hierarchy">
 							<li>
-								<a href="gattlocal.html" class="tsd-signature-type" data-tsd-kind="Class">GattLocal</a>
-							</li>
-							<li>
-								<a href="gattremote.html" class="tsd-signature-type" data-tsd-kind="Class">GattRemote</a>
+								<span class="target">GattRemote</span>
 							</li>
 						</ul>
 					</li>
@@ -95,27 +92,29 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="gatt.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite"><a href="gattremote.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="gatt.html#services" class="tsd-kind-icon">services</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="gattremote.html#peripheral" class="tsd-kind-icon">peripheral</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="gattremote.html#services" class="tsd-kind-icon">services</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Accessors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="gatt.html#isremote" class="tsd-kind-icon">is<wbr>Remote</a></li>
-								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="gatt.html#mtu" class="tsd-kind-icon">mtu</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="gattremote.html#isremote" class="tsd-kind-icon">is<wbr>Remote</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="gattremote.html#mtu" class="tsd-kind-icon">mtu</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="gatt.html#tojson" class="tsd-kind-icon">toJSON</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="gatt.html#tostring" class="tsd-kind-icon">to<wbr>String</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="gattremote.html#discoverservices" class="tsd-kind-icon">discover<wbr>Services</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite"><a href="gattremote.html#tojson" class="tsd-kind-icon">toJSON</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="gattremote.html#tostring" class="tsd-kind-icon">to<wbr>String</a></li>
 							</ul>
 						</section>
 					</div>
@@ -123,29 +122,30 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Gatt<span class="tsd-signature-symbol">(</span>mtu<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span>, services<span class="tsd-signature-symbol">?: </span><a href="gattservice.html" class="tsd-signature-type" data-tsd-kind="Class">GattService</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="gatt.html" class="tsd-signature-type" data-tsd-kind="Class">Gatt</a></li>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Gatt<wbr>Remote<span class="tsd-signature-symbol">(</span>peripheral<span class="tsd-signature-symbol">: </span><a href="peripheral.html" class="tsd-signature-type" data-tsd-kind="Class">Peripheral</a>, mtu<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="gattremote.html" class="tsd-signature-type" data-tsd-kind="Class">GattRemote</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
+								<p>Overrides <a href="gatt.html">Gatt</a>.<a href="gatt.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/Gatt.ts#L29">src/models/gatt/Gatt.ts:29</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/GattRemote.ts#L17">src/models/gatt/GattRemote.ts:17</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> mtu: <span class="tsd-signature-type">number</span></h5>
+									<h5>peripheral: <a href="peripheral.html" class="tsd-signature-type" data-tsd-kind="Class">Peripheral</a></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> services: <a href="gattservice.html" class="tsd-signature-type" data-tsd-kind="Class">GattService</a><span class="tsd-signature-symbol">[]</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> mtu: <span class="tsd-signature-type">number</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="gatt.html" class="tsd-signature-type" data-tsd-kind="Class">Gatt</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="gattremote.html" class="tsd-signature-type" data-tsd-kind="Class">GattRemote</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -153,10 +153,26 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="peripheral" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> peripheral</h3>
+					<div class="tsd-signature tsd-kind-icon">peripheral<span class="tsd-signature-symbol">:</span> <a href="peripheral.html" class="tsd-signature-type" data-tsd-kind="Class">Peripheral</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/GattRemote.ts#L13">src/models/gatt/GattRemote.ts:13</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The peripheral that this GATT server belongs to.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="services" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> services</h3>
 					<div class="tsd-signature tsd-kind-icon">services<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="gattservice.html" class="tsd-signature-type" data-tsd-kind="Class">GattService</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
+						<p>Inherited from <a href="gatt.html">Gatt</a>.<a href="gatt.html#services">services</a></p>
 						<ul>
 							<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/Gatt.ts#L20">src/models/gatt/Gatt.ts:20</a></li>
 						</ul>
@@ -171,17 +187,17 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Accessors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 					<a name="isremote" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> is<wbr>Remote</h3>
-					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
+					<h3>is<wbr>Remote</h3>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> isRemote<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/Gatt.ts#L14">src/models/gatt/Gatt.ts:14</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/GattRemote.ts#L15">src/models/gatt/GattRemote.ts:15</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -193,10 +209,10 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 					<a name="mtu" class="tsd-anchor"></a>
 					<h3>mtu</h3>
-					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> mtu<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
@@ -220,31 +236,55 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="tojson" class="tsd-anchor"></a>
-					<h3>toJSON</h3>
+					<a name="discoverservices" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> discover<wbr>Services</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">toJSON<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">discover<wbr>Services<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="gattservice.html" class="tsd-signature-type" data-tsd-kind="Class">GattService</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/Gatt.ts#L45">src/models/gatt/Gatt.ts:45</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/GattRemote.ts#L28">src/models/gatt/GattRemote.ts:28</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Discover all services of this GATT server.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="gattservice.html" class="tsd-signature-type" data-tsd-kind="Class">GattService</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
+					<a name="tojson" class="tsd-anchor"></a>
+					<h3>toJSON</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
+						<li class="tsd-signature tsd-kind-icon">toJSON<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Overrides <a href="gatt.html">Gatt</a>.<a href="gatt.html#tojson">toJSON</a></p>
+								<ul>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/GattRemote.ts#L30">src/models/gatt/GattRemote.ts:30</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 					<a name="tostring" class="tsd-anchor"></a>
 					<h3>to<wbr>String</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 						<li class="tsd-signature tsd-kind-icon">to<wbr>String<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
+								<p>Inherited from <a href="gatt.html">Gatt</a>.<a href="gatt.html#tostring">toString</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/15a6f8c/src/models/gatt/Gatt.ts#L41">src/models/gatt/Gatt.ts:41</a></li>
 								</ul>
@@ -268,33 +308,9 @@
 					<li class=" tsd-kind-class">
 						<a href="adapter.html" class="tsd-kind-icon">Adapter</a>
 					</li>
-				</ul>
-				<ul class="current">
-					<li class="current tsd-kind-class">
+					<li class=" tsd-kind-class">
 						<a href="gatt.html" class="tsd-kind-icon">Gatt</a>
-						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="gatt.html#constructor" class="tsd-kind-icon">constructor</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="gatt.html#services" class="tsd-kind-icon">services</a>
-							</li>
-							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
-								<a href="gatt.html#isremote" class="tsd-kind-icon">is<wbr>Remote</a>
-							</li>
-							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
-								<a href="gatt.html#mtu" class="tsd-kind-icon">mtu</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="gatt.html#tojson" class="tsd-kind-icon">toJSON</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="gatt.html#tostring" class="tsd-kind-icon">to<wbr>String</a>
-							</li>
-						</ul>
 					</li>
-				</ul>
-				<ul class="after-current">
 					<li class=" tsd-kind-class">
 						<a href="gattcharacteristic.html" class="tsd-kind-icon">Gatt<wbr>Characteristic</a>
 					</li>
@@ -307,9 +323,39 @@
 					<li class=" tsd-kind-class">
 						<a href="gattlocal.html" class="tsd-kind-icon">Gatt<wbr>Local</a>
 					</li>
-					<li class=" tsd-kind-class">
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class">
 						<a href="gattremote.html" class="tsd-kind-icon">Gatt<wbr>Remote</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
+								<a href="gattremote.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="gattremote.html#peripheral" class="tsd-kind-icon">peripheral</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+								<a href="gattremote.html#services" class="tsd-kind-icon">services</a>
+							</li>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
+								<a href="gattremote.html#isremote" class="tsd-kind-icon">is<wbr>Remote</a>
+							</li>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
+								<a href="gattremote.html#mtu" class="tsd-kind-icon">mtu</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="gattremote.html#discoverservices" class="tsd-kind-icon">discover<wbr>Services</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
+								<a href="gattremote.html#tojson" class="tsd-kind-icon">toJSON</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+								<a href="gattremote.html#tostring" class="tsd-kind-icon">to<wbr>String</a>
+							</li>
+						</ul>
 					</li>
+				</ul>
+				<ul class="after-current">
 					<li class=" tsd-kind-class">
 						<a href="gattservice.html" class="tsd-kind-icon">Gatt<wbr>Service</a>
 					</li>
