@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [8.0.1](https://github.com/modum-io/modblue/compare/v8.0.0...v8.0.1) (2021-04-07)
+
+### Bug Fixes
+
+- **gatt:** Fix gatt advertising issues ([d144465](https://github.com/modum-io/modblue/commit/d144465e1902efbc02ef1b18420b2a29c8c2dde1))
+- **gatt:** Fix gatt issues ([84ff6a1](https://github.com/modum-io/modblue/commit/84ff6a1fc3bd8bf3b55ed57b4fe8db8449f7f9ce))
+- **gatt:** Fix getting gatt from peripheral ([2d984d4](https://github.com/modum-io/modblue/commit/2d984d4c148da3da5c277235e866ff304d56f612))
+- **hci:** Fix gatt issues ([6fdf257](https://github.com/modum-io/modblue/commit/6fdf2577dc0a004cf066cff8da33befa10a33e41))
+- **test:** Fix advertise test ([b162ec8](https://github.com/modum-io/modblue/commit/b162ec868be7d29a0728ccd089878f6416f5ad89))
+
 ## [8.0.0](https://github.com/modum-io/modblue/compare/v7.0.3...v8.0.0) (2021-04-07)
 
 ### ⚠ BREAKING CHANGES
