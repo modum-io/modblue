@@ -51,12 +51,6 @@ export class DbusPeripheral extends Peripheral {
 		this._init = true;
 	}
 
-	private async prop<T>(iface: string, name: string): Promise<T> {
-		await this.init();
-		const rawProp = await this.propsIface.Get(iface, name);
-		return rawProp.value;
-	}
-
 	public async connect(): Promise<DbusGatt> {
 		if (this._state === 'connected') {
 			return;
@@ -72,6 +66,12 @@ export class DbusPeripheral extends Peripheral {
 		this._state = 'connecting';
 
 		await this.init();
+
+		const connected = (await this.propsIface.Get(I_BLUEZ_DEVICE, 'Connected')).value;
+		if (connected) {
+			this._state = 'connected';
+			return;
+		}
 
 		return new Promise((resolve, reject) => {
 			this.connecting.push([resolve, reject]);
@@ -108,12 +108,6 @@ export class DbusPeripheral extends Peripheral {
 	}
 
 	public async disconnect(): Promise<void> {
-		if (this._state === 'disconnected') {
-			return;
-		}
-		if (this._state === 'connecting') {
-			throw new Error(`Device is currently connecting, cannot disconnect`);
-		}
 		if (this.state === 'disconnecting') {
 			return new Promise<void>((resolve, reject) => this.disconnecting.push([resolve, reject]));
 		}
@@ -122,6 +116,12 @@ export class DbusPeripheral extends Peripheral {
 		this._state = 'disconnecting';
 
 		await this.init();
+
+		const connected = (await this.propsIface.Get(I_BLUEZ_DEVICE, 'Connected')).value;
+		if (!connected) {
+			this._state = 'disconnected';
+			return;
+		}
 
 		return new Promise<void>((resolve, reject) => {
 			this.disconnecting.push([resolve, reject]);

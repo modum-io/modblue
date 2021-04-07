@@ -8,5 +8,6 @@ export declare class WebGattService extends GattService {
     private srv;
     constructor(gatt: WebGatt, service: BluetoothRemoteGATTService);
     discoverCharacteristics(): Promise<GattCharacteristic[]>;
+    addCharacteristic(): Promise<GattCharacteristic>;
 }
 //# sourceMappingURL=Service.d.ts.map

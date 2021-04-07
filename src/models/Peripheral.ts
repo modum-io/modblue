@@ -2,7 +2,7 @@ import { inspect } from 'util';
 
 import { Adapter } from './Adapter';
 import { AddressType } from './AddressType';
-import { Gatt } from './gatt';
+import { GattRemote } from './gatt';
 import { CUSTOM, InspectOptionsStylized } from './Inspect';
 
 /**
@@ -49,12 +49,12 @@ export abstract class Peripheral {
 	/**
 	 * The remote gatt server. Only available after connecting.
 	 */
-	protected _gatt: Gatt;
-	public get gatt(): Gatt {
+	protected _gatt: GattRemote;
+	public get gatt(): GattRemote {
 		if (this.state !== 'connected') {
 			throw new Error('GATT is only available when connected');
 		}
-		return this.gatt;
+		return this._gatt;
 	}
 
 	/**
@@ -117,7 +117,7 @@ export abstract class Peripheral {
 	 * Some connection settings may not be supported on certain platforms and wil be ignored.
 	 * @param options The connection options.
 	 */
-	public abstract connect(options?: ConnectOptions): Promise<Gatt>;
+	public abstract connect(options?: ConnectOptions): Promise<GattRemote>;
 
 	/**
 	 * Disconnect from this peripheral. Does nothing if not connected. This method **never** throws an error.

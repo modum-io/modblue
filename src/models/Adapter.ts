@@ -2,7 +2,7 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 import { inspect } from 'util';
 
 import { AddressType } from './AddressType';
-import { Gatt } from './gatt';
+import { GattLocal } from './gatt';
 import { CUSTOM, InspectOptionsStylized } from './Inspect';
 import { MODblue } from './MODblue';
 import { Peripheral } from './Peripheral';
@@ -83,7 +83,6 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		return new Promise<Peripheral>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
 			const onDiscover = (p: Peripheral) => filterFunc(p) && resolveHandler(p);
-
 			const cleanup = () => {
 				this.stopScanning();
 				this.off('discover', onDiscover);
@@ -160,7 +159,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	 * Setup the GATT server for this adapter to communicate with connecting remote peripherals.
 	 * @param maxMtu The maximum MTU that will be negotiated in case the remote peripheral starts an MTU negotation.
 	 */
-	public abstract setupGatt(maxMtu?: number): Promise<Gatt>;
+	public abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
 
 	public toString(): string {
 		return JSON.stringify(this.toJSON());

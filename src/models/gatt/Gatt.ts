@@ -1,8 +1,6 @@
 import { inspect } from 'util';
 
-import { Adapter } from '../Adapter';
 import { CUSTOM, InspectOptionsStylized } from '../Inspect';
-import { Peripheral } from '../Peripheral';
 
 import { GattService } from './Service';
 
@@ -11,23 +9,9 @@ import { GattService } from './Service';
  */
 export abstract class Gatt {
 	/**
-	 * Local: undefined
-	 * Remote: The peripheral that this GATT server belongs to.
-	 */
-	public readonly peripheral: Peripheral;
-
-	/**
-	 * Local: The adapter that this GATT server belongs to.
-	 * Remote: undefined
-	 */
-	public readonly adapter: Adapter;
-
-	/**
 	 * True if this is a remote GATT server, false otherwise.
 	 */
-	public get isRemote(): boolean {
-		return !!this.peripheral;
-	}
+	public abstract get isRemote(): boolean;
 
 	/**
 	 * The services that belong to this GATT server, mapped by UUID.
@@ -37,16 +21,14 @@ export abstract class Gatt {
 
 	protected _mtu: number;
 	/**
-	 * Local: The maximum MTU that will agreed upon during negotiation.
+	 * Local: The maximum MTU that will be agreed upon during negotiation.
 	 * Remote: The MTU that was agreed upon during negotiation.
 	 */
 	public get mtu(): number {
 		return this._mtu;
 	}
 
-	public constructor(peripheral?: Peripheral, adapter?: Adapter, mtu?: number, services?: GattService[]) {
-		this.peripheral = peripheral;
-		this.adapter = adapter;
+	public constructor(mtu?: number, services?: GattService[]) {
 		this._mtu = mtu;
 
 		if (services) {
@@ -56,17 +38,15 @@ export abstract class Gatt {
 		}
 	}
 
-	/**
-	 * Discover all services of this GATT server.
-	 */
-	public abstract discoverServices(): Promise<GattService[]>;
-
 	public toString(): string {
 		return JSON.stringify(this.toJSON());
 	}
 
 	public toJSON(): Record<string, unknown> {
-		return {};
+		return {
+			mtu: this.mtu,
+			services: this.services.size
+		};
 	}
 
 	public [CUSTOM](depth: number, options: InspectOptionsStylized): string {

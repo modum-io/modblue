@@ -74,13 +74,9 @@ const main = async () => {
 		console.log(targetAddress, `Connecting ${total}...`);
 
 		try {
-			await peripheral.connect();
+			const gatt = await peripheral.connect();
 
-			console.log(targetAddress, `Connected, setting up gatt...`);
-
-			const gatt = await peripheral.setupGatt();
-
-			console.log(targetAddress, `Setup (mtu: ${gatt.mtu}), discovering services...`);
+			console.log(targetAddress, `Connected (mtu: ${gatt.mtu}), discovering services...`);
 
 			const services = await gatt.discoverServices();
 			const service = services.find((s) => s.uuid === SERVICE_UUID);

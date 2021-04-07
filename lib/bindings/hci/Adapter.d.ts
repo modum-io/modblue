@@ -1,4 +1,5 @@
-import { Adapter, Gatt, Peripheral } from '../../models';
+import { Adapter, Peripheral } from '../../models';
+import { HciGattLocal } from './gatt';
 import { HciPeripheral } from './Peripheral';
 export declare class HciAdapter extends Adapter {
     private initialized;
@@ -30,7 +31,7 @@ export declare class HciAdapter extends Adapter {
     isAdvertising(): Promise<boolean>;
     startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
     stopAdvertising(): Promise<void>;
-    setupGatt(maxMtu?: number): Promise<Gatt>;
+    setupGatt(maxMtu?: number): Promise<HciGattLocal>;
     private onLeScanEnable;
     private onLeAdvertiseEnable;
     private onLeConnComplete;

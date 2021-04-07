@@ -14,5 +14,6 @@ export declare class WebGattCharacteristic extends GattCharacteristic {
     broadcast(): Promise<void>;
     notify(notify: boolean): Promise<void>;
     private onValueChanged;
+    addDescriptor(): Promise<GattDescriptor>;
 }
 //# sourceMappingURL=Characteristic.d.ts.map

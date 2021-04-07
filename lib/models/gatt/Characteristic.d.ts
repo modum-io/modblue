@@ -47,40 +47,56 @@ export declare abstract class GattCharacteristic extends TypedEmitter<GattCharac
      * If this is a remote characteristic use {@link discoverDescriptors} to discover them.
      */
     readonly descriptors: Map<string, GattDescriptor>;
-    constructor(service: GattService, uuid: string, isRemote: boolean, propsOrFlag: number | GattCharacteristicProperty[], secureOrFlag: number | GattCharacteristicProperty[], readFunc?: ReadFunction, writeFunc?: WriteFunction);
+    constructor(service: GattService, uuid: string, isRemote: boolean, propsOrFlag: number | GattCharacteristicProperty[], secureOrFlag: number | GattCharacteristicProperty[], readFuncOrValue?: ReadFunction | Buffer, writeFunc?: WriteFunction);
     /**
-     * Discover all descriptors of this characteristic.
+     * Remote only: Discover all descriptors of this characteristic.
      */
     abstract discoverDescriptors(): Promise<GattDescriptor[]>;
     /**
-     * Read the current value of this characteristic.
+     * Remote only: Read the current value of this characteristic.
      */
     abstract read(): Promise<Buffer>;
     /**
-     * Write the specified data to this characteristic.
+     * Remote only: Write the specified data to this characteristic.
      * @param data The data to write.
      * @param withoutResponse Do not require a response from the remote GATT server for this write.
      */
     abstract write(data: Buffer, withoutResponse: boolean): Promise<void>;
     /**
-     * Enable or disable broadcasts.
+     * Remote only: Enable or disable broadcasts.
      * @param broadcast True to enable broadcasts, false otherwise.
      */
     abstract broadcast(broadcast: boolean): Promise<void>;
     /**
-     * Enable or disable notifications.
+     * Remote only: Enable or disable notifications.
      * @param notify True to enable notifies, false otherwise.
      */
     abstract notify(notify: boolean): Promise<void>;
     /**
-     * Enable notifications. Equivalent to calling {@link notify} with `true`.
+     * Remote only: Enable notifications. Equivalent to calling {@link notify} with `true`.
      */
     subscribe(): Promise<void>;
     /**
-     * Disable nofitications. Equivalent to calling {@link notify} with `false`.
+     * Remote only: Disable nofitications. Equivalent to calling {@link notify} with `false`.
      */
     unsubscribe(): Promise<void>;
+    /**
+     * Local only: Adds a descriptor to this characteristic.
+     */
+    abstract addDescriptor(uuid: string, value: Buffer): Promise<GattDescriptor>;
+    /**
+     * Local only: Handles an incoming read request for this characteristic.
+     * @param offset The offset to start at
+     * @returns The read data.
+     */
     handleRead(offset: number): Promise<Buffer>;
+    /**
+     * Local only: Handles an incoming write request for this characteristic.
+     * @param offset The offset to start at.
+     * @param data The data to write.
+     * @param withoutResponse True to not produce a response code, false otherwise.
+     * @returns The result code.
+     */
     handleWrite(offset: number, data: Buffer, withoutResponse: boolean): Promise<number>;
     toString(): string;
     toJSON(): Record<string, unknown>;

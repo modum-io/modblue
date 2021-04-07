@@ -1,4 +1,10 @@
-import { GattCharacteristic, GattService } from '../../../models';
+import {
+	GattCharacteristic,
+	GattCharacteristicProperty,
+	GattService,
+	ReadFunction,
+	WriteFunction
+} from '../../../models';
 
 import { HciGattCharacteristic } from './Characteristic';
 import { HciGattLocal } from './GattLocal';
@@ -22,6 +28,18 @@ export class HciGattService extends GattService {
 
 		this.startHandle = startHandle;
 		this.endHandle = endHandle;
+	}
+
+	public async addCharacteristic(
+		uuid: string,
+		props: GattCharacteristicProperty[],
+		secure: GattCharacteristicProperty[],
+		readFuncOrValue?: ReadFunction | Buffer,
+		writeFunc?: WriteFunction
+	): Promise<GattCharacteristic> {
+		const char = new HciGattCharacteristic(this, uuid, false, props, secure, 0, 0, readFuncOrValue, writeFunc);
+		this.characteristics.set(uuid, char);
+		return char;
 	}
 
 	public async discoverCharacteristics(): Promise<GattCharacteristic[]> {

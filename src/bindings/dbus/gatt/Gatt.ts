@@ -1,4 +1,4 @@
-import { Gatt } from '../../../models';
+import { GattRemote } from '../../../models';
 import { DbusObject, I_BLUEZ_DEVICE, I_BLUEZ_SERVICE, I_OBJECT_MANAGER, I_PROPERTIES } from '../misc';
 import { DbusPeripheral } from '../Peripheral';
 
@@ -6,7 +6,7 @@ import { DbusGattService } from './Service';
 
 const DISCOVER_TIMEOUT = 10; // in seconds
 
-export class DbusGatt extends Gatt {
+export class DbusGatt extends GattRemote {
 	public readonly peripheral: DbusPeripheral;
 	public readonly services: Map<string, DbusGattService> = new Map();
 
@@ -70,7 +70,7 @@ export class DbusGatt extends Gatt {
 			}
 
 			const uuid = srvObj.UUID.value.replace(/-/g, '');
-			const service = new DbusGattService(this, srvPath, true, uuid);
+			const service = new DbusGattService(this, uuid, true, srvPath);
 			this.services.set(service.uuid, service);
 		}
 

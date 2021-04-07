@@ -1,11 +1,11 @@
 /// <reference types="node" />
-import { Gatt, Peripheral } from '../../../models';
+import { GattRemote, GattService, Peripheral } from '../../../models';
 import { Hci } from '../misc';
 import { HciPeripheral } from '../Peripheral';
 import { HciGattCharacteristic } from './Characteristic';
 import { HciGattDescriptor } from './Descriptor';
 import { HciGattService } from './Service';
-export declare class HciGattRemote extends Gatt {
+export declare class HciGattRemote extends GattRemote {
     readonly peripheral: HciPeripheral;
     readonly services: Map<string, HciGattService>;
     private hci;
@@ -45,5 +45,7 @@ export declare class HciGattRemote extends Gatt {
     discoverDescriptors(serviceUUID: string, characteristicUUID: string): Promise<HciGattDescriptor[]>;
     readDescriptor(serviceUUID: string, characteristicUUID: string, descriptorUUID: string): Promise<Buffer>;
     writeDescriptor(serviceUUID: string, characteristicUUID: string, descriptorUUID: string, data: Buffer): Promise<void>;
+    addService(): Promise<GattService>;
+    prepare(): Promise<void>;
 }
 //# sourceMappingURL=GattRemote.d.ts.map

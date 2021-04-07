@@ -1,4 +1,4 @@
-import { Adapter, Gatt, Peripheral } from '../../models';
+import { Adapter, GattLocal, Peripheral } from '../../models';
 export declare class WebAdapter extends Adapter {
     private peripherals;
     dispose(): void;
@@ -10,7 +10,7 @@ export declare class WebAdapter extends Adapter {
     isAdvertising(): Promise<boolean>;
     startAdvertising(): Promise<void>;
     stopAdvertising(): Promise<void>;
-    setupGatt(): Promise<Gatt>;
+    setupGatt(): Promise<GattLocal>;
     private addDashes;
 }
 //# sourceMappingURL=Adapter.d.ts.map

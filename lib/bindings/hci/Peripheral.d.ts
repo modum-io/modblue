@@ -5,7 +5,6 @@ import { Hci } from './misc';
 export declare class HciPeripheral extends Peripheral {
     adapter: HciAdapter;
     protected _gatt: HciGattRemote;
-    private hci;
     private handle;
     private signaling;
     private _isMaster;

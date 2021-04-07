@@ -80,7 +80,7 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 		isRemote: boolean,
 		propsOrFlag: number | GattCharacteristicProperty[],
 		secureOrFlag: number | GattCharacteristicProperty[],
-		readFunc?: ReadFunction,
+		readFuncOrValue?: ReadFunction | Buffer,
 		writeFunc?: WriteFunction
 	) {
 		super();
@@ -193,41 +193,46 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 		this.propertyFlag = propertyFlag;
 		this.secureFlag = secureFlag;
 
-		this.readFunc = readFunc;
+		if (typeof readFuncOrValue !== 'function') {
+			this.readFunc = async () => readFuncOrValue;
+		} else {
+			this.readFunc = readFuncOrValue;
+		}
+
 		this.writeFunc = writeFunc;
 	}
 
 	/**
-	 * Discover all descriptors of this characteristic.
+	 * Remote only: Discover all descriptors of this characteristic.
 	 */
 	public abstract discoverDescriptors(): Promise<GattDescriptor[]>;
 
 	/**
-	 * Read the current value of this characteristic.
+	 * Remote only: Read the current value of this characteristic.
 	 */
 	public abstract read(): Promise<Buffer>;
 
 	/**
-	 * Write the specified data to this characteristic.
+	 * Remote only: Write the specified data to this characteristic.
 	 * @param data The data to write.
 	 * @param withoutResponse Do not require a response from the remote GATT server for this write.
 	 */
 	public abstract write(data: Buffer, withoutResponse: boolean): Promise<void>;
 
 	/**
-	 * Enable or disable broadcasts.
+	 * Remote only: Enable or disable broadcasts.
 	 * @param broadcast True to enable broadcasts, false otherwise.
 	 */
 	public abstract broadcast(broadcast: boolean): Promise<void>;
 
 	/**
-	 * Enable or disable notifications.
+	 * Remote only: Enable or disable notifications.
 	 * @param notify True to enable notifies, false otherwise.
 	 */
 	public abstract notify(notify: boolean): Promise<void>;
 
 	/**
-	 * Enable notifications. Equivalent to calling {@link notify} with `true`.
+	 * Remote only: Enable notifications. Equivalent to calling {@link notify} with `true`.
 	 */
 	public async subscribe(): Promise<void> {
 		if (!this.isRemote) {
@@ -238,7 +243,7 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 	}
 
 	/**
-	 * Disable nofitications. Equivalent to calling {@link notify} with `false`.
+	 * Remote only: Disable nofitications. Equivalent to calling {@link notify} with `false`.
 	 */
 	public async unsubscribe(): Promise<void> {
 		if (!this.isRemote) {
@@ -248,6 +253,16 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 		await this.notify(false);
 	}
 
+	/**
+	 * Local only: Adds a descriptor to this characteristic.
+	 */
+	public abstract addDescriptor(uuid: string, value: Buffer): Promise<GattDescriptor>;
+
+	/**
+	 * Local only: Handles an incoming read request for this characteristic.
+	 * @param offset The offset to start at
+	 * @returns The read data.
+	 */
 	public async handleRead(offset: number): Promise<Buffer> {
 		if (this.isRemote) {
 			throw new Error('Can only be used for local characteristic');
@@ -256,6 +271,13 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 		return this.readFunc(offset);
 	}
 
+	/**
+	 * Local only: Handles an incoming write request for this characteristic.
+	 * @param offset The offset to start at.
+	 * @param data The data to write.
+	 * @param withoutResponse True to not produce a response code, false otherwise.
+	 * @returns The result code.
+	 */
 	public async handleWrite(offset: number, data: Buffer, withoutResponse: boolean): Promise<number> {
 		if (this.isRemote) {
 			throw new Error('Can only be used for local characteristic');

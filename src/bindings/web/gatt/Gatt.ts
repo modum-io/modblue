@@ -1,9 +1,9 @@
-import { Gatt } from '../../../models';
+import { GattRemote, GattService } from '../../../models';
 import { WebPeripheral } from '../Peripheral';
 
 import { WebGattService } from './Service';
 
-export class WebGatt extends Gatt {
+export class WebGatt extends GattRemote {
 	public readonly peripheral: WebPeripheral;
 	public readonly services: Map<string, WebGattService> = new Map();
 
@@ -23,6 +23,14 @@ export class WebGatt extends Gatt {
 			this.services.set(service.uuid, new WebGattService(this, service));
 		}
 		return [...this.services.values()];
+	}
+
+	public async addService(): Promise<GattService> {
+		throw new Error('Method not implemented.');
+	}
+
+	public async prepare(): Promise<void> {
+		throw new Error('Method not implemented.');
 	}
 
 	public disconnect(): void {

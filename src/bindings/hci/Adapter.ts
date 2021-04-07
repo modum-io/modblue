@@ -1,4 +1,4 @@
-import { Adapter, AddressType, Gatt, Peripheral } from '../../models';
+import { Adapter, AddressType, Peripheral } from '../../models';
 
 import { HciGattLocal } from './gatt';
 import { Gap, Hci } from './misc';
@@ -237,11 +237,13 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
+		if (!this.gatt) {
+			throw new Error('You have to setup the local GATT server before advertising');
+		}
+
 		this.deviceName = deviceName;
 		this.advertisedServiceUUIDs = serviceUUIDs;
-		if (this.gatt) {
-			this.gatt.setData(this.deviceName, this.gatt.serviceInputs);
-		}
+		await this.gatt.prepare(this.deviceName);
 
 		await this.gap.startAdvertising(this.deviceName, serviceUUIDs);
 
@@ -267,11 +269,13 @@ export class HciAdapter extends Adapter {
 		this.advertising = false;
 	}
 
-	public async setupGatt(maxMtu?: number): Promise<Gatt> {
+	public async setupGatt(maxMtu?: number): Promise<HciGattLocal> {
 		await this.init();
 
-		this.gatt = new HciGattLocal(this, this.hci, maxMtu);
-		this.gatt.setData(this.deviceName, []);
+		if (!this.gatt) {
+			this.gatt = new HciGattLocal(this, this.hci, maxMtu);
+		}
+
 		return this.gatt;
 	}
 

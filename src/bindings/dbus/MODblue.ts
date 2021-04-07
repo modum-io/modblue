@@ -18,7 +18,8 @@ export class DbusMODblue extends MODblue {
 		super();
 
 		const END = 't';
-		this.dbus = new (require(`dbus-nex${END}`))();
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		this.dbus = require(`dbus-nex${END}`).systemBus();
 	}
 
 	public async dispose(): Promise<void> {

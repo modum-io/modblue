@@ -1,6 +1,6 @@
 import { Adapter } from './Adapter';
 import { AddressType } from './AddressType';
-import { Gatt } from './gatt';
+import { GattRemote } from './gatt';
 /**
  * The current state of the peripheral.
  */
@@ -42,8 +42,8 @@ export declare abstract class Peripheral {
     /**
      * The remote gatt server. Only available after connecting.
      */
-    protected _gatt: Gatt;
-    get gatt(): Gatt;
+    protected _gatt: GattRemote;
+    get gatt(): GattRemote;
     /**
      * The unique identifier for this peripheral.
      */
@@ -79,7 +79,7 @@ export declare abstract class Peripheral {
      * Some connection settings may not be supported on certain platforms and wil be ignored.
      * @param options The connection options.
      */
-    abstract connect(options?: ConnectOptions): Promise<Gatt>;
+    abstract connect(options?: ConnectOptions): Promise<GattRemote>;
     /**
      * Disconnect from this peripheral. Does nothing if not connected. This method **never** throws an error.
      * When connecting to a peripheral you should always wrap your calls in try-catch-finally and call this method at the end.
