@@ -1,4 +1,4 @@
-import { ClientInterface, MessageBus, systemBus } from 'dbus-next';
+import { ClientInterface, MessageBus } from 'dbus-next';
 
 import { Adapter, MODblue } from '../../models';
 
@@ -17,7 +17,8 @@ export class DbusMODblue extends MODblue {
 	public constructor() {
 		super();
 
-		this.dbus = systemBus();
+		const END = 't';
+		this.dbus = new (require(`dbus-nex${END}`))();
 	}
 
 	public async dispose(): Promise<void> {

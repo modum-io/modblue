@@ -1,9 +1,9 @@
 import { ClientInterface } from 'dbus-next';
 
-import { AddressType, GattRemote, Peripheral } from '../../models';
+import { AddressType, Peripheral } from '../../models';
 
 import { DbusAdapter } from './Adapter';
-import { DbusGattRemote } from './gatt';
+import { DbusGatt } from './gatt';
 import { DbusObject, I_BLUEZ_DEVICE, I_PROPERTIES } from './misc';
 
 const CONNECT_TIMEOUT = 10; // in seconds
@@ -16,12 +16,11 @@ export class DbusPeripheral extends Peripheral {
 	private propsIface: ClientInterface;
 	private _init = false;
 
-	private gatt: DbusGattRemote;
+	protected _gatt: DbusGatt;
 
-	private isConnecting = false;
-	private connecting: [() => void, (error?: Error) => void][] = [];
+	private connecting: [(gatt: DbusGatt) => void, (error?: Error) => void][] = [];
 	private connectTimeout: NodeJS.Timer;
-	private isDisconnecting = false;
+
 	private disconnecting: [() => void, (error?: Error) => void][] = [];
 	private disconnectTimeout: NodeJS.Timer;
 
@@ -29,12 +28,13 @@ export class DbusPeripheral extends Peripheral {
 		adapter: DbusAdapter,
 		path: string,
 		id: string,
+		name: string,
 		addressType: AddressType,
 		address: string,
 		advertisement: Record<string, unknown>,
 		rssi: number
 	) {
-		super(adapter, id, addressType, address, advertisement, rssi);
+		super(adapter, id, name, addressType, address, advertisement, rssi);
 
 		this.path = path;
 	}
@@ -57,25 +57,19 @@ export class DbusPeripheral extends Peripheral {
 		return rawProp.value;
 	}
 
-	private async isConnected() {
-		return this.prop<boolean>(I_BLUEZ_DEVICE, 'Connected');
-	}
-
-	public async connect(): Promise<void> {
-		if (await this.isConnected()) {
+	public async connect(): Promise<DbusGatt> {
+		if (this._state === 'connected') {
 			return;
 		}
-
-		if (this.isDisconnecting) {
+		if (this._state === 'disconnecting') {
 			throw new Error(`Device is currently disconnecting, cannot connect`);
 		}
-
-		if (this.isConnecting) {
-			return new Promise<void>((resolve, reject) => this.connecting.push([resolve, reject]));
+		if (this._state === 'connecting') {
+			return new Promise<DbusGatt>((resolve, reject) => this.connecting.push([resolve, reject]));
 		}
 
 		this.connecting = [];
-		this.isConnecting = true;
+		this._state = 'connecting';
 
 		await this.init();
 
@@ -114,20 +108,18 @@ export class DbusPeripheral extends Peripheral {
 	}
 
 	public async disconnect(): Promise<void> {
-		if (!(await this.isConnected())) {
+		if (this._state === 'disconnected') {
 			return;
 		}
-
-		if (this.isConnecting) {
+		if (this._state === 'connecting') {
 			throw new Error(`Device is currently connecting, cannot disconnect`);
 		}
-
-		if (this.isDisconnecting) {
+		if (this.state === 'disconnecting') {
 			return new Promise<void>((resolve, reject) => this.disconnecting.push([resolve, reject]));
 		}
 
 		this.disconnecting = [];
-		this.isDisconnecting = true;
+		this._state = 'disconnecting';
 
 		await this.init();
 
@@ -159,27 +151,28 @@ export class DbusPeripheral extends Peripheral {
 	}
 
 	private doneConnecting(error?: Error) {
-		if (!this.isConnecting) {
+		if (this._state !== 'connecting') {
 			return;
 		}
 
-		this.isConnecting = false;
+		this._state = 'connected';
 		clearTimeout(this.connectTimeout);
 
 		if (error) {
 			this.connecting.forEach(([, rej]) => rej(error));
 		} else {
-			this.connecting.forEach(([res]) => res());
+			this._gatt = new DbusGatt(this);
+			this.connecting.forEach(([res]) => res(this._gatt));
 		}
 
 		this.connecting = [];
 	}
 	private doneDisconnecting(error?: Error) {
-		if (!this.isDisconnecting) {
+		if (this._state !== 'disconnecting') {
 			return;
 		}
 
-		this.isDisconnecting = false;
+		this._state = 'disconnected';
 		clearTimeout(this.disconnectTimeout);
 
 		if (error) {
@@ -189,18 +182,5 @@ export class DbusPeripheral extends Peripheral {
 		}
 
 		this.disconnecting = [];
-	}
-
-	public async setupGatt(requestMtu?: number): Promise<GattRemote> {
-		if (this.gatt) {
-			return this.gatt;
-		}
-
-		if (requestMtu) {
-			throw new Error(`MTU requests are not accepted for dbus`);
-		}
-
-		this.gatt = new DbusGattRemote(this);
-		return this.gatt;
 	}
 }

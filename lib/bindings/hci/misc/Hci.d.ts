@@ -42,6 +42,7 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private totalNumAclLeDataPackets;
     private aclPacketQueue;
     constructor(deviceId?: number, cmdTimeout?: number);
+    private static createSocket;
     static getDeviceList(): HciDevice[];
     private isInitializing;
     init(timeoutInSeconds?: number): Promise<void>;

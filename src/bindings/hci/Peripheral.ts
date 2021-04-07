@@ -1,4 +1,4 @@
-import { GattRemote, Peripheral } from '../../models';
+import { ConnectOptions, Peripheral } from '../../models';
 
 import { HciAdapter } from './Adapter';
 import { HciGattRemote } from './gatt';
@@ -10,9 +10,8 @@ const DEFAULT_MTU = 517;
 export class HciPeripheral extends Peripheral {
 	public adapter: HciAdapter;
 
+	protected _gatt: HciGattRemote;
 	private hci: Hci;
-	private gatt: HciGattRemote;
-	private mtuExchanged: boolean;
 	private handle: number;
 	private signaling: Signaling;
 
@@ -21,18 +20,23 @@ export class HciPeripheral extends Peripheral {
 		return this._isMaster;
 	}
 
-	public async connect(
-		minInterval?: number,
-		maxInterval?: number,
-		latency?: number,
-		supervisionTimeout?: number
-	): Promise<void> {
+	public async connect(options?: ConnectOptions): Promise<HciGattRemote> {
 		if (this._state === 'connected') {
 			return;
 		}
 
 		this._state = 'connecting';
-		await this.adapter.connect(this, minInterval, maxInterval, latency, supervisionTimeout);
+		await this.adapter.connect(
+			this,
+			options?.minInterval,
+			options?.maxInterval,
+			options?.latency,
+			options?.supervisionTimeout
+		);
+
+		await this._gatt.exchangeMtu(options?.mtu || DEFAULT_MTU);
+
+		return this._gatt;
 	}
 	public onConnect(isMaster: boolean, hci: Hci, handle: number): void {
 		this.hci = hci;
@@ -40,9 +44,7 @@ export class HciPeripheral extends Peripheral {
 		this._isMaster = isMaster;
 
 		this.signaling = new Signaling(this.hci, this.handle);
-		this.gatt = new HciGattRemote(this, hci, handle);
-
-		this.mtuExchanged = false;
+		this._gatt = new HciGattRemote(this, hci, handle);
 
 		this._state = 'connected';
 	}
@@ -56,9 +58,9 @@ export class HciPeripheral extends Peripheral {
 		await this.adapter.disconnect(this);
 	}
 	public onDisconnect(reason?: string): void {
-		if (this.gatt) {
-			this.gatt.dispose(reason);
-			this.gatt = null;
+		if (this._gatt) {
+			this._gatt.dispose(reason);
+			this._gatt = null;
 		}
 
 		if (this.signaling) {
@@ -69,20 +71,6 @@ export class HciPeripheral extends Peripheral {
 		this.hci = null;
 		this.handle = null;
 
-		this.mtuExchanged = false;
 		this._state = 'disconnected';
-	}
-
-	public async setupGatt(requestMtu: number = DEFAULT_MTU): Promise<GattRemote> {
-		if (this.state !== 'connected' || !this.handle) {
-			throw new Error(`Peripheral is not connected`);
-		}
-
-		if (!this.mtuExchanged) {
-			await this.gatt.exchangeMtu(requestMtu);
-			this.mtuExchanged = true;
-		}
-
-		return this.gatt;
 	}
 }

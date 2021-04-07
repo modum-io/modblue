@@ -1,1 +1,1 @@
-{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../../src/bindings/hci/gatt/index.ts"],"names":[],"mappings":"AAAA,cAAc,aAAa,CAAC;AAE5B,OAAO,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AACvC,OAAO,EAAE,2BAA2B,EAAE,uBAAuB,EAAE,aAAa,EAAE,oBAAoB,EAAE,MAAM,UAAU,CAAC"}
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../../src/bindings/hci/gatt/index.ts"],"names":[],"mappings":"AAAA,cAAc,kBAAkB,CAAC;AACjC,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC;AAC5B,cAAc,cAAc,CAAC;AAC7B,cAAc,WAAW,CAAC"}

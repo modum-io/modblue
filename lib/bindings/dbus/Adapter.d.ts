@@ -1,4 +1,4 @@
-import { Adapter, GattLocal, Peripheral } from '../../models';
+import { Adapter, Gatt, Peripheral } from '../../models';
 import { DbusMODblue } from './MODblue';
 export declare class DbusAdapter extends Adapter {
     modblue: DbusMODblue;
@@ -25,6 +25,6 @@ export declare class DbusAdapter extends Adapter {
     isAdvertising(): Promise<boolean>;
     startAdvertising(): Promise<void>;
     stopAdvertising(): Promise<void>;
-    setupGatt(): Promise<GattLocal>;
+    setupGatt(): Promise<Gatt>;
 }
 //# sourceMappingURL=Adapter.d.ts.map

@@ -1,0 +1,141 @@
+export const HCI_COMMAND_PKT = 0x01;
+export const HCI_ACLDATA_PKT = 0x02;
+export const HCI_EVENT_PKT = 0x04;
+
+export const ACL_START_NO_FLUSH = 0x00;
+export const ACL_CONT = 0x01;
+export const ACL_START = 0x02;
+
+export const EVT_DISCONN_COMPLETE = 0x05;
+export const EVT_ENCRYPT_CHANGE = 0x08;
+export const EVT_QOS_COMPLETE = 0x0d;
+export const EVT_CMD_COMPLETE = 0x0e;
+export const EVT_CMD_STATUS = 0x0f;
+export const EVT_HARDWARE_ERROR = 0x10;
+export const EVT_NUMBER_OF_COMPLETED_PACKETS = 0x13;
+export const EVT_LE_META_EVENT = 0x3e;
+
+export const EVT_LE_CONN_COMPLETE = 0x01;
+export const EVT_LE_ADVERTISING_REPORT = 0x02;
+export const EVT_LE_CONN_UPDATE_COMPLETE = 0x03;
+export const EVT_LE_READ_REMOTE_FEATURES_COMPLETE = 0x04;
+
+export const OGF_LINK_CTL = 0x01;
+export const OCF_DISCONNECT = 0x0006;
+
+export const OGF_HOST_CTL = 0x03;
+export const OCF_SET_EVENT_MASK = 0x0001;
+export const OCF_RESET = 0x0003;
+export const OCF_READ_LE_HOST_SUPPORTED = 0x006c;
+export const OCF_WRITE_LE_HOST_SUPPORTED = 0x006d;
+
+export const OGF_INFO_PARAM = 0x04;
+export const OCF_READ_LOCAL_VERSION = 0x0001;
+export const OCF_READ_BUFER_SIZE = 0x0005;
+export const OCF_READ_BD_ADDR = 0x0009;
+
+export const OGF_STATUS_PARAM = 0x05;
+export const OCF_READ_RSSI = 0x0005;
+
+export const OGF_LE_CTL = 0x08;
+export const OCF_LE_SET_EVENT_MASK = 0x0001;
+export const OCF_LE_READ_BUFFER_SIZE = 0x0002;
+export const OCF_LE_SET_ADVERTISING_PARAMETERS = 0x0006;
+export const OCF_LE_SET_ADVERTISING_DATA = 0x0008;
+export const OCF_LE_SET_SCAN_RESPONSE_DATA = 0x0009;
+export const OCF_LE_SET_ADVERTISE_ENABLE = 0x000a;
+export const OCF_LE_SET_SCAN_PARAMETERS = 0x000b;
+export const OCF_LE_SET_SCAN_ENABLE = 0x000c;
+export const OCF_LE_CREATE_CONN = 0x000d;
+export const OCF_LE_CANCEL_CONN = 0x000e;
+export const OCF_LE_CONN_UPDATE = 0x0013;
+export const OCF_LE_START_ENCRYPTION = 0x0019;
+export const OCF_LE_LTK_NEG_REPLY = 0x001b;
+
+export const DISCONNECT_CMD = OCF_DISCONNECT | (OGF_LINK_CTL << 10);
+
+export const SET_EVENT_MASK_CMD = OCF_SET_EVENT_MASK | (OGF_HOST_CTL << 10);
+export const RESET_CMD = OCF_RESET | (OGF_HOST_CTL << 10);
+export const READ_LE_HOST_SUPPORTED_CMD = OCF_READ_LE_HOST_SUPPORTED | (OGF_HOST_CTL << 10);
+export const WRITE_LE_HOST_SUPPORTED_CMD = OCF_WRITE_LE_HOST_SUPPORTED | (OGF_HOST_CTL << 10);
+
+export const READ_LOCAL_VERSION_CMD = OCF_READ_LOCAL_VERSION | (OGF_INFO_PARAM << 10);
+export const READ_BUFFER_SIZE_CMD = OCF_READ_BUFER_SIZE | (OGF_INFO_PARAM << 10);
+export const READ_BD_ADDR_CMD = OCF_READ_BD_ADDR | (OGF_INFO_PARAM << 10);
+
+export const READ_RSSI_CMD = OCF_READ_RSSI | (OGF_STATUS_PARAM << 10);
+
+export const LE_SET_EVENT_MASK_CMD = OCF_LE_SET_EVENT_MASK | (OGF_LE_CTL << 10);
+export const LE_SET_SCAN_PARAMETERS_CMD = OCF_LE_SET_SCAN_PARAMETERS | (OGF_LE_CTL << 10);
+export const LE_SET_SCAN_ENABLE_CMD = OCF_LE_SET_SCAN_ENABLE | (OGF_LE_CTL << 10);
+export const LE_CREATE_CONN_CMD = OCF_LE_CREATE_CONN | (OGF_LE_CTL << 10);
+export const LE_CANCEL_CONN_CMD = OCF_LE_CANCEL_CONN | (OGF_LE_CTL << 10);
+export const LE_CONN_UPDATE_CMD = OCF_LE_CONN_UPDATE | (OGF_LE_CTL << 10);
+export const LE_START_ENCRYPTION_CMD = OCF_LE_START_ENCRYPTION | (OGF_LE_CTL << 10);
+export const LE_READ_BUFFER_SIZE_CMD = OCF_LE_READ_BUFFER_SIZE | (OGF_LE_CTL << 10);
+export const LE_SET_ADVERTISING_PARAMETERS_CMD = OCF_LE_SET_ADVERTISING_PARAMETERS | (OGF_LE_CTL << 10);
+export const LE_SET_ADVERTISING_DATA_CMD = OCF_LE_SET_ADVERTISING_DATA | (OGF_LE_CTL << 10);
+export const LE_SET_SCAN_RESPONSE_DATA_CMD = OCF_LE_SET_SCAN_RESPONSE_DATA | (OGF_LE_CTL << 10);
+export const LE_SET_ADVERTISE_ENABLE_CMD = OCF_LE_SET_ADVERTISE_ENABLE | (OGF_LE_CTL << 10);
+export const LE_LTK_NEG_REPLY_CMD = OCF_LE_LTK_NEG_REPLY | (OGF_LE_CTL << 10);
+
+export const HCI_OE_USER_ENDED_CONNECTION = 0x13;
+
+// GATT Specific
+
+export const ATT_OP_ERROR = 0x01;
+export const ATT_OP_MTU_REQ = 0x02;
+export const ATT_OP_MTU_RESP = 0x03;
+export const ATT_OP_FIND_INFO_REQ = 0x04;
+export const ATT_OP_FIND_INFO_RESP = 0x05;
+export const ATT_OP_FIND_BY_TYPE_REQ = 0x06;
+export const ATT_OP_FIND_BY_TYPE_RESP = 0x07;
+export const ATT_OP_READ_BY_TYPE_REQ = 0x08;
+export const ATT_OP_READ_BY_TYPE_RESP = 0x09;
+export const ATT_OP_READ_REQ = 0x0a;
+export const ATT_OP_READ_RESP = 0x0b;
+export const ATT_OP_READ_BLOB_REQ = 0x0c;
+export const ATT_OP_READ_BLOB_RESP = 0x0d;
+export const ATT_OP_READ_MULTI_REQ = 0x0e;
+export const ATT_OP_READ_MULTI_RESP = 0x0f;
+export const ATT_OP_READ_BY_GROUP_REQ = 0x10;
+export const ATT_OP_READ_BY_GROUP_RESP = 0x11;
+export const ATT_OP_WRITE_REQ = 0x12;
+export const ATT_OP_WRITE_RESP = 0x13;
+export const ATT_OP_PREPARE_WRITE_REQ = 0x16;
+export const ATT_OP_PREPARE_WRITE_RESP = 0x17;
+export const ATT_OP_EXECUTE_WRITE_REQ = 0x18;
+export const ATT_OP_EXECUTE_WRITE_RESP = 0x19;
+export const ATT_OP_HANDLE_NOTIFY = 0x1b;
+export const ATT_OP_HANDLE_IND = 0x1d;
+export const ATT_OP_HANDLE_CNF = 0x1e;
+export const ATT_OP_WRITE_CMD = 0x52;
+export const ATT_OP_SIGNED_WRITE_CMD = 0xd2;
+
+export const ATT_ECODE_SUCCESS = 0x00;
+export const ATT_ECODE_INVALID_HANDLE = 0x01;
+export const ATT_ECODE_READ_NOT_PERM = 0x02;
+export const ATT_ECODE_WRITE_NOT_PERM = 0x03;
+export const ATT_ECODE_INVALID_PDU = 0x04;
+export const ATT_ECODE_AUTHENTICATION = 0x05;
+export const ATT_ECODE_REQ_NOT_SUPP = 0x06;
+export const ATT_ECODE_INVALID_OFFSET = 0x07;
+export const ATT_ECODE_AUTHORIZATION = 0x08;
+export const ATT_ECODE_PREP_QUEUE_FULL = 0x09;
+export const ATT_ECODE_ATTR_NOT_FOUND = 0x0a;
+export const ATT_ECODE_ATTR_NOT_LONG = 0x0b;
+export const ATT_ECODE_INSUFF_ENCR_KEY_SIZE = 0x0c;
+export const ATT_ECODE_INVAL_ATTR_VALUE_LEN = 0x0d;
+export const ATT_ECODE_UNLIKELY = 0x0e;
+export const ATT_ECODE_INSUFF_ENC = 0x0f;
+export const ATT_ECODE_UNSUPP_GRP_TYPE = 0x10;
+export const ATT_ECODE_INSUFF_RESOURCES = 0x11;
+
+export const GATT_PRIM_SVC_UUID = 0x2800;
+export const GATT_INCLUDE_UUID = 0x2802;
+export const GATT_CHARAC_UUID = 0x2803;
+
+export const GATT_CLIENT_CHARAC_CFG_UUID = 0x2902;
+export const GATT_SERVER_CHARAC_CFG_UUID = 0x2903;
+
+export const ATT_CID = 0x0004;

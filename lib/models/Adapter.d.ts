@@ -1,8 +1,6 @@
-/// <reference types="node" />
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { inspect } from 'util';
 import { AddressType } from './AddressType';
-import { GattLocal } from './gatt';
+import { Gatt } from './gatt';
 import { MODblue } from './MODblue';
 import { Peripheral } from './Peripheral';
 export interface AdapterEvents {
@@ -39,18 +37,18 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
     /**
      * Scans for a specific {@link Peripheral} using the specified matching function and returns the peripheral once found.
      * If the timeout is reached before finding a peripheral the returned promise will be rejected.
-     * @param isTarget A function that returns `true` if the specified peripheral is the peripheral we're looking for.
+     * @param filter Either a string that is used as name prefix, or a function that returns `true` if the specified peripheral is the peripheral we're looking for.
      * @param timeoutInSeconds The timeout in seconds. The returned promise will reject once the timeout is reached.
-     * @param serviceUUIDs The UUIDs of the {@link GattServiceRemote}s that must be contained in the advertisement data.
+     * @param serviceUUIDs The UUIDs of the {@link GattService}s that must be contained in the advertisement data.
      */
-    scanFor(isTarget: (peripheral: Peripheral) => boolean, timeoutInSeconds?: number, serviceUUIDs?: []): Promise<Peripheral>;
+    scanFor(filter: string | ((peripheral: Peripheral) => boolean), timeoutInSeconds?: number, serviceUUIDs?: string[]): Promise<Peripheral>;
     /**
      * Returns `true` if this adapter is currently scanning, `false` otherwise.
      */
     abstract isScanning(): Promise<boolean>;
     /**
      * Start scanning for nearby {@link Peripheral}s.
-     * @param serviceUUIDs The UUIDs of the {@link GattServiceRemote} that an advertising
+     * @param serviceUUIDs The UUIDs of the {@link GattService} that an advertising
      * packet must advertise to emit a `discover` event.
      * @param allowDuplicates True if advertisements for the same peripheral should emit multiple `discover` events.
      */
@@ -70,7 +68,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
     /**
      * Start advertising on this adapter.
      * @param deviceName The device name that is included in the advertisement.
-     * @param serviceUUIDs The UUIDs of the {@link GattServiceLocal}s that are included in the advertisement.
+     * @param serviceUUIDs The UUIDs of the {@link GattService}s that are included in the advertisement.
      */
     abstract startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
     /**
@@ -81,9 +79,8 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
      * Setup the GATT server for this adapter to communicate with connecting remote peripherals.
      * @param maxMtu The maximum MTU that will be negotiated in case the remote peripheral starts an MTU negotation.
      */
-    abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
+    abstract setupGatt(maxMtu?: number): Promise<Gatt>;
     toString(): string;
     toJSON(): Record<string, unknown>;
-    [inspect.custom](depth: number, options: any): string;
 }
 //# sourceMappingURL=Adapter.d.ts.map

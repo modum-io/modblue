@@ -1,19 +1,18 @@
-import { GattRemote, Peripheral } from '../../models';
+import { ConnectOptions, Peripheral } from '../../models';
 import { HciAdapter } from './Adapter';
+import { HciGattRemote } from './gatt';
 import { Hci } from './misc';
 export declare class HciPeripheral extends Peripheral {
     adapter: HciAdapter;
+    protected _gatt: HciGattRemote;
     private hci;
-    private gatt;
-    private mtuExchanged;
     private handle;
     private signaling;
     private _isMaster;
     get isMaster(): boolean;
-    connect(minInterval?: number, maxInterval?: number, latency?: number, supervisionTimeout?: number): Promise<void>;
+    connect(options?: ConnectOptions): Promise<HciGattRemote>;
     onConnect(isMaster: boolean, hci: Hci, handle: number): void;
     disconnect(): Promise<void>;
     onDisconnect(reason?: string): void;
-    setupGatt(requestMtu?: number): Promise<GattRemote>;
 }
 //# sourceMappingURL=Peripheral.d.ts.map
