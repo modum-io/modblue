@@ -1,8 +1,8 @@
 /// <reference types="web-bluetooth" />
-import { Gatt, GattService } from '../../../models';
+import { GattRemote, GattService } from '../../../models';
 import { WebPeripheral } from '../Peripheral';
 import { WebGattService } from './Service';
-export declare class WebGatt extends Gatt {
+export declare class WebGatt extends GattRemote {
     readonly peripheral: WebPeripheral;
     readonly services: Map<string, WebGattService>;
     private gatt;

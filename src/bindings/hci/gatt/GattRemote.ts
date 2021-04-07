@@ -1,6 +1,6 @@
 import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 
-import { Gatt, GattError, GattService, Peripheral } from '../../../models';
+import { GattError, GattRemote, GattService, Peripheral } from '../../../models';
 import { Hci, Codes } from '../misc';
 import { HciPeripheral } from '../Peripheral';
 
@@ -15,7 +15,7 @@ interface GattCommand {
 	onResponse: (data: Buffer, error?: string) => void;
 }
 
-export class HciGattRemote extends Gatt {
+export class HciGattRemote extends GattRemote {
 	public readonly peripheral: HciPeripheral;
 	public readonly services: Map<string, HciGattService> = new Map();
 

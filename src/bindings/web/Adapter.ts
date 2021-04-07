@@ -1,4 +1,4 @@
-import { Adapter, Gatt, Peripheral } from '../../models';
+import { Adapter, GattLocal, Peripheral } from '../../models';
 
 import { WebPeripheral } from './Peripheral';
 
@@ -63,23 +63,23 @@ export class WebAdapter extends Adapter {
 		throw new Error('Method not implemented.');
 	}
 
-	public getScannedPeripherals(): Promise<Peripheral[]> {
+	public async getScannedPeripherals(): Promise<Peripheral[]> {
 		throw new Error('Method not implemented.');
 	}
 
-	public isAdvertising(): Promise<boolean> {
+	public async isAdvertising(): Promise<boolean> {
 		throw new Error('Method not implemented.');
 	}
 
-	public startAdvertising(): Promise<void> {
+	public async startAdvertising(): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
 
-	public stopAdvertising(): Promise<void> {
+	public async stopAdvertising(): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
 
-	public setupGatt(): Promise<Gatt> {
+	public async setupGatt(): Promise<GattLocal> {
 		throw new Error('Method not implemented.');
 	}
 

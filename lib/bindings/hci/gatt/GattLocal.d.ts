@@ -1,16 +1,14 @@
-import { Gatt, GattService } from '../../../models';
+import { GattLocal, GattService } from '../../../models';
 import { HciAdapter } from '../Adapter';
 import { Hci } from '../misc';
 import { HciPeripheral } from '../Peripheral';
 import { HciGattService } from './Service';
-export declare class HciGattLocal extends Gatt {
+export declare class HciGattLocal extends GattLocal {
     readonly peripheral: HciPeripheral;
     readonly services: Map<string, HciGattService>;
     private hci;
     private handles;
     private negotiatedMtus;
-    private _deviceName;
-    get deviceName(): string;
     constructor(adapter: HciAdapter, hci: Hci, maxMtu?: number);
     addService(uuid: string): Promise<GattService>;
     prepare(name: string): Promise<void>;
@@ -28,6 +26,5 @@ export declare class HciGattLocal extends Gatt {
     private handlePrepareWriteRequest;
     private handleExecuteWriteRequest;
     private handleConfirmation;
-    discoverServices(): Promise<GattService[]>;
 }
 //# sourceMappingURL=GattLocal.d.ts.map

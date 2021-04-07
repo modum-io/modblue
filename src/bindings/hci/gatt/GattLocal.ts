@@ -1,4 +1,4 @@
-import { Gatt, GattCharacteristic, GattDescriptor, GattService } from '../../../models';
+import { GattCharacteristic, GattDescriptor, GattLocal, GattService } from '../../../models';
 import { HciAdapter } from '../Adapter';
 import { Hci, Codes } from '../misc';
 import { HciPeripheral } from '../Peripheral';
@@ -25,7 +25,7 @@ interface DescriptorHandle {
 
 type Handle = ServiceHandle | CharacteristicHandle | DescriptorHandle;
 
-export class HciGattLocal extends Gatt {
+export class HciGattLocal extends GattLocal {
 	public readonly peripheral: HciPeripheral;
 	public readonly services: Map<string, HciGattService> = new Map();
 
@@ -34,13 +34,8 @@ export class HciGattLocal extends Gatt {
 
 	private negotiatedMtus: Map<number, number>;
 
-	private _deviceName: string;
-	public get deviceName(): string {
-		return this._deviceName;
-	}
-
 	public constructor(adapter: HciAdapter, hci: Hci, maxMtu: number = DEFAULT_MAX_MTU) {
-		super(null, adapter, maxMtu);
+		super(adapter, maxMtu);
 
 		this.hci = hci;
 		this.hci.on('aclDataPkt', this.onAclStreamData);
@@ -58,24 +53,23 @@ export class HciGattLocal extends Gatt {
 	public async prepare(name: string): Promise<void> {
 		const handles: Handle[] = [];
 
-		this._deviceName = name;
+		this.services.delete('1801');
+		const srv1801 = await this.addService('1801');
+		await srv1801.addCharacteristic('2a05', ['indicate'], [], Buffer.from([0x00, 0x00, 0x00, 0x00]));
 
 		this.services.delete('1800');
 		const srv1800 = await this.addService('1800');
 		await srv1800.addCharacteristic('2a00', ['read'], [], Buffer.from(name));
 		await srv1800.addCharacteristic('2a01', ['read'], [], Buffer.from([0x80, 0x00]));
 
-		this.services.delete('1801');
-		const srv1801 = await this.addService('1801');
-		await srv1801.addCharacteristic('2a05', ['read'], [], Buffer.from([0x00, 0x00, 0x00, 0x00]));
+		const services = [...this.services.values()].reverse();
 
 		let handle = 1;
-		for (const service of this.services.values()) {
+		for (const service of services) {
 			const serviceStartHandle = handle++;
 			service.startHandle = serviceStartHandle; // End handle determined below
 
-			const serviceHandle: ServiceHandle = { type: 'service', object: service };
-			handles[serviceStartHandle] = serviceHandle;
+			handles[serviceStartHandle] = { type: 'service', object: service };
 
 			for (const char of service.characteristics.values()) {
 				const charStartHandle = handle++;
@@ -99,9 +93,10 @@ export class HciGattLocal extends Gatt {
 					await char.addDescriptor('2902', Buffer.from([0x00, 0x00]));
 				}
 
-				for (const descr of char.descriptors.values()) {
-					const descrHandle = handle++;
+				const descrs = [...char.descriptors.values()].reverse();
 
+				for (const descr of descrs) {
+					const descrHandle = handle++;
 					descr.handle = descrHandle;
 
 					handles[descrHandle] = { type: 'descriptor', object: descr };
@@ -175,17 +170,16 @@ export class HciGattLocal extends Gatt {
 				default:
 				case Codes.ATT_OP_READ_MULTI_REQ:
 				case Codes.ATT_OP_SIGNED_WRITE_CMD:
-					// console.log('[ACL]', 'UNSUPPORTED', requestType, data);
 					response = this.errorResponse(requestType, 0x0000, Codes.ATT_ECODE_REQ_NOT_SUPP);
 					break;
 			}
-		} catch (err) {
-			// TODO: How should errors thrown inside possibly user-defined functions be propagated?
-			// console.error(err);
-		}
 
-		if (response) {
-			this.hci.writeAclDataPkt(handle, cid, response);
+			if (response) {
+				this.hci.writeAclDataPkt(handle, cid, response);
+			}
+		} catch (err) {
+			// console.error(err);
+			this.hci.emit('hciError', err);
 		}
 	};
 
@@ -357,6 +351,8 @@ export class HciGattLocal extends Gatt {
 			.match(/.{1,2}/g)
 			.reverse()
 			.join('');
+
+		// console.log('read by group req', uuid, startHandle, endHandle);
 
 		if (uuid === '2800' || uuid === '2802') {
 			const srvHandles: ServiceHandle[] = [];
@@ -850,9 +846,5 @@ export class HciGattLocal extends Gatt {
 		}
 
 		return undefined;*/
-	}
-
-	public discoverServices(): Promise<GattService[]> {
-		throw new Error('Method not implemented.');
 	}
 }

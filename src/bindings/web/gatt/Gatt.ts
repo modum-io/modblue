@@ -1,9 +1,9 @@
-import { Gatt, GattService } from '../../../models';
+import { GattRemote, GattService } from '../../../models';
 import { WebPeripheral } from '../Peripheral';
 
 import { WebGattService } from './Service';
 
-export class WebGatt extends Gatt {
+export class WebGatt extends GattRemote {
 	public readonly peripheral: WebPeripheral;
 	public readonly services: Map<string, WebGattService> = new Map();
 

@@ -765,6 +765,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 			throw new HciError(`Could not write ACL data`, 'Unknown handle id');
 		}
 
+		//console.log('ACL', '<--', handleId, cid, data);
+
 		let hf = handleId | (Codes.ACL_START_NO_FLUSH << 12);
 
 		// l2cap PDU may be fragmented on hci level
@@ -1173,6 +1175,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 			const pktData = data.slice(8);
 
 			if (length === pktData.length) {
+				//console.log('ACL', '-->', handleId, cid, pktData);
 				this.emit('aclDataPkt', handleId, cid, pktData);
 			} else {
 				handle.buffer = {
@@ -1191,6 +1194,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 			buff.data = Buffer.concat([buff.data, data.slice(4)]);
 
 			if (buff.data.length === buff.length) {
+				//console.log('ACL', '-->', handleId, buff.cid, buff.data);
 				this.emit('aclDataPkt', handleId, buff.cid, buff.data);
 				handle.buffer = null;
 			}

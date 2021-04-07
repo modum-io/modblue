@@ -11,7 +11,6 @@ export class HciPeripheral extends Peripheral {
 	public adapter: HciAdapter;
 
 	protected _gatt: HciGattRemote;
-	private hci: Hci;
 	private handle: number;
 	private signaling: Signaling;
 
@@ -23,6 +22,10 @@ export class HciPeripheral extends Peripheral {
 	public async connect(options?: ConnectOptions): Promise<HciGattRemote> {
 		if (this._state === 'connected') {
 			return;
+		}
+
+		if (!this.isMaster) {
+			throw new Error('Connect can only be called when in master role');
 		}
 
 		this._state = 'connecting';
@@ -39,12 +42,14 @@ export class HciPeripheral extends Peripheral {
 		return this._gatt;
 	}
 	public onConnect(isMaster: boolean, hci: Hci, handle: number): void {
-		this.hci = hci;
 		this.handle = handle;
 		this._isMaster = isMaster;
 
-		this.signaling = new Signaling(this.hci, this.handle);
-		this._gatt = new HciGattRemote(this, hci, handle);
+		this.signaling = new Signaling(hci, this.handle);
+		if (!isMaster) {
+			// Only setup remote GATT if we're the master
+			this._gatt = new HciGattRemote(this, hci, handle);
+		}
 
 		this._state = 'connected';
 	}
@@ -68,7 +73,6 @@ export class HciPeripheral extends Peripheral {
 			this.signaling = null;
 		}
 
-		this.hci = null;
 		this.handle = null;
 
 		this._state = 'disconnected';

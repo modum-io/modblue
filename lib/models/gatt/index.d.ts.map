@@ -1,1 +1,1 @@
-{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../src/models/gatt/index.ts"],"names":[],"mappings":"AAAA,cAAc,kBAAkB,CAAC;AACjC,cAAc,cAAc,CAAC;AAC7B,cAAc,QAAQ,CAAC;AACvB,cAAc,aAAa,CAAC;AAC5B,cAAc,WAAW,CAAC"}
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../src/models/gatt/index.ts"],"names":[],"mappings":"AAAA,cAAc,kBAAkB,CAAC;AACjC,cAAc,cAAc,CAAC;AAC7B,cAAc,QAAQ,CAAC;AACvB,cAAc,aAAa,CAAC;AAC5B,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC;AAC5B,cAAc,WAAW,CAAC"}

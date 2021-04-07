@@ -1,6 +1,6 @@
 import { ClientInterface } from 'dbus-next';
 
-import { Adapter, AddressType, Gatt, Peripheral } from '../../models';
+import { Adapter, AddressType, GattLocal, Peripheral } from '../../models';
 
 import { buildTypedValue, DbusObject, I_BLUEZ_ADAPTER, I_BLUEZ_DEVICE, I_OBJECT_MANAGER, I_PROPERTIES } from './misc';
 import { DbusMODblue } from './MODblue';
@@ -191,7 +191,7 @@ export class DbusAdapter extends Adapter {
 		throw new Error('Method not implemented.');
 	}
 
-	public setupGatt(): Promise<Gatt> {
+	public async setupGatt(): Promise<GattLocal> {
 		throw new Error('Method not implemented.');
 	}
 }

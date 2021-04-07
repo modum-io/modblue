@@ -1,11 +1,11 @@
 /// <reference types="node" />
-import { Gatt, GattService, Peripheral } from '../../../models';
+import { GattRemote, GattService, Peripheral } from '../../../models';
 import { Hci } from '../misc';
 import { HciPeripheral } from '../Peripheral';
 import { HciGattCharacteristic } from './Characteristic';
 import { HciGattDescriptor } from './Descriptor';
 import { HciGattService } from './Service';
-export declare class HciGattRemote extends Gatt {
+export declare class HciGattRemote extends GattRemote {
     readonly peripheral: HciPeripheral;
     readonly services: Map<string, HciGattService>;
     private hci;

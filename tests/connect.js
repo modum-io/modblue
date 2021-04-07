@@ -1,27 +1,25 @@
 const { HciMODblue } = require('../lib/hci');
 const { DbusMODblue } = require('../lib/dbus');
 
-const MAC_ADDRESS = /(?:[0-9A-F]{2}:?){6}/i;
-
 const USAGE = `
 Usage:
-	node ./tests/connect.js <bindings> <devices> <service> <characteristic>
+	node ./tests/connect.js <bindings> <device> <service> <characteristic>
 Arguments:
 	bindings:        Bindings to use: "hci" or "dbus"
-	devices:         Peripheral MAC addresses seperated by pipe. Eg. "AA:AA:AA:AA:AA:AA|BB:BB:BB:BB:BB:BB"
+	device:          Peripheral MAC address, eg. "AA:AA:AA:AA:AA:AA"
 	service:         Service UUID without dashes
 	characteristic:  Characteristic UUID without dashes
 `;
 
 const BINDINGS = process.argv[2];
-const DEVICE_ADDRESSES = (process.argv[3] || '').split(/[,|;]/g).filter((p) => !!p && MAC_ADDRESS.test(p));
+const ADDRESS = (process.argv[3] || '').replace(/:/g, '');
 const SERVICE_UUID = process.argv[4];
 const CHAR_UUID = process.argv[5];
 
 const printUsage = () => console.log(USAGE);
 
 const main = async () => {
-	if (!BINDINGS || !DEVICE_ADDRESSES || DEVICE_ADDRESSES.length === 0 || !SERVICE_UUID || !CHAR_UUID) {
+	if (!BINDINGS || !ADDRESS || !SERVICE_UUID || !CHAR_UUID) {
 		throw new Error(printUsage());
 	}
 
@@ -42,47 +40,21 @@ const main = async () => {
 	const adapter = adapters[0];
 	console.log(`Using adapter ${adapter.id}`);
 
-	console.log('Starting scan...');
+	console.log('Scanning for peripheral...');
 
-	await adapter.startScanning();
-
-	console.log('Waiting to scan a bit...');
-
-	// Scan for 3 seconds
-	await new Promise((resolve) => setTimeout(resolve, 3000));
-
-	await adapter.stopScanning();
-
-	console.log('Getting peripherals...');
-
-	const peripherals = await adapter.getScannedPeripherals();
-	const missing = DEVICE_ADDRESSES.filter((address) => !peripherals.some((p) => p.address === address.toUpperCase()));
-	if (missing.length > 0) {
-		throw new Error(
-			`Could not find peripherals.\nAvailable: ${peripherals.map((p) => p.address)}\nMissing: ${missing}`
-		);
-	}
+	const peripheral = await adapter.scanFor(ADDRESS, 10);
 
 	console.time('Connect');
 	let total = 0;
 	let success = 0;
 
 	while (true) {
-		const targetAddress = DEVICE_ADDRESSES[total % DEVICE_ADDRESSES.length].toUpperCase();
-
-		console.log(`Using peripheral ${targetAddress}`);
-		const peripheral = peripherals.find((p) => p.address === targetAddress);
-
 		try {
 			console.log(`Connecting ${total}...`);
 
-			await peripheral.connect();
+			const gatt = await peripheral.connect();
 
-			console.log(`Connected, setting up gatt...`);
-
-			const gatt = await peripheral.setupGatt();
-
-			console.log(`Setup (mtu: ${gatt.mtu}), discovering services...`);
+			console.log(`Connected (mtu: ${gatt.mtu}), discovering services...`);
 
 			const services = await gatt.discoverServices();
 			const service = services.find((s) => s.uuid === SERVICE_UUID);
@@ -107,7 +79,6 @@ const main = async () => {
 			success++;
 		} catch (err) {
 			console.error(err);
-			await new Promise((resolve) => setTimeout(() => resolve(), 1000));
 		} finally {
 			console.log('Disconnecting...');
 
@@ -120,6 +91,8 @@ const main = async () => {
 
 		console.timeLog('Connect');
 		console.log(`Finished ${success}/${total} connects`);
+
+		await new Promise((resolve) => setTimeout(() => resolve(), 1000));
 	}
 };
 
