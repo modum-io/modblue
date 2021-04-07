@@ -1,8 +1,9 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 
 import { AddressType } from './AddressType';
-import { GattLocal } from './gatt';
+import { Gatt } from './gatt';
+import { CUSTOM, InspectOptionsStylized } from './Inspect';
 import { MODblue } from './MODblue';
 import { Peripheral } from './Peripheral';
 
@@ -60,24 +61,28 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
 	 * Scans for a specific {@link Peripheral} using the specified matching function and returns the peripheral once found.
 	 * If the timeout is reached before finding a peripheral the returned promise will be rejected.
-	 * @param isTarget A function that returns `true` if the specified peripheral is the peripheral we're looking for.
+	 * @param filter Either a string that is used as name prefix, or a function that returns `true` if the specified peripheral is the peripheral we're looking for.
 	 * @param timeoutInSeconds The timeout in seconds. The returned promise will reject once the timeout is reached.
-	 * @param serviceUUIDs The UUIDs of the {@link GattServiceRemote}s that must be contained in the advertisement data.
+	 * @param serviceUUIDs The UUIDs of the {@link GattService}s that must be contained in the advertisement data.
 	 */
 	public async scanFor(
-		isTarget: (peripheral: Peripheral) => boolean,
+		filter: string | ((peripheral: Peripheral) => boolean),
 		timeoutInSeconds = 10,
-		serviceUUIDs?: []
+		serviceUUIDs?: string[]
 	): Promise<Peripheral> {
 		const origScope = new Error();
 
+		let filterFunc: (p: Peripheral) => boolean;
+		if (typeof filter === 'string') {
+			const lowFilter = filter.toLowerCase();
+			filterFunc = (p: Peripheral) => p.name && p.name.toLowerCase().startsWith(lowFilter);
+		} else {
+			filterFunc = filter;
+		}
+
 		return new Promise<Peripheral>((resolve, reject) => {
 			let timeout: NodeJS.Timeout;
-			const onDiscover = (peripheral: Peripheral) => {
-				if (isTarget(peripheral)) {
-					resolveHandler(peripheral);
-				}
-			};
+			const onDiscover = (p: Peripheral) => filterFunc(p) && resolveHandler(p);
 
 			const cleanup = () => {
 				this.stopScanning();
@@ -120,7 +125,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 
 	/**
 	 * Start scanning for nearby {@link Peripheral}s.
-	 * @param serviceUUIDs The UUIDs of the {@link GattServiceRemote} that an advertising
+	 * @param serviceUUIDs The UUIDs of the {@link GattService} that an advertising
 	 * packet must advertise to emit a `discover` event.
 	 * @param allowDuplicates True if advertisements for the same peripheral should emit multiple `discover` events.
 	 */
@@ -143,7 +148,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
 	 * Start advertising on this adapter.
 	 * @param deviceName The device name that is included in the advertisement.
-	 * @param serviceUUIDs The UUIDs of the {@link GattServiceLocal}s that are included in the advertisement.
+	 * @param serviceUUIDs The UUIDs of the {@link GattService}s that are included in the advertisement.
 	 */
 	public abstract startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
 	/**
@@ -155,7 +160,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	 * Setup the GATT server for this adapter to communicate with connecting remote peripherals.
 	 * @param maxMtu The maximum MTU that will be negotiated in case the remote peripheral starts an MTU negotation.
 	 */
-	public abstract setupGatt(maxMtu?: number): Promise<GattLocal>;
+	public abstract setupGatt(maxMtu?: number): Promise<Gatt>;
 
 	public toString(): string {
 		return JSON.stringify(this.toJSON());
@@ -169,7 +174,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
+	public [CUSTOM](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

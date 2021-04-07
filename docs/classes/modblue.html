@@ -96,6 +96,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="modblue.html#dispose" class="tsd-kind-icon">dispose</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="modblue.html#getadapters" class="tsd-kind-icon">get<wbr>Adapters</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="modblue.html#autodetectbindings" class="tsd-kind-icon">auto<wbr>Detect<wbr>Bindings</a></li>
 							</ul>
 						</section>
 					</div>
@@ -130,7 +131,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/84d3887/src/models/MODblue.ts#L11">src/models/MODblue.ts:11</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/f4bcff8/src/models/MODblue.ts#L14">src/models/MODblue.ts:14</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -152,7 +153,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/84d3887/src/models/MODblue.ts#L16">src/models/MODblue.ts:16</a></li>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/f4bcff8/src/models/MODblue.ts#L19">src/models/MODblue.ts:19</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -161,6 +162,29 @@
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="adapter.html" class="tsd-signature-type" data-tsd-kind="Class">Adapter</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="autodetectbindings" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> auto<wbr>Detect<wbr>Bindings</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">auto<wbr>Detect<wbr>Bindings<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="modblue.html" class="tsd-signature-type" data-tsd-kind="Class">MODblue</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/modum-io/modblue/blob/f4bcff8/src/models/MODblue.ts#L25">src/models/MODblue.ts:25</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Tries to automatically detect the current platform and use the most appropriate BLE bindings.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="modblue.html" class="tsd-signature-type" data-tsd-kind="Class">MODblue</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>The MODblue instance for this platform</p>
 						</li>
 					</ul>
 				</section>
@@ -186,37 +210,13 @@
 						<a href="gattcharacteristic.html" class="tsd-kind-icon">Gatt<wbr>Characteristic</a>
 					</li>
 					<li class=" tsd-kind-class">
-						<a href="gattcharacteristiclocal.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Local</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="gattcharacteristicremote.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Remote</a>
-					</li>
-					<li class=" tsd-kind-class">
 						<a href="gattdescriptor.html" class="tsd-kind-icon">Gatt<wbr>Descriptor</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="gattdescriptorlocal.html" class="tsd-kind-icon">Gatt<wbr>Descriptor<wbr>Local</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="gattdescriptorremote.html" class="tsd-kind-icon">Gatt<wbr>Descriptor<wbr>Remote</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="gatterror.html" class="tsd-kind-icon">Gatt<wbr>Error</a>
 					</li>
 					<li class=" tsd-kind-class">
-						<a href="gattlocal.html" class="tsd-kind-icon">Gatt<wbr>Local</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="gattremote.html" class="tsd-kind-icon">Gatt<wbr>Remote</a>
-					</li>
-					<li class=" tsd-kind-class">
 						<a href="gattservice.html" class="tsd-kind-icon">Gatt<wbr>Service</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="gattservicelocal.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Local</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="gattserviceremote.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Remote</a>
 					</li>
 				</ul>
 				<ul class="current">
@@ -232,6 +232,9 @@
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="modblue.html#getadapters" class="tsd-kind-icon">get<wbr>Adapters</a>
 							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="modblue.html#autodetectbindings" class="tsd-kind-icon">auto<wbr>Detect<wbr>Bindings</a>
+							</li>
 						</ul>
 					</li>
 				</ul>
@@ -240,13 +243,13 @@
 						<a href="peripheral.html" class="tsd-kind-icon">Peripheral</a>
 					</li>
 					<li class=" tsd-kind-interface">
-						<a href="../interfaces/gattcharacteristicinput.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Input</a>
+						<a href="../interfaces/adapterevents.html" class="tsd-kind-icon">Adapter<wbr>Events</a>
 					</li>
 					<li class=" tsd-kind-interface">
-						<a href="../interfaces/gattdescriptorinput.html" class="tsd-kind-icon">Gatt<wbr>Descriptor<wbr>Input</a>
+						<a href="../interfaces/gattcharacteristicevents.html" class="tsd-kind-icon">Gatt<wbr>Characteristic<wbr>Events</a>
 					</li>
 					<li class=" tsd-kind-interface">
-						<a href="../interfaces/gattserviceinput.html" class="tsd-kind-icon">Gatt<wbr>Service<wbr>Input</a>
+						<a href="../interfaces/inspectoptionsstylized.html" class="tsd-kind-icon">Inspect<wbr>Options<wbr>Stylized</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="../modules.html#addresstype" class="tsd-kind-icon">Address<wbr>Type</a>
@@ -256,6 +259,15 @@
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="../modules.html#peripheralstate" class="tsd-kind-icon">Peripheral<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#readfunction" class="tsd-kind-icon">Read<wbr>Function</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#writefunction" class="tsd-kind-icon">Write<wbr>Function</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="../modules.html#custom" class="tsd-kind-icon">CUSTOM</a>
 					</li>
 				</ul>
 			</nav>
@@ -272,12 +284,11 @@
 				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
 			</ul>
 		</div>
 	</div>

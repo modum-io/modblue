@@ -1,9 +1,13 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 
+import { CUSTOM, InspectOptionsStylized } from '../Inspect';
+
+import { GattDescriptor } from './Descriptor';
 import { GattService } from './Service';
 
-// tslint:disable: no-bitwise
+export type ReadFunction = (offset: number) => Promise<Buffer>;
+export type WriteFunction = (offset: number, data: Buffer, withoutResponse: boolean) => Promise<number>;
 
 export type GattCharacteristicProperty =
 	| 'broadcast'
@@ -26,6 +30,9 @@ export interface GattCharacteristicEvents {
  * Represents a GATT Characteristic.
  */
 export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristicEvents> {
+	private readonly readFunc: ReadFunction;
+	private readonly writeFunc: WriteFunction;
+
 	/**
 	 * The GATT service that this characteristic belongs to.
 	 */
@@ -37,33 +44,50 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 	public readonly uuid: string;
 
 	/**
+	 * True if this is a remote characteristic, false otherwise.
+	 */
+	public readonly isRemote: boolean;
+
+	/**
 	 * A list of all the properties that are enabled/supported for this characteristic.
 	 */
 	public readonly properties: GattCharacteristicProperty[];
+
 	/**
 	 * The list of properties supported by this characteristic as a byte flag per the Bluetooth Core spec.
 	 */
 	public readonly propertyFlag: number;
+
 	/**
 	 * A list of all the properties on this characteristic that are secured.
 	 */
 	public readonly secure: GattCharacteristicProperty[];
+
 	/**
 	 * The list of all secured properties of this characteristic as a byte flag per the Bluetooth Core spec.
 	 */
 	public readonly secureFlag: number;
 
+	/**
+	 * The descriptors that belong to this characteristic, mapped by UUID.
+	 * If this is a remote characteristic use {@link discoverDescriptors} to discover them.
+	 */
+	public readonly descriptors: Map<string, GattDescriptor> = new Map();
+
 	public constructor(
 		service: GattService,
 		uuid: string,
+		isRemote: boolean,
 		propsOrFlag: number | GattCharacteristicProperty[],
-		secureOrFlag: number | GattCharacteristicProperty[]
+		secureOrFlag: number | GattCharacteristicProperty[],
+		readFunc?: ReadFunction,
+		writeFunc?: WriteFunction
 	) {
 		super();
 
 		this.service = service;
-
 		this.uuid = uuid;
+		this.isRemote = isRemote;
 
 		let properties: GattCharacteristicProperty[] = [];
 		let secure: GattCharacteristicProperty[] = [];
@@ -168,6 +192,76 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 		this.secure = secure;
 		this.propertyFlag = propertyFlag;
 		this.secureFlag = secureFlag;
+
+		this.readFunc = readFunc;
+		this.writeFunc = writeFunc;
+	}
+
+	/**
+	 * Discover all descriptors of this characteristic.
+	 */
+	public abstract discoverDescriptors(): Promise<GattDescriptor[]>;
+
+	/**
+	 * Read the current value of this characteristic.
+	 */
+	public abstract read(): Promise<Buffer>;
+
+	/**
+	 * Write the specified data to this characteristic.
+	 * @param data The data to write.
+	 * @param withoutResponse Do not require a response from the remote GATT server for this write.
+	 */
+	public abstract write(data: Buffer, withoutResponse: boolean): Promise<void>;
+
+	/**
+	 * Enable or disable broadcasts.
+	 * @param broadcast True to enable broadcasts, false otherwise.
+	 */
+	public abstract broadcast(broadcast: boolean): Promise<void>;
+
+	/**
+	 * Enable or disable notifications.
+	 * @param notify True to enable notifies, false otherwise.
+	 */
+	public abstract notify(notify: boolean): Promise<void>;
+
+	/**
+	 * Enable notifications. Equivalent to calling {@link notify} with `true`.
+	 */
+	public async subscribe(): Promise<void> {
+		if (!this.isRemote) {
+			throw new Error('Can only be used for remote characteristic');
+		}
+
+		await this.notify(true);
+	}
+
+	/**
+	 * Disable nofitications. Equivalent to calling {@link notify} with `false`.
+	 */
+	public async unsubscribe(): Promise<void> {
+		if (!this.isRemote) {
+			throw new Error('Can only be used for remote characteristic');
+		}
+
+		await this.notify(false);
+	}
+
+	public async handleRead(offset: number): Promise<Buffer> {
+		if (this.isRemote) {
+			throw new Error('Can only be used for local characteristic');
+		}
+
+		return this.readFunc(offset);
+	}
+
+	public async handleWrite(offset: number, data: Buffer, withoutResponse: boolean): Promise<number> {
+		if (this.isRemote) {
+			throw new Error('Can only be used for local characteristic');
+		}
+
+		return this.writeFunc(offset, data, withoutResponse);
 	}
 
 	public toString(): string {
@@ -183,7 +277,7 @@ export abstract class GattCharacteristic extends TypedEmitter<GattCharacteristic
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
+	public [CUSTOM](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

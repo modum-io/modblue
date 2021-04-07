@@ -1,8 +1,5 @@
-export { GattCharacteristic, GattCharacteristicProperty } from './Characteristic';
-export { GattDescriptor } from './Descriptor';
-export { Gatt } from './Gatt';
-export { GattError } from './GattError';
-export { GattService } from './Service';
-
-export * from './local';
-export * from './remote';
+export * from './Characteristic';
+export * from './Descriptor';
+export * from './Gatt';
+export * from './GattError';
+export * from './Service';

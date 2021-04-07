@@ -3,96 +3,9 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 
 import { AddressType } from '../../../models';
 
-import STATUS_MAPPER from './hci-status.json';
+import * as Codes from './HciCodes';
 import { HciError } from './HciError';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const BluetoothHciSocket = require('@abandonware/bluetooth-hci-socket');
-
-// tslint:disable: no-bitwise
-
-const HCI_COMMAND_PKT = 0x01;
-const HCI_ACLDATA_PKT = 0x02;
-const HCI_EVENT_PKT = 0x04;
-
-const ACL_START_NO_FLUSH = 0x00;
-const ACL_CONT = 0x01;
-const ACL_START = 0x02;
-
-const EVT_DISCONN_COMPLETE = 0x05;
-const EVT_ENCRYPT_CHANGE = 0x08;
-// const EVT_QOS_COMPLETE = 0x0d;
-const EVT_CMD_COMPLETE = 0x0e;
-const EVT_CMD_STATUS = 0x0f;
-const EVT_HARDWARE_ERROR = 0x10;
-const EVT_NUMBER_OF_COMPLETED_PACKETS = 0x13;
-const EVT_LE_META_EVENT = 0x3e;
-
-const EVT_LE_CONN_COMPLETE = 0x01;
-const EVT_LE_ADVERTISING_REPORT = 0x02;
-const EVT_LE_CONN_UPDATE_COMPLETE = 0x03;
-// const EVT_LE_READ_REMOTE_FEATURES_COMPLETE = 0x04;
-
-const OGF_LINK_CTL = 0x01;
-const OCF_DISCONNECT = 0x0006;
-
-const OGF_HOST_CTL = 0x03;
-const OCF_SET_EVENT_MASK = 0x0001;
-const OCF_RESET = 0x0003;
-const OCF_READ_LE_HOST_SUPPORTED = 0x006c;
-const OCF_WRITE_LE_HOST_SUPPORTED = 0x006d;
-
-const OGF_INFO_PARAM = 0x04;
-const OCF_READ_LOCAL_VERSION = 0x0001;
-const OCF_READ_BUFER_SIZE = 0x0005;
-const OCF_READ_BD_ADDR = 0x0009;
-
-const OGF_STATUS_PARAM = 0x05;
-const OCF_READ_RSSI = 0x0005;
-
-const OGF_LE_CTL = 0x08;
-const OCF_LE_SET_EVENT_MASK = 0x0001;
-const OCF_LE_READ_BUFFER_SIZE = 0x0002;
-// const OCF_LE_SET_ADVERTISING_PARAMETERS = 0x0006;
-const OCF_LE_SET_ADVERTISING_DATA = 0x0008;
-const OCF_LE_SET_SCAN_RESPONSE_DATA = 0x0009;
-const OCF_LE_SET_ADVERTISE_ENABLE = 0x000a;
-const OCF_LE_SET_SCAN_PARAMETERS = 0x000b;
-const OCF_LE_SET_SCAN_ENABLE = 0x000c;
-const OCF_LE_CREATE_CONN = 0x000d;
-const OCF_LE_CANCEL_CONN = 0x000e;
-const OCF_LE_CONN_UPDATE = 0x0013;
-// const OCF_LE_START_ENCRYPTION = 0x0019;
-// const OCF_LE_LTK_NEG_REPLY = 0x001b;
-
-const DISCONNECT_CMD = OCF_DISCONNECT | (OGF_LINK_CTL << 10);
-
-const SET_EVENT_MASK_CMD = OCF_SET_EVENT_MASK | (OGF_HOST_CTL << 10);
-const RESET_CMD = OCF_RESET | (OGF_HOST_CTL << 10);
-const READ_LE_HOST_SUPPORTED_CMD = OCF_READ_LE_HOST_SUPPORTED | (OGF_HOST_CTL << 10);
-const WRITE_LE_HOST_SUPPORTED_CMD = OCF_WRITE_LE_HOST_SUPPORTED | (OGF_HOST_CTL << 10);
-
-const READ_LOCAL_VERSION_CMD = OCF_READ_LOCAL_VERSION | (OGF_INFO_PARAM << 10);
-const READ_BUFFER_SIZE_CMD = OCF_READ_BUFER_SIZE | (OGF_INFO_PARAM << 10);
-const READ_BD_ADDR_CMD = OCF_READ_BD_ADDR | (OGF_INFO_PARAM << 10);
-
-const READ_RSSI_CMD = OCF_READ_RSSI | (OGF_STATUS_PARAM << 10);
-
-const LE_SET_EVENT_MASK_CMD = OCF_LE_SET_EVENT_MASK | (OGF_LE_CTL << 10);
-const LE_SET_SCAN_PARAMETERS_CMD = OCF_LE_SET_SCAN_PARAMETERS | (OGF_LE_CTL << 10);
-const LE_SET_SCAN_ENABLE_CMD = OCF_LE_SET_SCAN_ENABLE | (OGF_LE_CTL << 10);
-const LE_CREATE_CONN_CMD = OCF_LE_CREATE_CONN | (OGF_LE_CTL << 10);
-const LE_CANCEL_CONN_CMD = OCF_LE_CANCEL_CONN | (OGF_LE_CTL << 10);
-const LE_CONN_UPDATE_CMD = OCF_LE_CONN_UPDATE | (OGF_LE_CTL << 10);
-// const LE_START_ENCRYPTION_CMD = OCF_LE_START_ENCRYPTION | (OGF_LE_CTL << 10);
-const LE_READ_BUFFER_SIZE_CMD = OCF_LE_READ_BUFFER_SIZE | (OGF_LE_CTL << 10);
-// const LE_SET_ADVERTISING_PARAMETERS_CMD = OCF_LE_SET_ADVERTISING_PARAMETERS | (OGF_LE_CTL << 10);
-const LE_SET_ADVERTISING_DATA_CMD = OCF_LE_SET_ADVERTISING_DATA | (OGF_LE_CTL << 10);
-const LE_SET_SCAN_RESPONSE_DATA_CMD = OCF_LE_SET_SCAN_RESPONSE_DATA | (OGF_LE_CTL << 10);
-const LE_SET_ADVERTISE_ENABLE_CMD = OCF_LE_SET_ADVERTISE_ENABLE | (OGF_LE_CTL << 10);
-// const LE_LTK_NEG_REPLY_CMD = OCF_LE_LTK_NEG_REPLY | (OGF_LE_CTL << 10);
-
-const HCI_OE_USER_ENDED_CONNECTION = 0x13;
+import { HciStatus } from './HciStatus';
 
 const HCI_CMD_TIMEOUT = 10000; // in milliseconds
 
@@ -149,7 +62,7 @@ interface HciEvents {
 	cmdComplete: (status: number, data: Buffer) => void;
 
 	hciEvent: (eventCode: number, data: Buffer) => void;
-	error: (error: Error) => void;
+	hciError: (error: Error) => void;
 }
 
 export class Hci extends TypedEmitter<HciEvents> {
@@ -169,7 +82,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 	private handles: Map<number, Handle>;
 
 	private mutex: MutexInterface;
-	private mutexStack: Error;
 	private currentCmd: HciCommand;
 	private cmdTimeout: number;
 
@@ -196,23 +108,19 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.currentCmd = null;
 	}
 
+	private static createSocket() {
+		// This fixes an issue with webpack trying to load the module at compile time
+		const NAME = '/bluetooth-hci-socket';
+		return new (require(`@abandonware${NAME}`))();
+	}
+
 	public static getDeviceList(): HciDevice[] {
-		const socket = new BluetoothHciSocket();
+		const socket = Hci.createSocket();
 		return socket.getDeviceList();
 	}
 
-	private async acquireMutex() {
-		try {
-			const release = await this.mutex.acquire();
-			this.mutexStack = new Error();
-			return release;
-		} catch {
-			throw new HciError(`Could not acquire HCI command mutex`, this.mutexStack?.stack);
-		}
-	}
-
 	private isInitializing = false;
-	public async init(timeoutInSeconds = 2): Promise<void> {
+	public init(timeoutInSeconds = 2): Promise<void> {
 		if (this.isSocketUp) {
 			return;
 		}
@@ -221,7 +129,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 			return this.waitForInit(timeoutInSeconds);
 		}
 
-		this.socket = new BluetoothHciSocket();
+		this.socket = Hci.createSocket();
 		this.socket.on('data', this.onSocketData);
 		this.socket.on('error', this.onSocketError);
 
@@ -236,10 +144,10 @@ export class Hci extends TypedEmitter<HciEvents> {
 		return this.waitForInit(timeoutInSeconds);
 	}
 
-	private async waitForInit(timeoutInSeconds: number) {
+	private waitForInit(timeoutInSeconds: number) {
 		return new Promise<void>((resolve, reject) => {
 			const timeout = setTimeout(() => {
-				this.off('error', errorHandler);
+				this.off('hciError', errorHandler);
 				this.off('stateChange', stateChangeHandler);
 
 				reject(
@@ -252,7 +160,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 			const stateChangeHandler = (newState: string) => {
 				clearTimeout(timeout);
-				this.off('error', errorHandler);
+				this.off('hciError', errorHandler);
 
 				if (newState === 'poweredOn') {
 					resolve();
@@ -268,7 +176,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 				reject(new Error(`Error while initializing: ${error}`));
 			};
-			this.once('error', errorHandler);
+			this.once('hciError', errorHandler);
 		});
 	}
 
@@ -287,10 +195,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 					this.setSocketFilter();
 
 					await this.reset();
-
-					if (this.state === 'unauthorized') {
-						throw new HciError('Not authorized');
-					}
 
 					await this.setEventMask();
 					await this.setLeEventMask();
@@ -312,7 +216,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 					this.state = 'poweredOn';
 					this.emit('stateChange', this.state);
 				} catch (err) {
-					this.emit('error', err);
+					this.emit('hciError', err);
 				}
 			} else {
 				// Socket went down
@@ -355,95 +259,100 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.mutex.cancel();
 	}
 
-	private async sendCommand(data: Buffer, statusOnly?: false, customMutex?: boolean): Promise<Buffer>;
-	private async sendCommand(data: Buffer, statusOnly?: true, customMutex?: boolean): Promise<void>;
-	private async sendCommand(data: Buffer, statusOnly?: boolean, customMutex?: boolean): Promise<Buffer | void> {
-		// Check if our socket is available
-		if (!this.isSocketUp) {
-			throw new HciError('HCI socket not available');
-		}
-
-		const release = customMutex ? null : await this.acquireMutex();
-
-		// Our socket might have been disposed while waiting for the mutex
-		if (!this.isSocketUp) {
-			if (release) {
-				release();
-			}
-			throw new HciError('HCI socket not available');
-		}
-
+	private sendCommand(data: Buffer, statusOnly?: false, customMutex?: boolean): Promise<Buffer>;
+	private sendCommand(data: Buffer, statusOnly?: true, customMutex?: boolean): Promise<void>;
+	private sendCommand(data: Buffer, statusOnly?: boolean, customMutex?: boolean): Promise<Buffer | void> {
+		// Capture original scope of function call
 		const origScope = new Error();
 
-		return new Promise<Buffer | void>((resolve, reject) => {
-			let timeout: NodeJS.Timeout;
-			const onComplete = (status: number, responseData?: Buffer) => {
-				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					rejectHandler(new HciError(`HCI Command ${this.currentCmd.cmd} failed`, errStatus));
-				} else {
-					resolveHandler(responseData);
-				}
-			};
-
-			const cleanup = () => {
-				if (statusOnly) {
-					this.off('cmdStatus', onComplete);
-				} else {
-					this.off('cmdComplete', onComplete);
-				}
-
-				this.mutexStack = null;
-
-				if (timeout) {
-					clearTimeout(timeout);
-					timeout = null;
-				}
-
-				this.currentCmd = null;
+		const run = (release: MutexInterface.Releaser) => {
+			// Our socket might have been disposed while waiting for the mutex
+			if (!this.isSocketUp) {
 				if (release) {
 					release();
 				}
-			};
-
-			const resolveHandler = (response?: Buffer) => {
-				cleanup();
-				resolve(response);
-			};
-
-			const rejectHandler = (error?: Error) => {
-				if (error) {
-					error.stack = error.stack + '\n' + origScope.stack;
-				}
-				cleanup();
-				reject(error);
-			};
-
-			this.currentCmd = { cmd: data.readUInt16LE(1), data };
-			if (statusOnly) {
-				this.once('cmdStatus', onComplete);
-			} else {
-				this.once('cmdComplete', onComplete);
+				throw new HciError('HCI socket not available');
 			}
 
-			const timeoutError = new HciError(`HCI command timed out`);
-			timeout = setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
+			return new Promise<Buffer | void>((resolve, reject) => {
+				let timeout: NodeJS.Timeout;
+				const onComplete = (status: number, responseData?: Buffer) => {
+					if (status !== 0) {
+						const errStatus = `${HciStatus[status]} (0x${status.toString(16).padStart(2, '0')})`;
+						rejectHandler(new HciError(`HCI Command ${this.currentCmd?.cmd} failed`, errStatus));
+					} else {
+						resolveHandler(responseData);
+					}
+				};
 
-			// console.log('->', 'hci', data);
-			this.socket.write(data);
-		});
+				const cleanup = () => {
+					if (statusOnly) {
+						this.off('cmdStatus', onComplete);
+					} else {
+						this.off('cmdComplete', onComplete);
+					}
+
+					if (timeout) {
+						clearTimeout(timeout);
+						timeout = null;
+					}
+
+					this.currentCmd = null;
+					if (release) {
+						release();
+					}
+				};
+
+				const resolveHandler = (response?: Buffer) => {
+					cleanup();
+					resolve(response);
+				};
+
+				const rejectHandler = (error?: Error) => {
+					if (error) {
+						error.stack = error.stack + '\n' + origScope.stack;
+					}
+					cleanup();
+					reject(error);
+				};
+
+				this.currentCmd = { cmd: data.readUInt16LE(1), data };
+				if (statusOnly) {
+					this.once('cmdStatus', onComplete);
+				} else {
+					this.once('cmdComplete', onComplete);
+				}
+
+				const timeoutError = new HciError(`HCI command timed out`);
+				timeout = setTimeout(() => rejectHandler(timeoutError), this.cmdTimeout);
+
+				// console.log('->', 'hci', data);
+				this.socket.write(data);
+			});
+		};
+
+		// Check if our socket is available
+		if (!this.isSocketUp) {
+			return Promise.reject('HCI socket not available');
+		}
+
+		if (customMutex) {
+			return run(null);
+		} else {
+			return this.mutex.acquire().then((release) => run(release));
+		}
 	}
 
 	private setSocketFilter() {
 		const filter = Buffer.alloc(14);
-		const typeMask = (1 << HCI_COMMAND_PKT) | (1 << HCI_EVENT_PKT) | (1 << HCI_ACLDATA_PKT);
+		const typeMask = (1 << Codes.HCI_COMMAND_PKT) | (1 << Codes.HCI_EVENT_PKT) | (1 << Codes.HCI_ACLDATA_PKT);
 		const eventMask1 =
-			(1 << EVT_DISCONN_COMPLETE) |
-			(1 << EVT_ENCRYPT_CHANGE) |
-			(1 << EVT_CMD_COMPLETE) |
-			(1 << EVT_CMD_STATUS) |
-			(1 << EVT_NUMBER_OF_COMPLETED_PACKETS);
-		const eventMask2 = 1 << (EVT_LE_META_EVENT - 32);
+			(1 << Codes.EVT_DISCONN_COMPLETE) |
+			(1 << Codes.EVT_ENCRYPT_CHANGE) |
+			(1 << Codes.EVT_CMD_COMPLETE) |
+			(1 << Codes.EVT_CMD_STATUS) |
+			(1 << Codes.EVT_NUMBER_OF_COMPLETED_PACKETS);
+		const eventMask2 = 1 << (Codes.EVT_LE_META_EVENT - 32);
 		const opcode = 0;
 
 		filter.writeUInt32LE(typeMask, 0);
@@ -459,8 +368,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const eventMask = Buffer.from('fffffbff07f8bf3d', 'hex');
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(SET_EVENT_MASK_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.SET_EVENT_MASK_CMD, 1);
 
 		// length
 		cmd.writeUInt8(eventMask.length, 3);
@@ -474,8 +383,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(4);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(RESET_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.RESET_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x00, 3);
@@ -487,8 +396,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(4);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(READ_LOCAL_VERSION_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.READ_LOCAL_VERSION_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x0, 3);
@@ -507,8 +416,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(4);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(READ_BD_ADDR_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.READ_BD_ADDR_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x0, 3);
@@ -529,8 +438,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const leEventMask = Buffer.from('1f00000000000000', 'hex');
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_SET_EVENT_MASK_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_SET_EVENT_MASK_CMD, 1);
 
 		// length
 		cmd.writeUInt8(leEventMask.length, 3);
@@ -544,8 +453,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(4);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(READ_LE_HOST_SUPPORTED_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.READ_LE_HOST_SUPPORTED_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x00, 3);
@@ -562,8 +471,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(6);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(WRITE_LE_HOST_SUPPORTED_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.WRITE_LE_HOST_SUPPORTED_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x02, 3);
@@ -579,8 +488,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(11);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_SET_SCAN_PARAMETERS_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_SET_SCAN_PARAMETERS_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x07, 3);
@@ -599,8 +508,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(6);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_SET_SCAN_ENABLE_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_SET_SCAN_ENABLE_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x02, 3);
@@ -612,7 +521,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		await this.sendCommand(cmd);
 	}
 
-	public async createLeConn(
+	public createLeConn(
 		address: string,
 		addressType: AddressType,
 		minInterval = 0x0006,
@@ -625,8 +534,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(29);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_CREATE_CONN_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_CREATE_CONN_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x19, 3);
@@ -648,75 +557,79 @@ export class Hci extends TypedEmitter<HciEvents> {
 		cmd.writeUInt16LE(0x0004, 25); // min ce length
 		cmd.writeUInt16LE(0x0006, 27); // max ce length
 
-		const release = await this.acquireMutex();
-
-		try {
-			await this.cancelLeConn(true);
-		} catch {
-			// NO-OP
-		}
-
 		const origScope = new Error();
 
-		return new Promise<number>((resolve, reject) => {
-			let timeout: NodeJS.Timeout;
-			const onComplete: HciEvents['leConnComplete'] = (status, handle, role, _addressType, _address) => {
-				if (_address !== address || _addressType !== addressType) {
-					return;
-				}
+		const run = (release: MutexInterface.Releaser) => {
+			return new Promise<number>((resolve, reject) => {
+				let timeout: NodeJS.Timeout;
+				const onComplete: HciEvents['leConnComplete'] = (status, handle, role, _addressType, _address) => {
+					if (_address !== address || _addressType !== addressType) {
+						return;
+					}
 
-				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-					rejectHandler(new HciError(`LE conn failed`, errStatus));
-					return;
-				}
+					if (status !== 0) {
+						const errStatus = `${HciStatus[status]} (0x${status.toString(16).padStart(2, '0')})`;
+						rejectHandler(new HciError(`LE conn failed`, errStatus));
+						return;
+					}
 
-				if (role !== 0) {
-					rejectHandler(new HciError(`Could not acquire le connection as master role`));
-					return;
-				}
+					if (role !== 0) {
+						rejectHandler(new HciError(`Could not acquire le connection as master role`));
+						return;
+					}
 
-				resolveHandler(handle);
-			};
+					resolveHandler(handle);
+				};
 
-			const cleanup = () => {
-				this.off('leConnComplete', onComplete);
+				const cleanup = () => {
+					this.off('leConnComplete', onComplete);
 
-				if (timeout) {
-					clearTimeout(timeout);
-					timeout = null;
-				}
+					if (timeout) {
+						clearTimeout(timeout);
+						timeout = null;
+					}
 
-				release();
-			};
+					release();
+				};
 
-			const resolveHandler = (handle: number) => {
-				cleanup();
-				resolve(handle);
-			};
+				const resolveHandler = (handle: number) => {
+					cleanup();
+					resolve(handle);
+				};
 
-			const rejectHandler = async (error?: Error) => {
-				cleanup();
+				const rejectHandler = async (error?: Error) => {
+					cleanup();
 
-				try {
-					await this.cancelLeConn(true);
-				} catch {
-					// NO-OP
-				}
+					try {
+						await this.cancelLeConn(true);
+					} catch {
+						// NO-OP
+					}
 
-				if (error) {
-					error.stack = error.stack + '\n' + origScope.stack;
-				}
+					if (error) {
+						error.stack = error.stack + '\n' + origScope.stack;
+					}
 
-				reject(error);
-			};
+					reject(error);
+				};
 
-			this.on('leConnComplete', onComplete);
+				this.on('leConnComplete', onComplete);
 
-			const timeoutError = new HciError(`Creating connection timed out`);
-			timeout = setTimeout(() => rejectHandler(timeoutError), 2 * this.cmdTimeout);
+				const timeoutError = new HciError(`Creating connection timed out`);
+				timeout = setTimeout(() => rejectHandler(timeoutError), 2 * this.cmdTimeout);
 
-			this.sendCommand(cmd, true, true).catch((err) => rejectHandler(err));
+				this.sendCommand(cmd, true, true).catch((err) => rejectHandler(err));
+			});
+		};
+
+		return this.mutex.acquire().then(async (release) => {
+			try {
+				await this.cancelLeConn(true);
+			} catch {
+				// NO-OP
+			}
+
+			return run(release);
 		});
 	}
 
@@ -724,8 +637,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(4);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_CANCEL_CONN_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_CANCEL_CONN_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x00, 3);
@@ -743,8 +656,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(18);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_CONN_UPDATE_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_CONN_UPDATE_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x0e, 3);
@@ -761,12 +674,12 @@ export class Hci extends TypedEmitter<HciEvents> {
 		await this.sendCommand(cmd, true);
 	}
 
-	public async disconnect(handle: number, reason = HCI_OE_USER_ENDED_CONNECTION): Promise<void> {
+	public async disconnect(handle: number, reason = Codes.HCI_OE_USER_ENDED_CONNECTION): Promise<void> {
 		const cmd = Buffer.alloc(7);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(DISCONNECT_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.DISCONNECT_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x03, 3);
@@ -787,7 +700,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 				this.off('disconnectComplete', onComplete);
 
 				if (status !== 0) {
-					const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
+					const errStatus = `${HciStatus[status]} (0x${status.toString(16).padStart(2, '0')})`;
 					rejectHandler(new HciError(`Disconnect failed`, errStatus));
 					return;
 				}
@@ -827,8 +740,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(6);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(READ_RSSI_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.READ_RSSI_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x02, 3);
@@ -852,7 +765,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 			throw new HciError(`Could not write ACL data`, 'Unknown handle id');
 		}
 
-		let hf = handleId | (ACL_START_NO_FLUSH << 12);
+		let hf = handleId | (Codes.ACL_START_NO_FLUSH << 12);
 
 		// l2cap PDU may be fragmented on hci level
 		let l2capPdu = Buffer.alloc(4 + data.length);
@@ -866,9 +779,9 @@ export class Hci extends TypedEmitter<HciEvents> {
 			const pkt = Buffer.alloc(5 + frag.length);
 
 			// hci header
-			pkt.writeUInt8(HCI_ACLDATA_PKT, 0);
+			pkt.writeUInt8(Codes.HCI_ACLDATA_PKT, 0);
 			pkt.writeUInt16LE(hf, 1);
-			hf |= ACL_CONT << 12;
+			hf |= Codes.ACL_CONT << 12;
 			pkt.writeUInt16LE(frag.length, 3); // hci pdu length
 
 			frag.copy(pkt, 5);
@@ -901,8 +814,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(4);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(READ_BUFFER_SIZE_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.READ_BUFFER_SIZE_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x0, 3);
@@ -919,8 +832,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(4);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_READ_BUFFER_SIZE_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_READ_BUFFER_SIZE_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x0, 3);
@@ -944,8 +857,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		cmd.fill(0x00);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_SET_SCAN_RESPONSE_DATA_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_SET_SCAN_RESPONSE_DATA_CMD, 1);
 
 		// length
 		cmd.writeUInt8(32, 3);
@@ -963,8 +876,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		cmd.fill(0x00);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_SET_ADVERTISING_DATA_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_SET_ADVERTISING_DATA_CMD, 1);
 
 		// length
 		cmd.writeUInt8(32, 3);
@@ -980,8 +893,8 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const cmd = Buffer.alloc(5);
 
 		// header
-		cmd.writeUInt8(HCI_COMMAND_PKT, 0);
-		cmd.writeUInt16LE(LE_SET_ADVERTISE_ENABLE_CMD, 1);
+		cmd.writeUInt8(Codes.HCI_COMMAND_PKT, 0);
+		cmd.writeUInt16LE(Codes.LE_SET_ADVERTISE_ENABLE_CMD, 1);
 
 		// length
 		cmd.writeUInt8(0x01, 3);
@@ -999,15 +912,15 @@ export class Hci extends TypedEmitter<HciEvents> {
 		// console.log('<-', 'hci', data);
 
 		switch (eventType) {
-			case HCI_EVENT_PKT:
+			case Codes.HCI_EVENT_PKT:
 				this.handleEventPkt(eventData);
 				break;
 
-			case HCI_ACLDATA_PKT:
+			case Codes.HCI_ACLDATA_PKT:
 				this.handleAclDataPkt(eventData);
 				break;
 
-			case HCI_COMMAND_PKT:
+			case Codes.HCI_COMMAND_PKT:
 				this.handleCmdPkt(eventData);
 				break;
 
@@ -1024,27 +937,27 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.emit(`hciEvent`, eventType, data);
 
 		switch (eventType) {
-			case EVT_DISCONN_COMPLETE:
+			case Codes.EVT_DISCONN_COMPLETE:
 				this.handleDisconnectPkt(eventData);
 				break;
 
-			case EVT_CMD_COMPLETE:
+			case Codes.EVT_CMD_COMPLETE:
 				this.handleCmdCompletePkt(eventData);
 				break;
 
-			case EVT_CMD_STATUS:
+			case Codes.EVT_CMD_STATUS:
 				this.handleCmdStatusPkt(eventData);
 				break;
 
-			case EVT_LE_META_EVENT:
+			case Codes.EVT_LE_META_EVENT:
 				this.handleLeMetaEventPkt(eventData);
 				break;
 
-			case EVT_NUMBER_OF_COMPLETED_PACKETS:
+			case Codes.EVT_NUMBER_OF_COMPLETED_PACKETS:
 				this.handleNumCompletedPktsPkt(eventData);
 				break;
 
-			case EVT_HARDWARE_ERROR:
+			case Codes.EVT_HARDWARE_ERROR:
 				this.handleHardwareErrorPkt(eventData);
 				break;
 
@@ -1069,7 +982,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		// Remove all pending packets for this handle from the queue
 		this.aclPacketQueue = this.aclPacketQueue.filter(({ handle }) => handle.id !== handleId);
 
-		const reasonStr = `${STATUS_MAPPER[reason]} (0x${reason.toString(16).padStart(2, '0')})`;
+		const reasonStr = `${HciStatus[reason]} (0x${reason.toString(16).padStart(2, '0')})`;
 		this.emit('disconnectComplete', status, handleId, reasonStr);
 
 		// Process acl packet queue because we may have more space now
@@ -1114,15 +1027,15 @@ export class Hci extends TypedEmitter<HciEvents> {
 		const eventData = data.slice(2);
 
 		switch (eventType) {
-			case EVT_LE_ADVERTISING_REPORT:
+			case Codes.EVT_LE_ADVERTISING_REPORT:
 				this.handleLeAdvertisingReportEvent(eventStatus, eventData);
 				break;
 
-			case EVT_LE_CONN_COMPLETE:
+			case Codes.EVT_LE_CONN_COMPLETE:
 				this.handleLeConnCompleteEvent(eventStatus, eventData);
 				break;
 
-			case EVT_LE_CONN_UPDATE_COMPLETE:
+			case Codes.EVT_LE_CONN_UPDATE_COMPLETE:
 				this.handleLeConnUpdateEvent(eventStatus, eventData);
 				break;
 
@@ -1174,7 +1087,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 		const handle = this.handles.get(handleId);
 		if (!handle) {
-			this.emit('error', new HciError(`Received connection update packet for unknown handle ${handleId}`));
+			this.emit('hciError', new HciError(`Received connection update packet for unknown handle ${handleId}`));
 		}
 
 		if (status === 0) {
@@ -1234,7 +1147,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 	private handleHardwareErrorPkt(data: Buffer) {
 		const errorCode = data.readUInt8(0);
-		this.emit('error', new HciError(`Hardware error`, `${errorCode}`));
+		this.emit('hciError', new HciError(`Hardware error`, `${errorCode}`));
 	}
 
 	private handleAclDataPkt(data: Buffer) {
@@ -1254,7 +1167,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 			this.handles.set(handleId, handle);
 		}
 
-		if (ACL_START === flags) {
+		if (Codes.ACL_START === flags) {
 			const length = data.readUInt16LE(4);
 			const cid = data.readUInt16LE(6);
 			const pktData = data.slice(8);
@@ -1268,7 +1181,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 					data: pktData
 				};
 			}
-		} else if (ACL_CONT === flags) {
+		} else if (Codes.ACL_CONT === flags) {
 			const buff = handle.buffer;
 
 			if (!buff || !buff.data) {
@@ -1289,11 +1202,11 @@ export class Hci extends TypedEmitter<HciEvents> {
 		// const len = data.readUInt8(2);
 
 		switch (cmd) {
-			case LE_SET_SCAN_ENABLE_CMD:
+			case Codes.LE_SET_SCAN_ENABLE_CMD:
 				this.handleSetScanEnablePkt(data);
 				break;
 
-			case LE_SET_ADVERTISE_ENABLE_CMD:
+			case Codes.LE_SET_ADVERTISE_ENABLE_CMD:
 				this.handleSetAdvertiseEnablePkt(data);
 				break;
 
@@ -1317,6 +1230,14 @@ export class Hci extends TypedEmitter<HciEvents> {
 
 	private onSocketError = (error: NodeJS.ErrnoException) => {
 		if (error.code === 'EPERM') {
+			// Cancel any pending commands
+			if (this.currentCmd) {
+				// 0x03 means "Hardware failure"
+				this.emit('cmdStatus', 0x03);
+				this.emit('cmdComplete', 0x03, null);
+				this.currentCmd = null;
+			}
+
 			this.state = 'unauthorized';
 			this.emit('stateChange', this.state);
 		} else if (error.message === 'Network is down') {

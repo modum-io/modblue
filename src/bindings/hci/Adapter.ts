@@ -1,11 +1,20 @@
-import { Adapter, AddressType, GattLocal, Peripheral } from '../../models';
+import { Adapter, AddressType, Gatt, Peripheral } from '../../models';
 
 import { HciGattLocal } from './gatt';
-import { Advertisement, Gap, Hci } from './misc';
+import { Gap, Hci } from './misc';
 import { HciPeripheral } from './Peripheral';
 
 const SCAN_ENABLE_TIMEOUT = 1000;
 const ADVERTISING_ENABLE_TIMEOUT = 1000;
+
+interface Advertisement {
+	localName: string;
+	txPowerLevel: number;
+	manufacturerData: Buffer;
+	serviceData: { uuid: string; data: Buffer }[];
+	serviceUuids: string[];
+	solicitationServiceUuids: string[];
+}
 
 export class HciAdapter extends Adapter {
 	private initialized = false;
@@ -37,7 +46,7 @@ export class HciAdapter extends Adapter {
 		await this.hci.init();
 
 		// Don't listen for events until init is done
-		this.hci.on('error', this.onHciError);
+		this.hci.on('hciError', this.onHciError);
 		this.hci.on('stateChange', this.onHciStateChange);
 		this.hci.on('leScanEnable', this.onLeScanEnable);
 		this.hci.on('leAdvertiseEnable', this.onLeAdvertiseEnable);
@@ -138,7 +147,7 @@ export class HciAdapter extends Adapter {
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new HciPeripheral(this, uuid, addressType, address, adv, rssi);
+			peripheral = new HciPeripheral(this, uuid, adv.localName as string, addressType, address, adv, rssi);
 			this.peripherals.set(uuid, peripheral);
 		} else {
 			peripheral.advertisement = adv;
@@ -258,7 +267,7 @@ export class HciAdapter extends Adapter {
 		this.advertising = false;
 	}
 
-	public async setupGatt(maxMtu?: number): Promise<GattLocal> {
+	public async setupGatt(maxMtu?: number): Promise<Gatt> {
 		await this.init();
 
 		this.gatt = new HciGattLocal(this, this.hci, maxMtu);
@@ -317,7 +326,7 @@ export class HciAdapter extends Adapter {
 		address = address.toLowerCase();
 		const uuid = address;
 
-		const peripheral = new HciPeripheral(this, uuid, addressType, address, null, 0);
+		const peripheral = new HciPeripheral(this, uuid, undefined, addressType, address, null, 0);
 		peripheral.onConnect(true, this.hci, handle);
 
 		this.connectedDevices.set(handle, peripheral);

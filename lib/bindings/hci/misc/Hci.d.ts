@@ -20,7 +20,7 @@ interface HciEvents {
     cmdStatus: (status: number) => void;
     cmdComplete: (status: number, data: Buffer) => void;
     hciEvent: (eventCode: number, data: Buffer) => void;
-    error: (error: Error) => void;
+    hciError: (error: Error) => void;
 }
 export declare class Hci extends TypedEmitter<HciEvents> {
     state: string;
@@ -34,7 +34,6 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private isSocketUp;
     private handles;
     private mutex;
-    private mutexStack;
     private currentCmd;
     private cmdTimeout;
     private aclDataPacketLength;
@@ -43,8 +42,8 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private totalNumAclLeDataPackets;
     private aclPacketQueue;
     constructor(deviceId?: number, cmdTimeout?: number);
+    private static createSocket;
     static getDeviceList(): HciDevice[];
-    private acquireMutex;
     private isInitializing;
     init(timeoutInSeconds?: number): Promise<void>;
     private waitForInit;

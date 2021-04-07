@@ -1,5 +1,8 @@
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
 
+import { CUSTOM, InspectOptionsStylized } from '../Inspect';
+
+import { GattCharacteristic } from './Characteristic';
 import { Gatt } from './Gatt';
 
 /**
@@ -16,11 +19,27 @@ export abstract class GattService {
 	 */
 	public readonly uuid: string;
 
-	public constructor(gatt: Gatt, uuid: string) {
-		this.gatt = gatt;
+	/**
+	 * True if this is a remote service, false otherwise.
+	 */
+	public readonly isRemote: boolean;
 
+	/**
+	 * The characteristics that belong to this service, mapped by UUID.
+	 * If this is a remote service use {@link discoverCharacteristics} to discover them.
+	 */
+	public readonly characteristics: Map<string, GattCharacteristic> = new Map();
+
+	public constructor(gatt: Gatt, uuid: string, isRemote: boolean) {
+		this.gatt = gatt;
 		this.uuid = uuid;
+		this.isRemote = isRemote;
 	}
+
+	/**
+	 * Discover all charactersitics of this service.
+	 */
+	public abstract discoverCharacteristics(): Promise<GattCharacteristic[]>;
 
 	public toString(): string {
 		return JSON.stringify(this.toJSON());
@@ -33,7 +52,7 @@ export abstract class GattService {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
+	public [CUSTOM](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

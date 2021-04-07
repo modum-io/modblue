@@ -1,4 +1,6 @@
-import { inspect, InspectOptionsStylized } from 'util';
+import { inspect } from 'util';
+
+import { CUSTOM, InspectOptionsStylized } from '../Inspect';
 
 import { GattCharacteristic } from './Characteristic';
 
@@ -6,6 +8,8 @@ import { GattCharacteristic } from './Characteristic';
  * Represents a GATT Descriptor.
  */
 export abstract class GattDescriptor {
+	private value: Buffer;
+
 	/**
 	 * The GATT characteristic that this descriptor belongs to
 	 */
@@ -16,10 +20,48 @@ export abstract class GattDescriptor {
 	 */
 	public readonly uuid: string;
 
-	public constructor(characteristic: GattCharacteristic, uuid: string) {
-		this.characteristic = characteristic;
+	/**
+	 * True if this is a remote characteristic, false otherwise.
+	 */
+	public readonly isRemote: boolean;
 
+	public constructor(characteristic: GattCharacteristic, uuid: string, isRemote: boolean, value?: Buffer) {
+		this.characteristic = characteristic;
 		this.uuid = uuid;
+		this.isRemote = isRemote;
+
+		this.value = value;
+	}
+
+	/**
+	 * Read the current value of this descriptor.
+	 */
+	public abstract read(): Promise<Buffer>;
+
+	/**
+	 * Writes the specified data to this descriptor.
+	 * @param data The data to write.
+	 */
+	public abstract write(data: Buffer): Promise<void>;
+
+	public async handleRead(offset: number): Promise<Buffer> {
+		if (this.isRemote) {
+			throw new Error('Can only be used for local descriptors');
+		}
+
+		return this.value.slice(offset);
+	}
+
+	public async handleWrite(offset: number, data: Buffer): Promise<number> {
+		if (this.isRemote) {
+			throw new Error('Can only be used for local descriptors');
+		}
+		if (offset) {
+			throw new Error('Writing offset for discriptors is not supported');
+		}
+
+		this.value = data;
+		return 0;
 	}
 
 	public toString(): string {
@@ -33,7 +75,7 @@ export abstract class GattDescriptor {
 		};
 	}
 
-	public [inspect.custom](depth: number, options: InspectOptionsStylized): string {
+	public [CUSTOM](depth: number, options: InspectOptionsStylized): string {
 		const name = this.constructor.name;
 
 		if (depth < 0) {

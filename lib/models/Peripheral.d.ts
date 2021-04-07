@@ -1,12 +1,36 @@
-/// <reference types="node" />
-import { inspect, InspectOptionsStylized } from 'util';
 import { Adapter } from './Adapter';
 import { AddressType } from './AddressType';
-import { GattRemote } from './gatt';
+import { Gatt } from './gatt';
 /**
  * The current state of the peripheral.
  */
 export declare type PeripheralState = 'connecting' | 'connected' | 'disconnecting' | 'disconnected';
+/**
+ * Connection options used to establish the BLE connection.
+ * Certain options are only supported on certain platforms / bindings.
+ */
+export interface ConnectOptions {
+    /**
+     * The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.
+     */
+    mtu?: number;
+    /**
+     * The minimum connection interval.
+     */
+    minInterval?: number;
+    /**
+     * The maximum connection interval
+     */
+    maxInterval?: number;
+    /**
+     * The connection latency.
+     */
+    latency?: number;
+    /**
+     * The supervision timeout.
+     */
+    supervisionTimeout?: number;
+}
 /**
  * Represents a peripheral that was found during scanning.
  */
@@ -16,9 +40,18 @@ export declare abstract class Peripheral {
      */
     readonly adapter: Adapter;
     /**
+     * The remote gatt server. Only available after connecting.
+     */
+    protected _gatt: Gatt;
+    get gatt(): Gatt;
+    /**
      * The unique identifier for this peripheral.
      */
     readonly uuid: string;
+    /**
+     * The advertised name of the peripheral.
+     */
+    readonly name: string;
     /**
      * The MAC address type of this peripheral.
      */
@@ -40,18 +73,16 @@ export declare abstract class Peripheral {
      * The current state of the peripheral.
      */
     get state(): PeripheralState;
-    constructor(adapter: Adapter, uuid: string, addressType: AddressType, address: string, advertisement?: Record<string, unknown>, rssi?: number);
+    constructor(adapter: Adapter, uuid: string, name: string, addressType: AddressType, address: string, advertisement?: Record<string, unknown>, rssi?: number);
     /**
-     * Connect to this peripheral. Throws an error when connecting fails.
-     * @param minInterval The minimum connection interval.
-     * @param maxInterval The maximum connection interval.
-     * @param latency The connection latency.
-     * @param supervisionTimeout The supervision timeout.
+     * Connect to this peripheral and setup GATT. Throws an error when connecting fails.
+     * Some connection settings may not be supported on certain platforms and wil be ignored.
+     * @param options The connection options.
      */
-    abstract connect(minInterval?: number, maxInterval?: number, latency?: number, supervisionTimeout?: number): Promise<void>;
+    abstract connect(options?: ConnectOptions): Promise<Gatt>;
     /**
      * Disconnect from this peripheral. Does nothing if not connected. This method **never** throws an error.
-     * When connecting to a peripheral you should always wrap your calls in try-catch and call this method at the end.
+     * When connecting to a peripheral you should always wrap your calls in try-catch-finally and call this method at the end.
      * ```
      * try {
      *   peripheral.connect()
@@ -62,14 +93,7 @@ export declare abstract class Peripheral {
      * }```
      */
     abstract disconnect(): Promise<void>;
-    /**
-     * Setup the local GATT server to send and receive data from the remote GATT server of the peripheral.
-     * Requires an existing connection.
-     * @param requestMtu The requested MTU that is sent during the MTU negotiation. Actual mtu may be lower.
-     */
-    abstract setupGatt(requestMtu?: number): Promise<GattRemote>;
     toString(): string;
     toJSON(): Record<string, unknown>;
-    [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }
 //# sourceMappingURL=Peripheral.d.ts.map

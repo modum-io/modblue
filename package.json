@@ -19,8 +19,11 @@
 	"exports": {
 		".": "./lib/index.js",
 		"./hci": "./lib/bindings/hci/index.js",
-		"./dbus": "./lib/bindings/dbus/index.js"
+		"./dbus": "./lib/bindings/dbus/index.js",
+		"./web": "./lib/bindings/web/index.js",
+		"./package.json": "./package.json"
 	},
+	"type": "commonjs",
 	"types": "lib/index.d.ts",
 	"typesVersions": {
 		"*": {
@@ -29,6 +32,9 @@
 			],
 			"dbus": [
 				"lib/bindings/dbus"
+			],
+			"web": [
+				"lib/bindings/web"
 			]
 		}
 	},
@@ -52,17 +58,18 @@
 	},
 	"devDependencies": {
 		"@abandonware/bluetooth-hci-socket": "0.5.3-7",
-		"@types/node": "14.14.32",
-		"@typescript-eslint/eslint-plugin": "4.17.0",
-		"@typescript-eslint/parser": "4.17.0",
+		"@types/node": "14.14.37",
+		"@types/web-bluetooth": "0.0.9",
+		"@typescript-eslint/eslint-plugin": "4.21.0",
+		"@typescript-eslint/parser": "4.21.0",
 		"dbus-next": "0.9.1",
-		"eslint": "7.21.0",
+		"eslint": "7.23.0",
 		"eslint-config-prettier": "8.1.0",
-		"husky": "5.1.3",
+		"husky": "6.0.0",
 		"prettier": "2.2.1",
 		"pretty-quick": "3.1.0",
-		"standard-version": "9.1.1",
-		"typedoc": "0.20.30",
+		"standard-version": "9.2.0",
+		"typedoc": "0.20.35",
 		"typescript": "4.2.3"
 	},
 	"standard-version": {

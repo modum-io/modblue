@@ -1,4 +1,5 @@
-export * from './Constants';
-
-export { HciGattLocal } from './local';
-export { HciGattCharacteristicRemote, HciGattDescriptorRemote, HciGattRemote, HciGattServiceRemote } from './remote';
+export * from './Characteristic';
+export * from './Descriptor';
+export * from './GattLocal';
+export * from './GattRemote';
+export * from './Service';
