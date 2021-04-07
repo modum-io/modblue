@@ -360,7 +360,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 				const onComplete = (status: number, responseData?: Buffer) => {
 					if (status !== 0) {
 						const errStatus = `${STATUS_MAPPER[status]} (0x${status.toString(16).padStart(2, '0')})`;
-						rejectHandler(new HciError(`HCI Command ${this.currentCmd.cmd} failed`, errStatus));
+						rejectHandler(new HciError(`HCI Command ${this.currentCmd?.cmd} failed`, errStatus));
 					} else {
 						resolveHandler(responseData);
 					}
