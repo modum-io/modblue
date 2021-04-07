@@ -54,7 +54,7 @@ export abstract class Peripheral {
 		if (this.state !== 'connected') {
 			throw new Error('GATT is only available when connected');
 		}
-		return this.gatt;
+		return this._gatt;
 	}
 
 	/**
