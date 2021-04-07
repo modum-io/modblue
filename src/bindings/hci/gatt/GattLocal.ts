@@ -1,12 +1,4 @@
-import {
-	Gatt,
-	GattCharacteristic,
-	GattCharacteristicProperty,
-	GattDescriptor,
-	GattService,
-	ReadFunction,
-	WriteFunction
-} from '../../../models';
+import { Gatt, GattCharacteristic, GattDescriptor, GattService } from '../../../models';
 import { HciAdapter } from '../Adapter';
 import { Hci, Codes } from '../misc';
 import { HciPeripheral } from '../Peripheral';
@@ -33,28 +25,9 @@ interface DescriptorHandle {
 
 type Handle = ServiceHandle | CharacteristicHandle | DescriptorHandle;
 
-export interface GattServiceInput {
-	uuid: string;
-	characteristics: GattCharacteristicInput[];
-}
-
-export interface GattCharacteristicInput {
-	uuid: string;
-	properties: GattCharacteristicProperty[];
-	secure: GattCharacteristicProperty[];
-	value?: Buffer;
-	onRead?: ReadFunction;
-	onWrite?: WriteFunction;
-	descriptors?: GattDescriptorInput[];
-}
-
-export interface GattDescriptorInput {
-	uuid: string;
-	value: Buffer;
-}
-
 export class HciGattLocal extends Gatt {
 	public readonly peripheral: HciPeripheral;
+	public readonly services: Map<string, HciGattService> = new Map();
 
 	private hci: Hci;
 	private handles: Handle[];
@@ -64,11 +37,6 @@ export class HciGattLocal extends Gatt {
 	private _deviceName: string;
 	public get deviceName(): string {
 		return this._deviceName;
-	}
-
-	private _serviceInputs: GattServiceInput[];
-	public get serviceInputs(): GattServiceInput[] {
-		return this._serviceInputs;
 	}
 
 	public constructor(adapter: HciAdapter, hci: Hci, maxMtu: number = DEFAULT_MAX_MTU) {
@@ -81,141 +49,67 @@ export class HciGattLocal extends Gatt {
 		this.negotiatedMtus = new Map();
 	}
 
-	/**
-	 * Set the data that is used by this GATT service.
-	 * @param deviceName The name of the advertised device
-	 * @param services The services contained in the device.
-	 */
-	public setData(deviceName: string, services: GattServiceInput[]): void {
-		if (this.isRemote) {
-			throw new Error('Can only be used for local GATT servers');
-		}
+	public async addService(uuid: string): Promise<GattService> {
+		const srv = new HciGattService(this, uuid, false, 0, 0);
+		this.services.set(srv.uuid, srv);
+		return srv;
+	}
 
+	public async prepare(name: string): Promise<void> {
 		const handles: Handle[] = [];
 
-		this._deviceName = deviceName;
-		this._serviceInputs = services;
+		this._deviceName = name;
 
-		const baseServices: GattServiceInput[] = [
-			{
-				uuid: '1800',
-				characteristics: [
-					{
-						uuid: '2a00',
-						properties: ['read'],
-						secure: [],
-						value: Buffer.from(deviceName)
-					},
-					{
-						uuid: '2a01',
-						properties: ['read'],
-						secure: [],
-						value: Buffer.from([0x80, 0x00])
-					}
-				]
-			},
-			{
-				uuid: '1801',
-				characteristics: [
-					{
-						uuid: '2a05',
-						properties: ['indicate'],
-						secure: [],
-						value: Buffer.from([0x00, 0x00, 0x00, 0x00])
-					}
-				]
-			}
-		];
+		this.services.delete('1800');
+		const srv1800 = await this.addService('1800');
+		await srv1800.addCharacteristic('2a00', ['read'], [], Buffer.from(name));
+		await srv1800.addCharacteristic('2a01', ['read'], [], Buffer.from([0x80, 0x00]));
 
-		const allServices = baseServices.concat(services);
+		this.services.delete('1801');
+		const srv1801 = await this.addService('1801');
+		await srv1801.addCharacteristic('2a05', ['read'], [], Buffer.from([0x00, 0x00, 0x00, 0x00]));
 
 		let handle = 1;
-		for (const service of allServices) {
+		for (const service of this.services.values()) {
 			const serviceStartHandle = handle++;
-			const newService = new HciGattService(this, service.uuid, false, serviceStartHandle, 0); // End handle determined below
+			service.startHandle = serviceStartHandle; // End handle determined below
 
-			const serviceHandle: ServiceHandle = { type: 'service', object: newService };
+			const serviceHandle: ServiceHandle = { type: 'service', object: service };
 			handles[serviceStartHandle] = serviceHandle;
 
-			for (const char of service.characteristics) {
-				if (char.properties.includes('read') && !char.value && !char.onRead) {
-					throw new Error(
-						`Characteristic ${char.uuid} has the 'read' property and needs either a value or an 'onRead' function`
-					);
-				}
-
-				const onRead: ReadFunction = char.onRead ? char.onRead : async (offset: number) => char.value.slice(offset);
-
-				if (
-					(char.properties.includes('write') || char.properties.includes('write-without-response')) &&
-					!char.onWrite
-				) {
-					throw new Error(
-						`Characteristic ${char.uuid} has the 'write' or 'write-without-response' property and needs an 'onWrite' function`
-					);
-				}
-
-				const onWrite: WriteFunction = char.onWrite;
-
+			for (const char of service.characteristics.values()) {
 				const charStartHandle = handle++;
 				const charValueHandle = handle++;
 
-				const newChar = new HciGattCharacteristic(
-					newService,
-					char.uuid,
-					false,
-					char.properties,
-					char.secure,
-					charStartHandle,
-					charValueHandle,
-					onRead,
-					onWrite
-				);
+				char.startHandle = charStartHandle;
+				char.valueHandle = charValueHandle;
 
 				handles[charStartHandle] = {
 					type: 'characteristic',
-					object: newChar
+					object: char
 				};
 				handles[charValueHandle] = {
 					type: 'characteristicValue',
-					object: newChar
+					object: char
 				};
 
 				if (char.properties.includes('indicate') || char.properties.includes('notify')) {
-					const clientCharacteristicConfigurationDescriptorHandle = handle++;
-
 					// notify or indicate: add client characteristic configuration descriptor
-					const newDescr = new HciGattDescriptor(
-						newChar,
-						'2902',
-						false,
-						clientCharacteristicConfigurationDescriptorHandle,
-						Buffer.from([0x00, 0x00])
-					);
-
-					handles[clientCharacteristicConfigurationDescriptorHandle] = {
-						type: 'descriptor',
-						object: newDescr
-					};
+					char.descriptors.delete('2902');
+					await char.addDescriptor('2902', Buffer.from([0x00, 0x00]));
 				}
 
-				if (char.descriptors) {
-					for (const descr of char.descriptors) {
-						const descrHandle = handle++;
+				for (const descr of char.descriptors.values()) {
+					const descrHandle = handle++;
 
-						const newDescr = new HciGattDescriptor(newChar, descr.uuid, false, descrHandle, descr.value);
+					descr.handle = descrHandle;
 
-						handles[descrHandle] = { type: 'descriptor', object: newDescr };
-
-						newChar.descriptors.set(newDescr.uuid, newDescr);
-					}
+					handles[descrHandle] = { type: 'descriptor', object: descr };
 				}
-
-				newService.characteristics.set(newChar.uuid, newChar);
 			}
 
 			// Set service end handle
-			newService.endHandle = handle - 1;
+			service.endHandle = handle - 1;
 		}
 
 		this.handles = handles;

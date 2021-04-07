@@ -13,5 +13,6 @@ export declare class DbusGattCharacteristic extends GattCharacteristic {
     broadcast(): Promise<void>;
     notify(): Promise<void>;
     private getInterface;
+    addDescriptor(): Promise<GattDescriptor>;
 }
 //# sourceMappingURL=Characteristic.d.ts.map

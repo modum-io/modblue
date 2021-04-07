@@ -1,4 +1,5 @@
-import { GattCharacteristic } from './Characteristic';
+/// <reference types="node" />
+import { GattCharacteristic, GattCharacteristicProperty, ReadFunction, WriteFunction } from './Characteristic';
 import { Gatt } from './Gatt';
 /**
  * Represents a GATT service.
@@ -23,7 +24,15 @@ export declare abstract class GattService {
     readonly characteristics: Map<string, GattCharacteristic>;
     constructor(gatt: Gatt, uuid: string, isRemote: boolean);
     /**
-     * Discover all charactersitics of this service.
+     * Local only: Add a new characteristic to this service
+     */
+    abstract addCharacteristic(uuid: string, props: GattCharacteristicProperty[], secure: GattCharacteristicProperty[], value?: Buffer): Promise<GattCharacteristic>;
+    /**
+     * Local only: Add a new characteristic to this service
+     */
+    abstract addCharacteristic(uuid: string, props: GattCharacteristicProperty[], secure: GattCharacteristicProperty[], readFunc?: ReadFunction, writeFunc?: WriteFunction): Promise<GattCharacteristic>;
+    /**
+     * Remote only: Discover all charactersitics of this service.
      */
     abstract discoverCharacteristics(): Promise<GattCharacteristic[]>;
     toString(): string;

@@ -30,13 +30,19 @@ export class HciGattCharacteristic extends GattCharacteristic {
 		secureOrFlag: number | GattCharacteristicProperty[],
 		startHandle: number,
 		valueHandle: number,
-		readFunc?: ReadFunction,
+		readFuncOrValue?: ReadFunction | Buffer,
 		writeFunc?: WriteFunction
 	) {
-		super(service, uuid, isRemote, propsOrFlag, secureOrFlag, readFunc, writeFunc);
+		super(service, uuid, isRemote, propsOrFlag, secureOrFlag, readFuncOrValue, writeFunc);
 
 		this.startHandle = startHandle;
 		this.valueHandle = valueHandle;
+	}
+
+	public async addDescriptor(uuid: string, value: Buffer): Promise<GattDescriptor> {
+		const desc = new HciGattDescriptor(this, uuid, false, 0, value);
+		this.descriptors.set(desc.uuid, desc);
+		return desc;
 	}
 
 	public async discoverDescriptors(): Promise<GattDescriptor[]> {

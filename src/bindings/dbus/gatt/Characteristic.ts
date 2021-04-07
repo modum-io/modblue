@@ -66,4 +66,8 @@ export class DbusGattCharacteristic extends GattCharacteristic {
 
 		return this.iface;
 	}
+
+	public async addDescriptor(): Promise<GattDescriptor> {
+		throw new Error('Method not implemented.');
+	}
 }

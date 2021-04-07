@@ -1,4 +1,4 @@
-import { Gatt } from '../../../models';
+import { Gatt, GattService } from '../../../models';
 import { DbusObject, I_BLUEZ_DEVICE, I_BLUEZ_SERVICE, I_OBJECT_MANAGER, I_PROPERTIES } from '../misc';
 import { DbusPeripheral } from '../Peripheral';
 
@@ -75,5 +75,13 @@ export class DbusGatt extends Gatt {
 		}
 
 		return [...this.services.values()];
+	}
+
+	public async addService(): Promise<GattService> {
+		throw new Error('Method not implemented.');
+	}
+
+	public async prepare(): Promise<void> {
+		throw new Error('Method not implemented.');
 	}
 }

@@ -9,7 +9,8 @@ export declare class HciGattCharacteristic extends GattCharacteristic {
     valueHandle: number;
     endHandle: number;
     private get gatt();
-    constructor(service: HciGattService, uuid: string, isRemote: boolean, propsOrFlag: number | GattCharacteristicProperty[], secureOrFlag: number | GattCharacteristicProperty[], startHandle: number, valueHandle: number, readFunc?: ReadFunction, writeFunc?: WriteFunction);
+    constructor(service: HciGattService, uuid: string, isRemote: boolean, propsOrFlag: number | GattCharacteristicProperty[], secureOrFlag: number | GattCharacteristicProperty[], startHandle: number, valueHandle: number, readFuncOrValue?: ReadFunction | Buffer, writeFunc?: WriteFunction);
+    addDescriptor(uuid: string, value: Buffer): Promise<GattDescriptor>;
     discoverDescriptors(): Promise<GattDescriptor[]>;
     read(): Promise<Buffer>;
     write(data: Buffer, withoutResponse: boolean): Promise<void>;

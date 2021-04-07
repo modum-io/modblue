@@ -55,4 +55,8 @@ export class DbusGattService extends GattService {
 
 		return [...this.characteristics.values()];
 	}
+
+	public async addCharacteristic(): Promise<GattCharacteristic> {
+		throw new Error('Method not implemented.');
+	}
 }

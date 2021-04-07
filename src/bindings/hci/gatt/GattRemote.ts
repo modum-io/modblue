@@ -1,6 +1,6 @@
 import { Mutex, MutexInterface, withTimeout } from 'async-mutex';
 
-import { Gatt, GattError, Peripheral } from '../../../models';
+import { Gatt, GattError, GattService, Peripheral } from '../../../models';
 import { Hci, Codes } from '../misc';
 import { HciPeripheral } from '../Peripheral';
 
@@ -792,5 +792,13 @@ export class HciGattRemote extends Gatt {
 		if (opcode !== Codes.ATT_OP_WRITE_RESP) {
 			throw new GattError(this.peripheral, `WriteValue error, opcode ${opcode}`);
 		}
+	}
+
+	public async addService(): Promise<GattService> {
+		throw new Error('Method not implemented.');
+	}
+
+	public async prepare(): Promise<void> {
+		throw new Error('Method not implemented.');
 	}
 }

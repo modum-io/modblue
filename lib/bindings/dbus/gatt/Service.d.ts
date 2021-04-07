@@ -8,5 +8,6 @@ export declare class DbusGattService extends GattService {
     private get dbus();
     constructor(gatt: DbusGatt, uuid: string, isRemote: boolean, path: string);
     discoverCharacteristics(): Promise<GattCharacteristic[]>;
+    addCharacteristic(): Promise<GattCharacteristic>;
 }
 //# sourceMappingURL=Service.d.ts.map

@@ -237,11 +237,13 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
+		if (!this.gatt) {
+			throw new Error('You have to setup the local GATT server before advertising');
+		}
+
 		this.deviceName = deviceName;
 		this.advertisedServiceUUIDs = serviceUUIDs;
-		if (this.gatt) {
-			this.gatt.setData(this.deviceName, this.gatt.serviceInputs);
-		}
+		await this.gatt.prepare(this.deviceName);
 
 		await this.gap.startAdvertising(this.deviceName, serviceUUIDs);
 
@@ -270,8 +272,10 @@ export class HciAdapter extends Adapter {
 	public async setupGatt(maxMtu?: number): Promise<Gatt> {
 		await this.init();
 
-		this.gatt = new HciGattLocal(this, this.hci, maxMtu);
-		this.gatt.setData(this.deviceName, []);
+		if (!this.gatt) {
+			this.gatt = new HciGattLocal(this, this.hci, maxMtu);
+		}
+
 		return this.gatt;
 	}
 

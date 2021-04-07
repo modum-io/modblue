@@ -60,4 +60,8 @@ export class WebGattCharacteristic extends GattCharacteristic {
 	private onValueChanged = (event: Event) => {
 		this.emit('notification', (event.target as BluetoothRemoteGATTCharacteristic).value.buffer as Buffer);
 	};
+
+	public async addDescriptor(): Promise<GattDescriptor> {
+		throw new Error('Method not implemented.');
+	}
 }

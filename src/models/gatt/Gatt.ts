@@ -57,7 +57,19 @@ export abstract class Gatt {
 	}
 
 	/**
-	 * Discover all services of this GATT server.
+	 * Local only: Adds a new service to this GATT server.
+	 */
+	public abstract addService(uuid: string): Promise<GattService>;
+
+	/**
+	 * Local only: Prepares this GATT server for advertisement.
+	 * This assumes that no further changes to the services or characteristics will happen.
+	 * @param deviceName The name of this device. Also used in the advertisement.
+	 */
+	public abstract prepare(deviceName: string): Promise<void>;
+
+	/**
+	 * Remote only: Discover all services of this GATT server.
 	 */
 	public abstract discoverServices(): Promise<GattService[]>;
 

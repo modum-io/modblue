@@ -32,7 +32,17 @@ export declare abstract class Gatt {
     get mtu(): number;
     constructor(peripheral?: Peripheral, adapter?: Adapter, mtu?: number, services?: GattService[]);
     /**
-     * Discover all services of this GATT server.
+     * Local only: Adds a new service to this GATT server.
+     */
+    abstract addService(uuid: string): Promise<GattService>;
+    /**
+     * Local only: Prepares this GATT server for advertisement.
+     * This assumes that no further changes to the services or characteristics will happen.
+     * @param deviceName The name of this device. Also used in the advertisement.
+     */
+    abstract prepare(deviceName: string): Promise<void>;
+    /**
+     * Remote only: Discover all services of this GATT server.
      */
     abstract discoverServices(): Promise<GattService[]>;
     toString(): string;

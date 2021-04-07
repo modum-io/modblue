@@ -2,7 +2,7 @@ import { inspect } from 'util';
 
 import { CUSTOM, InspectOptionsStylized } from '../Inspect';
 
-import { GattCharacteristic } from './Characteristic';
+import { GattCharacteristic, GattCharacteristicProperty, ReadFunction, WriteFunction } from './Characteristic';
 import { Gatt } from './Gatt';
 
 /**
@@ -37,7 +37,28 @@ export abstract class GattService {
 	}
 
 	/**
-	 * Discover all charactersitics of this service.
+	 * Local only: Add a new characteristic to this service
+	 */
+	public abstract addCharacteristic(
+		uuid: string,
+		props: GattCharacteristicProperty[],
+		secure: GattCharacteristicProperty[],
+		value?: Buffer
+	): Promise<GattCharacteristic>;
+
+	/**
+	 * Local only: Add a new characteristic to this service
+	 */
+	public abstract addCharacteristic(
+		uuid: string,
+		props: GattCharacteristicProperty[],
+		secure: GattCharacteristicProperty[],
+		readFunc?: ReadFunction,
+		writeFunc?: WriteFunction
+	): Promise<GattCharacteristic>;
+
+	/**
+	 * Remote only: Discover all charactersitics of this service.
 	 */
 	public abstract discoverCharacteristics(): Promise<GattCharacteristic[]>;
 

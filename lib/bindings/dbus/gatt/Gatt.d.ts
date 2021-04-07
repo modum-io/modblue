@@ -1,4 +1,4 @@
-import { Gatt } from '../../../models';
+import { Gatt, GattService } from '../../../models';
 import { DbusPeripheral } from '../Peripheral';
 import { DbusGattService } from './Service';
 export declare class DbusGatt extends Gatt {
@@ -7,5 +7,7 @@ export declare class DbusGatt extends Gatt {
     private get dbus();
     constructor(peripheral: DbusPeripheral);
     discoverServices(): Promise<DbusGattService[]>;
+    addService(): Promise<GattService>;
+    prepare(): Promise<void>;
 }
 //# sourceMappingURL=Gatt.d.ts.map
