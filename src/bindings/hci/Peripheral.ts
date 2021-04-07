@@ -24,8 +24,8 @@ export class HciPeripheral extends Peripheral {
 			return;
 		}
 
-		if (!this.isMaster) {
-			throw new Error('Connect can only be called when in master role');
+		if (this.isMaster) {
+			throw new Error('Connect can only be called when not in master role');
 		}
 
 		this._state = 'connecting';
@@ -47,7 +47,7 @@ export class HciPeripheral extends Peripheral {
 
 		this.signaling = new Signaling(hci, this.handle);
 		if (!isMaster) {
-			// Only setup remote GATT if we're the master
+			// Only setup remote GATT if we're not the master
 			this._gatt = new HciGattRemote(this, hci, handle);
 		}
 
