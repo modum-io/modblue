@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [9.0.0](https://github.com/modum-io/modblue/compare/v8.0.1...v9.0.0) (2021-04-08)
+
+### ⚠ BREAKING CHANGES
+
+- Remove autodetect function
+
+### Bug Fixes
+
+- Remove autodetect ([3ed4b73](https://github.com/modum-io/modblue/commit/3ed4b7318486fc72d3a67fcb84fbf2a26f9bbbfd))
+
 ### [8.0.1](https://github.com/modum-io/modblue/compare/v8.0.0...v8.0.1) (2021-04-07)
 
 ### Bug Fixes
