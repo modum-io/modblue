@@ -1,7 +1,7 @@
 import { ClientInterface } from 'dbus-next';
 
 import { GattCharacteristic, GattCharacteristicProperty, GattDescriptor } from '../../../models';
-import { buildTypedValue, I_BLUEZ_CHARACTERISTIC } from '../misc';
+import { buildTypedValue, DbusObject, I_BLUEZ_CHARACTERISTIC, I_PROPERTIES } from '../misc';
 
 import { DbusGattService } from './Service';
 
@@ -11,6 +11,7 @@ export class DbusGattCharacteristic extends GattCharacteristic {
 	public readonly path: string;
 
 	private iface: ClientInterface;
+	private propsIface: ClientInterface;
 
 	private get dbus() {
 		return this.service.gatt.peripheral.adapter.modblue.dbus;
@@ -54,9 +55,28 @@ export class DbusGattCharacteristic extends GattCharacteristic {
 		throw new Error('Method not implemented.');
 	}
 
-	public async notify(): Promise<void> {
-		throw new Error('Method not implemented.');
+	public async notify(notify: boolean): Promise<void> {
+		const iface = await this.getInterface();
+		const propsIface = await this.getPropsInterface();
+
+		if (notify) {
+			propsIface.on('PropertiesChanged', this.onPropsChanged);
+			await iface.StartNotify();
+		} else {
+			propsIface.off('PropertiesChanged', this.onPropsChanged);
+			await iface.StopNotify();
+		}
 	}
+
+	private onPropsChanged = (iface: string, changedProps: DbusObject) => {
+		if (iface !== I_BLUEZ_CHARACTERISTIC) {
+			return;
+		}
+
+		if ('Value' in changedProps) {
+			this.emit('notification', changedProps.Value.value as Buffer);
+		}
+	};
 
 	private async getInterface() {
 		if (!this.iface) {
@@ -65,6 +85,15 @@ export class DbusGattCharacteristic extends GattCharacteristic {
 		}
 
 		return this.iface;
+	}
+
+	private async getPropsInterface() {
+		if (!this.propsIface) {
+			const obj = await this.dbus.getProxyObject('org.bluez', this.path);
+			this.propsIface = obj.getInterface(I_PROPERTIES);
+		}
+
+		return this.propsIface;
 	}
 
 	public async addDescriptor(): Promise<GattDescriptor> {
