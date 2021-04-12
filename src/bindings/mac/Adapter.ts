@@ -1,5 +1,5 @@
-const events = require('events');
-const util = require('util');
+import events from 'events';
+import util from 'util';
 
 import { Adapter, AddressType, GattLocal, MODblue, Peripheral } from '../../models';
 import { MacPeripheral } from './Peripheral';
@@ -10,6 +10,7 @@ util.inherits(NobleMac, events.EventEmitter);
 
 export class MacAdapter extends Adapter {
 	public readonly noble: any = null;
+
 	private initDone = false;
 	private scanning = false;
 
@@ -41,10 +42,13 @@ export class MacAdapter extends Adapter {
 			this.noble.init();
 		});
 
+		this.noble.on('read', this.onNotification);
+
 		this.initDone = true;
 	}
 
 	public dispose(): void {
+		this.noble.removeAllListeners();
 		this.noble.stop();
 	}
 
@@ -52,20 +56,56 @@ export class MacAdapter extends Adapter {
 		await this.init();
 		this.peripherals.clear();
 		this.noble.startScanning(serviceUUIDs, allowDuplicates);
-		this.noble.on("discover", this.onDiscover);
+		this.noble.on('discover', this.onDiscover);
 		this.scanning = true;
 	}
 
-	private onDiscover = (uuid: string, address: string, addressType: AddressType, connectable: boolean, advertisement: {localName?: string; manufacturerData?: Buffer}, rssi: number) => {
+	private onDiscover = (
+		uuid: string,
+		address: string,
+		addressType: AddressType,
+		connectable: boolean,
+		advertisement: { localName?: string; manufacturerData?: Buffer },
+		rssi: number
+	) => {
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new MacPeripheral(this, uuid, advertisement.localName, addressType, address, advertisement.manufacturerData, rssi);
+			peripheral = new MacPeripheral(
+				this,
+				uuid,
+				advertisement.localName,
+				addressType,
+				address,
+				advertisement.manufacturerData,
+				rssi
+			);
 		} else {
 			peripheral.name = advertisement.localName;
 			peripheral.manufacturerData = advertisement.manufacturerData;
 		}
 		this.emit('discover', peripheral);
-	}
+	};
+
+	private onNotification = (
+		uuid: string,
+		serviceUUID: string,
+		charUUID: string,
+		data: Buffer,
+		isNotification: boolean
+	) => {
+		if (isNotification) {
+			const peripheral = this.peripherals.get(uuid);
+			if (peripheral) {
+				const service = peripheral.gatt.services.get(serviceUUID);
+				if (service) {
+					const char = service.characteristics.get(charUUID);
+					if (char) {
+						char.emit('notification', data);
+					}
+				}
+			}
+		}
+	};
 
 	public async stopScanning(): Promise<void> {
 		this.noble.stopScanning();
@@ -80,7 +120,7 @@ export class MacAdapter extends Adapter {
 		throw new Error('Method not implemented.');
 	}
 
-	public startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void> {
+	public startAdvertising(): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
 
@@ -88,7 +128,7 @@ export class MacAdapter extends Adapter {
 		throw new Error('Method not implemented.');
 	}
 
-	public setupGatt(maxMtu?: number): Promise<GattLocal> {
+	public setupGatt(): Promise<GattLocal> {
 		throw new Error('Method not implemented.');
 	}
 }

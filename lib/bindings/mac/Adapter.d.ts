@@ -10,11 +10,12 @@ export declare class MacAdapter extends Adapter {
     dispose(): void;
     startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;
     private onDiscover;
+    private onNotification;
     stopScanning(): Promise<void>;
     getScannedPeripherals(): Promise<Peripheral[]>;
     isAdvertising(): Promise<boolean>;
-    startAdvertising(deviceName: string, serviceUUIDs?: string[]): Promise<void>;
+    startAdvertising(): Promise<void>;
     stopAdvertising(): Promise<void>;
-    setupGatt(maxMtu?: number): Promise<GattLocal>;
+    setupGatt(): Promise<GattLocal>;
 }
 //# sourceMappingURL=Adapter.d.ts.map
