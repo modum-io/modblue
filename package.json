@@ -16,6 +16,7 @@
 		"url": "https://github.com/modum-io/modblue.git"
 	},
 	"main": "lib/index.js",
+	"module": "lib/index.js",
 	"exports": {
 		".": "./lib/index.js",
 		"./hci": "./lib/bindings/hci/index.js",
