@@ -154,11 +154,14 @@ export class DbusAdapter extends Adapter {
 			const address = (data.Address?.value as string).toLowerCase();
 			const addressType = data.AddressType?.value as AddressType;
 			const advertisement = data.ManufacturerData?.value as Record<string, { value: Buffer }>;
-			let manufacturerData = Buffer.alloc(0);
-			for (const key of Object.keys(advertisement)) {
-				const prefix = Buffer.alloc(2);
-				prefix.writeUInt16LE(Number(key));
-				manufacturerData = Buffer.concat([manufacturerData, prefix, advertisement[key].value]);
+			let manufacturerData: Buffer = null;
+			if (advertisement) {
+				manufacturerData = Buffer.alloc(0);
+				for (const key of Object.keys(advertisement)) {
+					const prefix = Buffer.alloc(2);
+					prefix.writeUInt16LE(Number(key));
+					manufacturerData = Buffer.concat([manufacturerData, prefix, advertisement[key].value]);
+				}
 			}
 			const rssi = data.RSSI?.value as number;
 			peripheral = new DbusPeripheral(this, path, id, name, addressType, address, manufacturerData, rssi);
