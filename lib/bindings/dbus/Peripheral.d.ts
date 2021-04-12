@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { AddressType, Peripheral } from '../../models';
 import { DbusAdapter } from './Adapter';
 import { DbusGatt } from './gatt';
@@ -12,7 +13,7 @@ export declare class DbusPeripheral extends Peripheral {
     private connectTimeout;
     private disconnecting;
     private disconnectTimeout;
-    constructor(adapter: DbusAdapter, path: string, id: string, name: string, addressType: AddressType, address: string, advertisement: Record<string, unknown>, rssi: number);
+    constructor(adapter: DbusAdapter, path: string, id: string, name: string, addressType: AddressType, address: string, advertisement: Buffer, rssi: number);
     private init;
     connect(): Promise<DbusGatt>;
     disconnect(): Promise<void>;

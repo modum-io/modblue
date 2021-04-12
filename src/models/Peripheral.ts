@@ -75,9 +75,9 @@ export abstract class Peripheral {
 	public readonly address: string;
 
 	/**
-	 * Any advertisement data received from the peripheral. Usually a buffer.
+	 * Any manufacturer advertisement data received from the peripheral. Includes the company identifier.
 	 */
-	public advertisement: Record<string, unknown>;
+	public manufacturerData: Buffer;
 	/**
 	 * The current RSSI signal strength of the peripheral.
 	 */
@@ -97,7 +97,7 @@ export abstract class Peripheral {
 		name: string,
 		addressType: AddressType,
 		address: string,
-		advertisement?: Record<string, unknown>,
+		advertisement?: Buffer,
 		rssi?: number
 	) {
 		this.adapter = adapter;
@@ -106,7 +106,7 @@ export abstract class Peripheral {
 		this.addressType = addressType;
 		this.address = address;
 
-		this.advertisement = advertisement;
+		this.manufacturerData = advertisement;
 		this.rssi = rssi;
 
 		this._state = 'disconnected';

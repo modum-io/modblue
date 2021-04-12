@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { Adapter } from './Adapter';
 import { AddressType } from './AddressType';
 import { GattRemote } from './gatt';
@@ -61,9 +62,9 @@ export declare abstract class Peripheral {
      */
     readonly address: string;
     /**
-     * Any advertisement data received from the peripheral. Usually a buffer.
+     * Any manufacturer advertisement data received from the peripheral. Includes the company identifier.
      */
-    advertisement: Record<string, unknown>;
+    manufacturerData: Buffer;
     /**
      * The current RSSI signal strength of the peripheral.
      */
@@ -73,7 +74,7 @@ export declare abstract class Peripheral {
      * The current state of the peripheral.
      */
     get state(): PeripheralState;
-    constructor(adapter: Adapter, uuid: string, name: string, addressType: AddressType, address: string, advertisement?: Record<string, unknown>, rssi?: number);
+    constructor(adapter: Adapter, uuid: string, name: string, addressType: AddressType, address: string, advertisement?: Buffer, rssi?: number);
     /**
      * Connect to this peripheral and setup GATT. Throws an error when connecting fails.
      * Some connection settings may not be supported on certain platforms and wil be ignored.
