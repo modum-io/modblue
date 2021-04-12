@@ -4,11 +4,8 @@ import util from 'util';
 import { Adapter, AddressType, GattLocal, MODblue, Peripheral } from '../../models';
 import { MacPeripheral } from './Peripheral';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const NobleMac = require('./native').NobleMac;
-util.inherits(NobleMac, events.EventEmitter);
-
 export class MacAdapter extends Adapter {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public readonly noble: any = null;
 
 	private initDone = false;
@@ -23,6 +20,11 @@ export class MacAdapter extends Adapter {
 	public constructor(modblue: MODblue, id: string, name: string) {
 		super(modblue, id, name);
 
+		// This fixes an issue with webpack trying to load the module at compile time
+		const NAME = 'native';
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const NobleMac = require(`./${NAME}`).NobleMac;
+		util.inherits(NobleMac, events.EventEmitter);
 		this.noble = new NobleMac();
 	}
 
