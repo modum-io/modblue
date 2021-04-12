@@ -2,7 +2,7 @@ import { Adapter, MODblue } from '../../models';
 /**
  * Use the MAC bindings to access BLE functions.
  */
-export declare class WebMODblue extends MODblue {
+export declare class MacMODblue extends MODblue {
     private adapter;
     dispose(): Promise<void>;
     getAdapters(): Promise<Adapter[]>;

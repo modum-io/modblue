@@ -3,3 +3,6 @@ node_modules/
 
 # Custom tests
 tests/modum.js
+
+# GYP stuff
+build

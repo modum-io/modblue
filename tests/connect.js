@@ -1,11 +1,12 @@
 const { HciMODblue } = require('../lib/hci');
 const { DbusMODblue } = require('../lib/dbus');
+const { MacMODblue } = require('../lib/mac');
 
 const USAGE = `
 Usage:
 	node ./tests/connect.js <bindings> <device> <service> <characteristic>
 Arguments:
-	bindings:        Bindings to use: "hci" or "dbus"
+	bindings:        Bindings to use: "hci", "dbus" or "mac"
 	device:          Peripheral MAC address, eg. "AA:AA:AA:AA:AA:AA"
 	service:         Service UUID without dashes
 	characteristic:  Characteristic UUID without dashes
@@ -25,7 +26,7 @@ const main = async () => {
 
 	console.log('Initializing MODblue...');
 
-	const modblue = BINDINGS === 'hci' ? new HciMODblue() : BINDINGS === 'dbus' ? new DbusMODblue() : null;
+	const modblue = BINDINGS === 'hci' ? new HciMODblue() : BINDINGS === 'dbus' ? new DbusMODblue() : BINDINGS === "mac" ? new MacMODblue() : null;
 	if (!modblue) {
 		throw new Error(`Could not find requested bindings ${BINDINGS}`);
 	}

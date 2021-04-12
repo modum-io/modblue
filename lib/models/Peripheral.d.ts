@@ -50,10 +50,6 @@ export declare abstract class Peripheral {
      */
     readonly uuid: string;
     /**
-     * The advertised name of the peripheral.
-     */
-    readonly name: string;
-    /**
      * The MAC address type of this peripheral.
      */
     readonly addressType: AddressType;
@@ -61,6 +57,10 @@ export declare abstract class Peripheral {
      * The MAC address of this peripheral. All lowercase, with colon separator between bytes, e.g. 11:22:33:aa:bb:cc
      */
     readonly address: string;
+    /**
+     * The advertised name of the peripheral.
+     */
+    name: string;
     /**
      * Any manufacturer advertisement data received from the peripheral. Includes the company identifier.
      */

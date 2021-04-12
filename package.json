@@ -51,8 +51,8 @@
 		"build": "tsc",
 		"docs": "typedoc",
 		"release": "standard-version -a",
-		"prepare": "husky install",
-		"pretty-quick": "pretty-quick --staged"
+		"prepare": "npx husky install",
+		"pretty-quick": "npx pretty-quick --staged"
 	},
 	"dependencies": {
 		"async-mutex": "0.3.1",
@@ -65,12 +65,10 @@
 		"dbus-next": "0.9.x"
 	},
 	"devDependencies": {
-		"@abandonware/bluetooth-hci-socket": "0.5.3-7",
 		"@types/node": "14.14.37",
 		"@types/web-bluetooth": "0.0.9",
 		"@typescript-eslint/eslint-plugin": "4.21.0",
 		"@typescript-eslint/parser": "4.21.0",
-		"dbus-next": "0.9.2",
 		"eslint": "7.23.0",
 		"eslint-config-prettier": "8.1.0",
 		"husky": "6.0.0",

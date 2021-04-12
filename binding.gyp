@@ -1,11 +1,11 @@
 {
 	'targets': [
 		{
-			'target_name': 'noble',
+			'target_name': 'modblue',
 			'conditions': [
 				['OS=="mac"', {
 					'dependencies': [
-						'native/mac/binding.gyp:binding',
+						'native/mac/binding.gyp:native',
 					],
 				}],
 			],

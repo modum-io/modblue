@@ -1,11 +1,15 @@
 import { Adapter, GattLocal, MODblue, Peripheral } from '../../models';
 export declare class MacAdapter extends Adapter {
-    private noble;
+    readonly noble: any;
+    private initDone;
     private scanning;
+    private peripherals;
     isScanning(): Promise<boolean>;
     constructor(modblue: MODblue, id: string, name: string);
+    private init;
     dispose(): void;
     startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;
+    private onDiscover;
     stopScanning(): Promise<void>;
     getScannedPeripherals(): Promise<Peripheral[]>;
     isAdvertising(): Promise<boolean>;
