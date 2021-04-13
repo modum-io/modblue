@@ -23,6 +23,7 @@
 		"./dbus": "./lib/bindings/dbus/index.js",
 		"./web": "./lib/bindings/web/index.js",
 		"./mac": "./lib/bindings/mac/index.js",
+		"./win": "./lib/bindings/win/index.js",
 		"./package.json": "./package.json"
 	},
 	"type": "commonjs",
@@ -40,6 +41,9 @@
 			],
 			"mac": [
 				"lib/bindings/mac"
+			],
+			"win": [
+				"lib/bindings/win"
 			]
 		}
 	},

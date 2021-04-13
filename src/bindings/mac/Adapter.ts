@@ -21,9 +21,9 @@ export class MacAdapter extends Adapter {
 		super(modblue, id, name);
 
 		// This fixes an issue with webpack trying to load the module at compile time
-		const NAME = 'native.node';
+		const NAME = 'mac-ble.node';
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const NobleMac = require(`./${NAME}`).NobleMac;
+		const NobleMac = require(`../../../build/Relase/${NAME}`).NobleMac;
 		util.inherits(NobleMac, events.EventEmitter);
 		this.noble = new NobleMac();
 	}

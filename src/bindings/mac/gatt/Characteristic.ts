@@ -37,7 +37,7 @@ export class MacGattCharacteristic extends GattCharacteristic {
 					dev === this.service.gatt.peripheral.uuid &&
 					srv === this.service.uuid &&
 					char === this.uuid &&
-					isNotification
+					!isNotification
 				) {
 					noble.off('read', handler);
 					resolve(data);
