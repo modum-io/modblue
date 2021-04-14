@@ -61,6 +61,7 @@
 	},
 	"dependencies": {
 		"async-mutex": "0.3.1",
+		"nan": "2.14.2",
 		"napi-thread-safe-callback": "0.0.6",
 		"node-addon-api": "3.1.0",
 		"tiny-typed-emitter": "2.0.3"
