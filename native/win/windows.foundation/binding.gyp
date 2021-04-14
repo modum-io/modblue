@@ -8,7 +8,7 @@
     "target_name": "windows.foundation",
     "sources": [],
     "include_dirs": [
-      "<!(node -e \"require('nan')\")"
+      "<!(node -e \"require('../../../node_modules/nan')\")"
     ],
     "libraries": [],
     "conditions": [
