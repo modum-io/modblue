@@ -5,7 +5,7 @@
   },
   "includes": ["common.gypi"],
   "targets": [{
-    "target_name": "windows.devices.bluetooth",
+    "target_name": "win-foundation",
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"
@@ -73,6 +73,6 @@
         "AdditionalOptions": ["/ZW"],
         "DisableSpecificWarnings": [4609]
       }
-    },
+    }
   }]
 }

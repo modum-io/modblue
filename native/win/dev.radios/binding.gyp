@@ -5,7 +5,7 @@
   },
   "includes": ["common.gypi"],
   "targets": [{
-    "target_name": "windows.foundation",
+    "target_name": "win-dev.radios",
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"

@@ -5,7 +5,7 @@
   },
   "includes": ["common.gypi"],
   "targets": [{
-    "target_name": "windows.devices.bluetooth.genericattributeprofile",
+    "target_name": "win-dev.ble.gap",
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"

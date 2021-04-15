@@ -5,7 +5,7 @@
   },
   "includes": ["common.gypi"],
   "targets": [{
-    "target_name": "windows.storage.streams",
+    "target_name": "win-dev.ble.adv",
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"

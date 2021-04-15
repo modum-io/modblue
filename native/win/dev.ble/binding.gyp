@@ -5,7 +5,7 @@
   },
   "includes": ["common.gypi"],
   "targets": [{
-    "target_name": "windows.devices.bluetooth.advertisement",
+    "target_name": "win-dev.ble",
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"
@@ -73,6 +73,6 @@
         "AdditionalOptions": ["/ZW"],
         "DisableSpecificWarnings": [4609]
       }
-    }
+    },
   }]
 }

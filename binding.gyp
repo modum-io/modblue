@@ -2,6 +2,7 @@
 	'targets': [
 		{
 			'target_name': 'modblue-mac',
+			'type': 'none',
 			'conditions': [
 				['OS=="mac"', {
 					'dependencies': [
@@ -12,16 +13,17 @@
 		},
 		{
 			'target_name': 'modblue-win',
+			'type': 'none',
 			'conditions': [
 				['OS=="win"', {
 					'dependencies': [
-						'native/win/windows.foundation/binding.gyp:windows.foundation',
-						'native/win/windows.storage.streams/binding.gyp:windows.storage.streams',
-						'native/win/windows.devices.bluetooth/binding.gyp:windows.devices.bluetooth',
-						'native/win/windows.devices.bluetooth.advertisement/binding.gyp:windows.devices.bluetooth.advertisement',
-						'native/win/windows.devices.bluetooth.genericattributeprofile/binding.gyp:windows.devices.bluetooth.genericattributeprofile',
-						'native/win/windows.devices.enumeration/binding.gyp:windows.devices.enumeration',
-						'native/win/windows.devices.radios/binding.gyp:windows.devices.radios',
+						'native/win/foundation/binding.gyp:win-foundation',
+						'native/win/storage.streams/binding.gyp:win-storage.streams',
+						'native/win/dev.ble/binding.gyp:win-dev.ble',
+						'native/win/dev.ble.adv/binding.gyp:win-dev.ble.adv',
+						'native/win/dev.ble.gap/binding.gyp:win-dev.ble.gap',
+						'native/win/dev.enum/binding.gyp:win-dev.enum',
+						'native/win/dev.radios/binding.gyp:win-dev.radios',
 					],
 				}],
 			],

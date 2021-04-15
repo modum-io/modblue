@@ -5,7 +5,7 @@
   },
   "includes": ["common.gypi"],
   "targets": [{
-    "target_name": "windows.devices.enumeration",
+    "target_name": "win-storage.streams",
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"

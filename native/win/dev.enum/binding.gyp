@@ -5,7 +5,7 @@
   },
   "includes": ["common.gypi"],
   "targets": [{
-    "target_name": "windows.devices.radios",
+    "target_name": "win-dev.enum",
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"
