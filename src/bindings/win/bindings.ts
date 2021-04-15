@@ -6,13 +6,13 @@ import { AddressType } from '../../models';
 import * as rt from './rt-utils';
 
 // Note the load order here is important for cross-namespace dependencies.
-rt.using(require('../../../build/Release/win-foundation'), 'Windows.Foundation');
-rt.using(require('../../../build/Release/win-storage.streams'), 'Windows.Storage.Streams');
-rt.using(require('../../../build/Release/win-dev.enum'), 'Windows.Devices.Enumeration');
-rt.using(require('../../../build/Release/win-dev.ble.gap'), 'Windows.Devices.Bluetooth.GenericAttributeProfile');
-rt.using(require('../../../build/Release/win-dev.ble'), 'Windows.Devices.Bluetooth');
-rt.using(require('../../../build/Release/win-dev.ble.adv'), 'Windows.Devices.Bluetooth.Advertisement');
-rt.using(require('../../../build/Release/win-dev.radios'), 'Windows.Devices.Radios');
+rt.using(require('../../../build/Release/win-foundation.node'), 'Windows.Foundation');
+rt.using(require('../../../build/Release/win-storage.streams.node'), 'Windows.Storage.Streams');
+rt.using(require('../../../build/Release/win-dev.enum.node'), 'Windows.Devices.Enumeration');
+rt.using(require('../../../build/Release/win-dev.ble.gap.node'), 'Windows.Devices.Bluetooth.GenericAttributeProfile');
+rt.using(require('../../../build/Release/win-dev.ble.node'), 'Windows.Devices.Bluetooth');
+rt.using(require('../../../build/Release/win-dev.ble.adv.node'), 'Windows.Devices.Bluetooth.Advertisement');
+rt.using(require('../../../build/Release/win-dev.radios.node'), 'Windows.Devices.Radios');
 
 const BluetoothLEDevice = Windows.Devices.Bluetooth.BluetoothLEDevice;
 const BluetoothCacheMode = Windows.Devices.Bluetooth.BluetoothCacheMode;
