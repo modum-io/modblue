@@ -1,15 +1,15 @@
-'use strict';
-
 // Utility functions for working with NodeRT projections.
 
-const debug = require('debug')('noble-uwp');
+declare global {
+	const Windows: any;
+}
 
 // Relative path to NodeRT-generaged UWP namespace modules.
 
 // Require a NodeRt namespace package and load it into the global namespace.
-function using(ns) {
-	let nsParts = ns.split('/').slice(-1)[0].split('.');
-	let parentObj = global;
+export function using(ns: string): void {
+	const nsParts = ns.split('/').slice(-1)[0].split('.');
+	let parentObj: any = global;
 
 	// Build an object tree as necessary for the namespace hierarchy.
 	for (let i = 0; i < nsParts.length - 1; i++) {
@@ -21,12 +21,13 @@ function using(ns) {
 		parentObj = nsObj;
 	}
 
-	let lastNsPart = nsParts[nsParts.length - 1];
-	let nsPackage = require(ns.toLowerCase());
+	const lastNsPart = nsParts[nsParts.length - 1];
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	const nsPackage = require(ns.toLowerCase());
 
 	// Merge in any already-loaded sub-namespaces.
 	// This allows loading in non-hierarchical order.
-	let nsObj = parentObj[lastNsPart];
+	const nsObj = parentObj[lastNsPart];
 	if (nsObj) {
 		Object.keys(nsObj).forEach((key) => {
 			nsPackage[key] = nsObj[key];
@@ -36,10 +37,10 @@ function using(ns) {
 }
 
 // Convert a NodeRT async method from callback to promise.
-function promisify(fn, o) {
-	return (...args) => {
+export function promisify(fn: () => void, o?: unknown) {
+	return (...args: unknown[]): Promise<unknown> => {
 		return new Promise((resolve, reject) => {
-			(o ? fn.bind(o) : fn)(...args, (err, result) => {
+			(o ? fn.bind(o) : fn)(...args, (err: Error, result: unknown) => {
 				if (err) reject(err);
 				else resolve(result);
 			});
@@ -48,8 +49,8 @@ function promisify(fn, o) {
 }
 
 // Convert a WinRT IVectorView to a JS Array.
-function toArray(o) {
-	let a = new Array(o.length);
+export function toArray<T = unknown>(o: { length: number; [index: number]: unknown } | T[]): T[] {
+	const a = new Array(o.length);
 	for (let i = 0; i < a.length; i++) {
 		a[i] = o[i];
 	}
@@ -57,8 +58,16 @@ function toArray(o) {
 }
 
 // Convert a WinRT IMap to a JS Map.
-function toMap(o) {
-	let m = new Map();
+export interface Cursor {
+	hasCurrent: boolean;
+	moveNext(): void;
+	current: {
+		key: unknown;
+		value: unknown;
+	};
+}
+export function toMap(o: { first(): Cursor }): Map<unknown, unknown> {
+	const m = new Map();
 	for (let i = o.first(); i.hasCurrent; i.moveNext()) {
 		m.set(i.current.key, i.current.value);
 	}
@@ -66,12 +75,12 @@ function toMap(o) {
 }
 
 // Convert a WinRT IBuffer to a JS Buffer.
-function toBuffer(b) {
+export function toBuffer(b: { length: number }): Buffer {
 	// TODO: Use nodert-streams to more efficiently convert the buffer?
-	let len = b.length;
+	const len = b.length;
 	const DataReader = Windows.Storage.Streams.DataReader;
-	let r = DataReader.fromBuffer(b);
-	let a = new Uint8Array(len);
+	const r = DataReader.fromBuffer(b);
+	const a = new Uint8Array(len);
 	for (let i = 0; i < len; i++) {
 		a[i] = r.readByte();
 	}
@@ -79,39 +88,42 @@ function toBuffer(b) {
 }
 
 // Convert a JS Buffer to a WinRT IBuffer.
-function fromBuffer(b) {
+export function fromBuffer(b: Buffer): unknown {
 	// TODO: Use nodert-streams to more efficiently convert the buffer?
-	let len = b.length;
+	const len = b.length;
 	const DataWriter = Windows.Storage.Streams.DataWriter;
-	let w = new DataWriter();
+	const w = new DataWriter();
 	for (let i = 0; i < len; i++) {
 		w.writeByte(b[i]);
 	}
 	return w.detachBuffer();
 }
 
-let keepAliveIntervalId = 0;
+let keepAliveIntervalId: NodeJS.Timer = null;
 let keepAliveIntervalCount = 0;
 
 // Increment or decrement the count of WinRT async tasks.
 // While the count is non-zero an interval is used to keep the JS engine alive.
-function keepAlive(k) {
+export function keepAlive(k: boolean): void {
 	if (k) {
 		if (++keepAliveIntervalCount === 1) {
 			// The actual duration doesn't really matter: it should be large but not too large.
-			keepAliveIntervalId = setInterval(() => {}, 24 * 60 * 60 * 1000);
+			keepAliveIntervalId = setInterval(() => null, 24 * 60 * 60 * 1000);
 		}
 	} else {
 		if (--keepAliveIntervalCount === 0) {
 			clearInterval(keepAliveIntervalId);
 		}
 	}
-	debug(`keepAlive(${k}) => ${keepAliveIntervalCount}`);
 }
 
-const disposableMap = {};
+export interface Disposable {
+	close(): void;
+}
 
-function trackDisposable(key, obj) {
+const disposableMap: { [key: string]: Disposable[] } = {};
+
+export function trackDisposable<T extends Disposable>(key: string, obj: T): T {
 	if (!obj) {
 		return obj;
 	}
@@ -138,35 +150,20 @@ function trackDisposable(key, obj) {
 	return obj;
 }
 
-function trackDisposables(key, array) {
+export function trackDisposables<T extends Disposable>(key: string, array: T[]): T[] {
 	array.forEach((obj) => trackDisposable(key, obj));
 	return array;
 }
 
-function disposeAll(key) {
+export function disposeAll(key: string): void {
 	const disposableList = disposableMap[key];
 
 	if (!disposableList) {
 		return;
 	}
 
-	debug('Disposing %d objects for %s', disposableList.length, key);
-
 	for (let i = 0; i < disposableList.length; i++) {
 		const disposable = disposableList[i];
 		disposable.close();
 	}
 }
-
-module.exports = {
-	using,
-	promisify,
-	toArray,
-	toMap,
-	toBuffer,
-	fromBuffer,
-	keepAlive,
-	trackDisposable,
-	trackDisposables,
-	disposeAll
-};

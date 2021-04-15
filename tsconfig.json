@@ -5,7 +5,6 @@
 		"target": "ES2015",
 		"outDir": "lib",
 		"types": ["node", "web-bluetooth"],
-		"allowJs": true,
 		"noImplicitAny": true,
 		"esModuleInterop": true,
 		"declaration": true,
