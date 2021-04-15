@@ -103,7 +103,7 @@ interface AdvertisementEvent {
 
 type Listener = (source: any, event: any) => void;
 
-class NobleBindings extends EventEmitter {
+export class NobleBindings extends EventEmitter {
 	private _radio: any = null;
 	private _radioState = 'unknown';
 	private _deviceMap: { [key: string]: DeviceRecord } = {};

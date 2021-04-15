@@ -12,14 +12,18 @@ export class WinGattCharacteristic extends GattCharacteristic {
 		this.descriptors.clear();
 		noble.discoverDescriptors(this.service.gatt.peripheral.uuid, this.service.uuid, this.uuid);
 
-		return new Promise<GattDescriptor[]>((resolve) => {
-			const handler = (dev: string, srv: string, char: string, descUUIDs: string[]) => {
+		return new Promise<GattDescriptor[]>((resolve, reject) => {
+			const handler = (dev: string, srv: string, char: string, descUUIDs: string[] | Error) => {
 				if (dev === this.service.gatt.peripheral.uuid && srv === this.service.uuid && char === this.uuid) {
 					noble.off('descriptorsDiscover', handler);
-					for (const descUUID of descUUIDs) {
-						this.descriptors.set(descUUID, new WinGattDescriptor(this, descUUID, true));
+					if (descUUIDs instanceof Error) {
+						reject(descUUIDs);
+					} else {
+						for (const descUUID of descUUIDs) {
+							this.descriptors.set(descUUID, new WinGattDescriptor(this, descUUID, true));
+						}
+						resolve([...this.descriptors.values()]);
 					}
-					resolve([...this.descriptors.values()]);
 				}
 			};
 			noble.on('descriptorsDiscover', handler);
@@ -31,8 +35,8 @@ export class WinGattCharacteristic extends GattCharacteristic {
 
 		noble.read(this.service.gatt.peripheral.uuid, this.service.uuid, this.uuid);
 
-		return new Promise<Buffer>((resolve) => {
-			const handler = (dev: string, srv: string, char: string, data: Buffer, isNotification: boolean) => {
+		return new Promise<Buffer>((resolve, reject) => {
+			const handler = (dev: string, srv: string, char: string, data: Buffer | Error, isNotification: boolean) => {
 				if (
 					dev === this.service.gatt.peripheral.uuid &&
 					srv === this.service.uuid &&
@@ -40,23 +44,31 @@ export class WinGattCharacteristic extends GattCharacteristic {
 					!isNotification
 				) {
 					noble.off('read', handler);
-					resolve(data);
+					if (data instanceof Error) {
+						reject(data);
+					} else {
+						resolve(data);
+					}
 				}
 			};
 			noble.on('read', handler);
 		});
 	}
 
-	public write(value: Buffer): Promise<void> {
+	public write(value: Buffer, withoutResponse?: boolean): Promise<void> {
 		const noble = this.service.gatt.peripheral.adapter.noble;
 
-		noble.write(this.service.gatt.peripheral.uuid, this.service.uuid, this.uuid, value);
+		noble.write(this.service.gatt.peripheral.uuid, this.service.uuid, this.uuid, value, withoutResponse);
 
-		return new Promise<void>((resolve) => {
-			const handler = (dev: string, srv: string, char: string) => {
+		return new Promise<void>((resolve, reject) => {
+			const handler = (dev: string, srv: string, char: string, err: Error) => {
 				if (dev === this.service.gatt.peripheral.uuid && srv === this.service.uuid && char === this.uuid) {
 					noble.off('write', handler);
-					resolve();
+					if (err) {
+						reject(err);
+					} else {
+						resolve();
+					}
 				}
 			};
 			noble.on('write', handler);
@@ -72,11 +84,15 @@ export class WinGattCharacteristic extends GattCharacteristic {
 
 		noble.notify(this.service.gatt.peripheral.uuid, this.service.uuid, this.uuid, notify);
 
-		return new Promise<void>((resolve) => {
-			const handler = (dev: string, srv: string, char: string) => {
+		return new Promise<void>((resolve, reject) => {
+			const handler = (dev: string, srv: string, char: string, err: Error) => {
 				if (dev === this.service.gatt.peripheral.uuid && srv === this.service.uuid && char === this.uuid) {
 					noble.off('notify', handler);
-					resolve();
+					if (err) {
+						reject(err);
+					} else {
+						resolve();
+					}
 				}
 			};
 			noble.on('notify', handler);

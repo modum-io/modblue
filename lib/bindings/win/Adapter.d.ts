@@ -1,6 +1,7 @@
 import { Adapter, GattLocal, MODblue, Peripheral } from '../../models';
+import { NobleBindings } from './bindings';
 export declare class WinAdapter extends Adapter {
-    readonly noble: any;
+    readonly noble: NobleBindings;
     private initDone;
     private scanning;
     private peripherals;

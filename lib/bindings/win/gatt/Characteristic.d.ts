@@ -5,7 +5,7 @@ export declare class WinGattCharacteristic extends GattCharacteristic {
     readonly service: WinGattService;
     discoverDescriptors(): Promise<GattDescriptor[]>;
     read(): Promise<Buffer>;
-    write(value: Buffer): Promise<void>;
+    write(value: Buffer, withoutResponse?: boolean): Promise<void>;
     broadcast(): Promise<void>;
     notify(notify: boolean): Promise<void>;
     addDescriptor(): Promise<GattDescriptor>;

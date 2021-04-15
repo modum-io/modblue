@@ -1,10 +1,11 @@
 import { Adapter, AddressType, GattLocal, MODblue, Peripheral } from '../../models';
+import { NobleBindings } from './bindings';
 
 import { WinPeripheral } from './Peripheral';
 
 export class WinAdapter extends Adapter {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	public readonly noble: any = null;
+	public readonly noble: NobleBindings = null;
 
 	private initDone = false;
 	private scanning = false;
@@ -44,8 +45,8 @@ export class WinAdapter extends Adapter {
 	}
 
 	public dispose(): void {
+		this.noble.stopScanning();
 		this.noble.removeAllListeners();
-		this.noble.stop();
 	}
 
 	public async startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void> {

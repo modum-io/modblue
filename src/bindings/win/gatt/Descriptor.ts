@@ -15,8 +15,8 @@ export class WinGattDescriptor extends GattDescriptor {
 			this.uuid
 		);
 
-		return new Promise<Buffer>((resolve) => {
-			const handler = (dev: string, srv: string, char: string, desc: string, data: Buffer) => {
+		return new Promise<Buffer>((resolve, reject) => {
+			const handler = (dev: string, srv: string, char: string, desc: string, data: Buffer | Error) => {
 				if (
 					dev === this.characteristic.service.gatt.peripheral.uuid &&
 					srv === this.characteristic.service.uuid &&
@@ -24,7 +24,11 @@ export class WinGattDescriptor extends GattDescriptor {
 					desc === this.uuid
 				) {
 					noble.off('valueRead', handler);
-					resolve(data);
+					if (data instanceof Error) {
+						reject(data);
+					} else {
+						resolve(data);
+					}
 				}
 			};
 			noble.on('valueRead', handler);
@@ -42,8 +46,8 @@ export class WinGattDescriptor extends GattDescriptor {
 			value
 		);
 
-		return new Promise<void>((resolve) => {
-			const handler = (dev: string, srv: string, char: string, desc: string) => {
+		return new Promise<void>((resolve, reject) => {
+			const handler = (dev: string, srv: string, char: string, desc: string, err: Error) => {
 				if (
 					dev === this.characteristic.service.gatt.peripheral.uuid &&
 					srv === this.characteristic.service.uuid &&
@@ -51,7 +55,11 @@ export class WinGattDescriptor extends GattDescriptor {
 					desc === this.uuid
 				) {
 					noble.off('valueWrite', handler);
-					resolve();
+					if (err) {
+						reject(err);
+					} else {
+						resolve();
+					}
 				}
 			};
 			noble.on('valueWrite', handler);

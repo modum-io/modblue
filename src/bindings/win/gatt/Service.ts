@@ -16,18 +16,25 @@ export class WinGattService extends GattService {
 		this.characteristics.clear();
 		noble.discoverCharacteristics(this.gatt.peripheral.uuid, this.uuid);
 
-		return new Promise<GattCharacteristic[]>((resolve) => {
+		return new Promise<GattCharacteristic[]>((resolve, reject) => {
 			const handler = (
 				uuid: string,
 				serviceUUID: string,
-				characteristics: { uuid: string; properties: GattCharacteristicProperty[] }[]
+				characteristics: { uuid: string; properties: GattCharacteristicProperty[] }[] | Error
 			) => {
 				if (uuid === this.gatt.peripheral.uuid && serviceUUID === this.uuid) {
 					noble.off('characteristicsDiscover', handler);
-					for (const char of characteristics) {
-						this.characteristics.set(char.uuid, new WinGattCharacteristic(this, char.uuid, true, char.properties, []));
+					if (characteristics instanceof Error) {
+						reject(characteristics);
+					} else {
+						for (const char of characteristics) {
+							this.characteristics.set(
+								char.uuid,
+								new WinGattCharacteristic(this, char.uuid, true, char.properties, [])
+							);
+						}
+						resolve([...this.characteristics.values()]);
 					}
-					resolve([...this.characteristics.values()]);
 				}
 			};
 			noble.on('characteristicsDiscover', handler);
