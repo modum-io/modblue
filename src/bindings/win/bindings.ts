@@ -1,17 +1,18 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import EventEmitter from 'events';
 import { AddressType } from '../../models';
 
 import * as rt from './rt-utils';
 
-const importPrefix = '../../../build/Release/';
 // Note the load order here is important for cross-namespace dependencies.
-rt.using(importPrefix + 'win-foundation', 'Windows.Foundation');
-rt.using(importPrefix + 'win-storage.streams', 'Windows.Storage.Streams');
-rt.using(importPrefix + 'win-dev.enum', 'Windows.Devices.Enumeration');
-rt.using(importPrefix + 'win-dev.ble.gap', 'Windows.Devices.Bluetooth.GenericAttributeProfile');
-rt.using(importPrefix + 'win-dev.ble', 'Windows.Devices.Bluetooth');
-rt.using(importPrefix + 'win-dev.ble.adv', 'Windows.Devices.Bluetooth.Advertisement');
-rt.using(importPrefix + 'win-dev.radios', 'Windows.Devices.Radios');
+const importPrefix = '../../../build/Release/';
+rt.using(require(importPrefix + 'win-foundation'), 'Windows.Foundation');
+rt.using(require(importPrefix + 'win-storage.streams'), 'Windows.Storage.Streams');
+rt.using(require(importPrefix + 'win-dev.enum'), 'Windows.Devices.Enumeration');
+rt.using(require(importPrefix + 'win-dev.ble.gap'), 'Windows.Devices.Bluetooth.GenericAttributeProfile');
+rt.using(require(importPrefix + 'win-dev.ble'), 'Windows.Devices.Bluetooth');
+rt.using(require(importPrefix + 'win-dev.ble.adv'), 'Windows.Devices.Bluetooth.Advertisement');
+rt.using(require(importPrefix + 'win-dev.radios'), 'Windows.Devices.Radios');
 
 const BluetoothLEDevice = Windows.Devices.Bluetooth.BluetoothLEDevice;
 const BluetoothCacheMode = Windows.Devices.Bluetooth.BluetoothCacheMode;

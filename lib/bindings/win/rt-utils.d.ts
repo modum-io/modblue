@@ -2,7 +2,7 @@
 declare global {
     const Windows: any;
 }
-export declare function using(path: string, ns: string): void;
+export declare function using(nsPackage: any, ns: string): void;
 export declare function promisify(fn: () => void, o?: unknown): (...args: unknown[]) => Promise<unknown>;
 export declare function toArray<T = unknown>(o: {
     length: number;

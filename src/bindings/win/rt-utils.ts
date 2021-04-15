@@ -7,7 +7,7 @@ declare global {
 // Relative path to NodeRT-generaged UWP namespace modules.
 
 // Require a NodeRt namespace package and load it into the global namespace.
-export function using(path: string, ns: string): void {
+export function using(nsPackage: any, ns: string): void {
 	const nsParts = ns.split('/').slice(-1)[0].split('.');
 	let parentObj: any = global;
 
@@ -22,8 +22,6 @@ export function using(path: string, ns: string): void {
 	}
 
 	const lastNsPart = nsParts[nsParts.length - 1];
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
-	const nsPackage = require(path);
 
 	// Merge in any already-loaded sub-namespaces.
 	// This allows loading in non-hierarchical order.
