@@ -109,9 +109,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 	}
 
 	private static createSocket() {
-		// This fixes an issue with webpack trying to load the module at compile time
-		const NAME = '/bluetooth-hci-socket';
-		return new (require(`@abandonware${NAME}`))();
+		return new (require(`@abandonware/bluetooth-hci-socket`))();
 	}
 
 	public static getDeviceList(): HciDevice[] {
