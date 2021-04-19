@@ -7,6 +7,7 @@ interface HciDevice {
     idVendor: number;
     idProduct: number;
     busNumber: number;
+    deviceAddress: number;
 }
 interface HciEvents {
     stateChange: (newState: string) => void;
