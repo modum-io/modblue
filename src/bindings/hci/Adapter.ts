@@ -41,7 +41,15 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		this.hci = new Hci(Number(this.id));
+		let devId: number | { bus: number; address: number };
+		if (this.id.includes('-')) {
+			const splits = this.id.split('-');
+			devId = { bus: Number(splits[0]), address: Number(splits[1]) };
+		} else {
+			devId = Number(this.id);
+		}
+
+		this.hci = new Hci(devId);
 
 		await this.hci.init();
 
