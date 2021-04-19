@@ -3,7 +3,7 @@ import { Adapter, MODblue } from '../../models';
  * Use the WIN bindings to access BLE functions.
  */
 export declare class WinMODblue extends MODblue {
-    private adapter;
+    private adapters;
     dispose(): Promise<void>;
     getAdapters(): Promise<Adapter[]>;
 }

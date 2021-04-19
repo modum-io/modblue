@@ -1,5 +1,5 @@
 import { Adapter, AddressType, GattLocal, MODblue, Peripheral } from '../../models';
-import { NobleBindings } from './bindings';
+import { NobleBindings, Radio } from './bindings';
 
 import { WinPeripheral } from './Peripheral';
 
@@ -16,11 +16,10 @@ export class WinAdapter extends Adapter {
 		return this.scanning;
 	}
 
-	public constructor(modblue: MODblue, id: string, name: string) {
-		super(modblue, id, name);
+	public constructor(modblue: MODblue, radio: Radio) {
+		super(modblue, radio.name, radio.name);
 
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		this.noble = require('./bindings.js');
+		this.noble = new NobleBindings(radio);
 	}
 
 	private async init() {

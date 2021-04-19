@@ -23,7 +23,7 @@ export declare function toBuffer(b: {
     length: number;
 }): Buffer;
 export declare function fromBuffer(b: Buffer): unknown;
-export declare function keepAlive(k: boolean): void;
+export declare function keepAlive(alive: boolean): void;
 export interface Disposable {
     close(): void;
 }

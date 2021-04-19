@@ -1,12 +1,12 @@
 import { Adapter, GattLocal, MODblue, Peripheral } from '../../models';
-import { NobleBindings } from './bindings';
+import { NobleBindings, Radio } from './bindings';
 export declare class WinAdapter extends Adapter {
     readonly noble: NobleBindings;
     private initDone;
     private scanning;
     private peripherals;
     isScanning(): Promise<boolean>;
-    constructor(modblue: MODblue, id: string, name: string);
+    constructor(modblue: MODblue, radio: Radio);
     private init;
     dispose(): void;
     startScanning(serviceUUIDs?: string[], allowDuplicates?: boolean): Promise<void>;

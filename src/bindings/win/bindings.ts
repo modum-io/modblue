@@ -39,8 +39,10 @@ const RadioState = Windows.Devices.Radios.RadioState;
 
 const DataReader = Windows.Storage.Streams.DataReader;
 
-interface Radio {
+export interface Radio extends EventEmitter {
 	kind: string;
+	name: string;
+	state: string;
 }
 
 interface Service extends rt.Disposable {
@@ -104,7 +106,7 @@ interface AdvertisementEvent {
 type Listener = (source: any, event: any) => void;
 
 export class NobleBindings extends EventEmitter {
-	private _radio: any = null;
+	private _radio: Radio = null;
 	private _radioState = 'unknown';
 	private _deviceMap: { [key: string]: DeviceRecord } = {};
 	private _devicesListeners: { [key: string]: { [key: string]: Listener } } = {};
@@ -113,31 +115,30 @@ export class NobleBindings extends EventEmitter {
 	private _filterAdvertisementServiceUuids: string[];
 	private _allowAdvertisementDuplicates: boolean;
 
-	init() {
+	public static async getAdapterList(): Promise<Radio[]> {
+		const radios = rt.toArray<Radio>((await rt.promisify(Radio.getRadiosAsync)()) as Radio[]);
+		return radios.filter((radio) => radio.kind === RadioKind.bluetooth);
+	}
+
+	public constructor(radio: Radio) {
+		super();
+
+		this._radio = radio;
+	}
+
+	public init(): void {
 		this._advertisementWatcher = new BluetoothLEAdvertisementWatcher();
 		this._advertisementWatcher.scanningMode = BluetoothLEScanningMode.active;
 		this._advertisementWatcher.on('received', this._onAdvertisementWatcherReceived);
 		this._advertisementWatcher.on('stopped', this._onAdvertisementWatcherStopped);
 
-		rt.promisify(Radio.getRadiosAsync)()
-			.then((radiosList: Radio[]) => {
-				radiosList = rt.toArray<Radio>(radiosList);
-				this._radio = radiosList.find((radio) => radio.kind === RadioKind.bluetooth);
-				if (this._radio) {
-					this._radio.on('stateChanged', () => {
-						this._updateRadioState();
-					});
-				} else {
-					// NO-OP
-				}
-				this._updateRadioState();
-			})
-			.catch(() => {
-				this._updateRadioState();
-			});
+		this._radio.on('stateChanged', () => {
+			this._updateRadioState();
+		});
+		this._updateRadioState();
 	}
 
-	startScanning(serviceUuids?: string[], allowDuplicates?: boolean) {
+	public startScanning(serviceUuids?: string[], allowDuplicates?: boolean): void {
 		if (!(serviceUuids && serviceUuids.length > 0)) {
 			serviceUuids = null;
 		}
@@ -154,14 +155,14 @@ export class NobleBindings extends EventEmitter {
 		rt.keepAlive(true);
 	}
 
-	stopScanning() {
+	public stopScanning(): void {
 		if (this._advertisementWatcher.status === BluetoothLEAdvertisementWatcherStatus.started) {
 			this._advertisementWatcher.stop();
 			rt.keepAlive(false);
 		}
 	}
 
-	connect(deviceUuid: string) {
+	public connect(deviceUuid: string): void {
 		const deviceRecord = this._deviceMap[deviceUuid];
 		if (!deviceRecord) {
 			throw new Error('Invalid or unknown device UUID: ' + deviceUuid);
@@ -193,7 +194,7 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	disconnect(deviceUuid: string) {
+	public disconnect(deviceUuid: string): void {
 		const deviceRecord = this._deviceMap[deviceUuid];
 		if (!deviceRecord) {
 			throw new Error('Invalid or unknown device UUID: ' + deviceUuid);
@@ -216,14 +217,7 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	updateRssi(deviceUuid: string) {
-		// TODO: Retrieve updated RSSI
-		const rssi = 0;
-
-		this.emit('rssiUpdate', deviceUuid, rssi);
-	}
-
-	discoverServices(deviceUuid: string, filterServiceUuids?: string[]) {
+	public discoverServices(deviceUuid: string, filterServiceUuids?: string[]): void {
 		if (filterServiceUuids && filterServiceUuids.length === 0) {
 			filterServiceUuids = null;
 		}
@@ -274,7 +268,7 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	discoverIncludedServices(deviceUuid: string, serviceUuid: string, filterServiceUuids?: string[]) {
+	public discoverIncludedServices(deviceUuid: string, serviceUuid: string, filterServiceUuids?: string[]): void {
 		if (filterServiceUuids && filterServiceUuids.length === 0) {
 			filterServiceUuids = null;
 		}
@@ -300,7 +294,7 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	discoverCharacteristics(deviceUuid: string, serviceUuid: string, filterCharacteristicUuids?: string[]) {
+	public discoverCharacteristics(deviceUuid: string, serviceUuid: string, filterCharacteristicUuids?: string[]): void {
 		if (filterCharacteristicUuids && filterCharacteristicUuids.length === 0) {
 			filterCharacteristicUuids = null;
 		}
@@ -333,7 +327,7 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	read(deviceUuid: string, serviceUuid: string, characteristicUuid: string) {
+	public read(deviceUuid: string, serviceUuid: string, characteristicUuid: string): void {
 		this._getCachedCharacteristicAsync(deviceUuid, serviceUuid, characteristicUuid)
 			.then((characteristic) => {
 				return rt
@@ -352,7 +346,13 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	write(deviceUuid: string, serviceUuid: string, characteristicUuid: string, data: Buffer, withoutResponse: boolean) {
+	public write(
+		deviceUuid: string,
+		serviceUuid: string,
+		characteristicUuid: string,
+		data: Buffer,
+		withoutResponse: boolean
+	): void {
 		this._getCachedCharacteristicAsync(deviceUuid, serviceUuid, characteristicUuid)
 			.then((characteristic) => {
 				const rtBuffer = rt.fromBuffer(data);
@@ -373,7 +373,7 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	notify(deviceUuid: string, serviceUuid: string, characteristicUuid: string, notify: boolean) {
+	public notify(deviceUuid: string, serviceUuid: string, characteristicUuid: string, notify: boolean): void {
 		this._getCachedCharacteristicAsync(deviceUuid, serviceUuid, characteristicUuid)
 			.then((characteristic) => {
 				const listenerKey = serviceUuid + '/' + characteristicUuid;
@@ -400,7 +400,7 @@ export class NobleBindings extends EventEmitter {
 						.then((result: CharacteristicCommunicationResult) => {
 							checkCommunicationResult(deviceUuid, result);
 
-							listener = ((source: any, e: any) => {
+							listener = ((source: unknown, e: any) => {
 								const data = rt.toBuffer(e.characteristicValue);
 								this.emit('read', deviceUuid, serviceUuid, characteristicUuid, data, true);
 							}).bind(this);
@@ -436,7 +436,7 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	discoverDescriptors(deviceUuid: string, serviceUuid: string, characteristicUuid: string) {
+	public discoverDescriptors(deviceUuid: string, serviceUuid: string, characteristicUuid: string): void {
 		this._getCachedCharacteristicAsync(deviceUuid, serviceUuid, characteristicUuid)
 			.then((characteristic) => {
 				return rt
@@ -456,8 +456,8 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	readValue(deviceUuid: string, serviceUuid: string, characteristicUuid: string, descriptorUuid: string) {
-		return this._getCachedDescriptorAsync(deviceUuid, serviceUuid, characteristicUuid, descriptorUuid)
+	public readValue(deviceUuid: string, serviceUuid: string, characteristicUuid: string, descriptorUuid: string): void {
+		this._getCachedDescriptorAsync(deviceUuid, serviceUuid, characteristicUuid, descriptorUuid)
 			.then((descriptor) => {
 				return rt
 					.promisify(
@@ -476,13 +476,13 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	writeValue(
+	public writeValue(
 		deviceUuid: string,
 		serviceUuid: string,
 		characteristicUuid: string,
 		descriptorUuid: string,
 		data: Buffer
-	) {
+	): void {
 		this._getCachedDescriptorAsync(deviceUuid, serviceUuid, characteristicUuid, descriptorUuid)
 			.then((descriptor) => {
 				const rtBuffer = rt.fromBuffer(data);
@@ -501,7 +501,7 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	_updateRadioState() {
+	private _updateRadioState() {
 		let state;
 
 		if (!this._radio) {
@@ -527,7 +527,7 @@ export class NobleBindings extends EventEmitter {
 		}
 	}
 
-	_onAdvertisementWatcherReceived = (sender: unknown, e: AdvertisementEvent) => {
+	private _onAdvertisementWatcherReceived = (sender: unknown, e: AdvertisementEvent) => {
 		const address = formatBluetoothAddress(e.bluetoothAddress);
 		const deviceUuid = address.replace(/:/g, '');
 
@@ -639,7 +639,7 @@ export class NobleBindings extends EventEmitter {
 		if (manufacturerSections.size > 0) {
 			const manufacturerData = manufacturerSections[0];
 			deviceRecord.manufacturerData = rt.toBuffer(manufacturerData.data);
-			const companyIdHex = manufacturerData.companyId.toString(16);
+			// const companyIdHex = manufacturerData.companyId.toString(16);
 			const toAppend = Buffer.allocUnsafe(2);
 			toAppend.writeUInt16LE(manufacturerData.companyId);
 			deviceRecord.manufacturerData = Buffer.concat([toAppend, deviceRecord.manufacturerData]);
@@ -673,7 +673,7 @@ export class NobleBindings extends EventEmitter {
 		}
 	};
 
-	_onAdvertisementWatcherStopped = (sender: unknown, e: any) => {
+	private _onAdvertisementWatcherStopped = (sender: any, e: unknown) => {
 		if (this._advertisementWatcher.status === BluetoothLEAdvertisementWatcherStatus.aborted) {
 			// NO-OP
 		} else if (this._advertisementWatcher.status === BluetoothLEAdvertisementWatcherStatus.stopped) {
@@ -684,7 +684,7 @@ export class NobleBindings extends EventEmitter {
 		this.emit('scanStop');
 	};
 
-	_onConnectionStatusChanged = (sender: any, e: any) => {
+	private _onConnectionStatusChanged = (sender: any, e: unknown) => {
 		const deviceUuid = sender.bluetoothAddress.toString(16);
 		const deviceRecord = this._deviceMap[deviceUuid];
 		if (deviceRecord) {
@@ -700,7 +700,7 @@ export class NobleBindings extends EventEmitter {
 		}
 	};
 
-	_getCachedServiceAsync(deviceUuid: string, serviceUuid: string) {
+	private _getCachedServiceAsync(deviceUuid: string, serviceUuid: string) {
 		const deviceRecord = this._deviceMap[deviceUuid];
 		if (!deviceRecord) {
 			throw new Error('Invalid or unknown device UUID: ' + deviceUuid);
@@ -734,7 +734,7 @@ export class NobleBindings extends EventEmitter {
 			});
 	}
 
-	_getCachedCharacteristicAsync(deviceUuid: string, serviceUuid: string, characteristicUuid: string) {
+	private _getCachedCharacteristicAsync(deviceUuid: string, serviceUuid: string, characteristicUuid: string) {
 		const deviceRecord = this._deviceMap[deviceUuid];
 		if (!deviceRecord) {
 			throw new Error('Invalid or unknown device UUID: ' + deviceUuid);
@@ -766,7 +766,7 @@ export class NobleBindings extends EventEmitter {
 		});
 	}
 
-	_getCachedDescriptorAsync(
+	private _getCachedDescriptorAsync(
 		deviceUuid: string,
 		serviceUuid: string,
 		characteristicUuid: string,
@@ -927,5 +927,3 @@ function checkCommunicationResult(deviceUuid: string, result: CommunicationResul
 		throw new Error('Protocol error communicating with device: ' + deviceUuid);
 	}
 }
-
-module.exports = new NobleBindings();

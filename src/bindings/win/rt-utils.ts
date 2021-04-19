@@ -102,8 +102,8 @@ let keepAliveIntervalCount = 0;
 
 // Increment or decrement the count of WinRT async tasks.
 // While the count is non-zero an interval is used to keep the JS engine alive.
-export function keepAlive(k: boolean): void {
-	if (k) {
+export function keepAlive(alive: boolean): void {
+	if (alive) {
 		if (++keepAliveIntervalCount === 1) {
 			// The actual duration doesn't really matter: it should be large but not too large.
 			keepAliveIntervalId = setInterval(() => null, 24 * 60 * 60 * 1000);
