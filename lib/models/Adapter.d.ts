@@ -33,7 +33,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
      * The MAC address of this adapter. All lowercase, with colon separator between bytes, e.g. 11:22:33:aa:bb:cc
      */
     get address(): string;
-    constructor(modblue: MODblue, id: string, name?: string, address?: string);
+    constructor(modblue: MODblue, id: string, name: string, address?: string);
     /**
      * Scans for a specific {@link Peripheral} using the specified matching function and returns the peripheral once found.
      * If the timeout is reached before finding a peripheral the returned promise will be rejected.

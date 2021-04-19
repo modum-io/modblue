@@ -21,7 +21,7 @@ export class HciMODblue extends MODblue {
 		for (const rawAdapter of adapters) {
 			let adapter = this.adapters.get(rawAdapter.devId);
 			if (!adapter) {
-				adapter = new HciAdapter(this, `hci${rawAdapter.devId}`);
+				adapter = new HciAdapter(this, `hci${rawAdapter.devId}`, `hci-${rawAdapter.devId}`);
 				this.adapters.set(rawAdapter.devId, adapter);
 			}
 		}

@@ -24,11 +24,9 @@ export class DbusAdapter extends Adapter {
 	private peripherals: Map<string, Peripheral> = new Map();
 
 	public constructor(modblue: DbusMODblue, path: string, name: string, address: string) {
-		super(modblue, path.replace(`/org/bluez/`, ''));
+		super(modblue, path.replace(`/org/bluez/`, ''), name, address);
 
 		this.path = path;
-		this._name = name;
-		this._address = address.toLowerCase();
 	}
 
 	private async init() {

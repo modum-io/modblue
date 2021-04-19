@@ -17,7 +17,7 @@ export class MacMODblue extends MODblue {
 
 	public async getAdapters(): Promise<Adapter[]> {
 		if (!this.adapter) {
-			this.adapter = new MacAdapter(this, 'mac', 'mac');
+			this.adapter = new MacAdapter(this, 'mac', 'singleton');
 		}
 
 		return [this.adapter];

@@ -17,7 +17,7 @@ export class WinMODblue extends MODblue {
 
 	public async getAdapters(): Promise<Adapter[]> {
 		if (!this.adapter) {
-			this.adapter = new WinAdapter(this, 'win', 'win');
+			this.adapter = new WinAdapter(this, 'win', 'singleton');
 		}
 
 		return [this.adapter];

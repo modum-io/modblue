@@ -49,12 +49,12 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 		return this._address;
 	}
 
-	public constructor(modblue: MODblue, id: string, name?: string, address?: string) {
+	public constructor(modblue: MODblue, id: string, name: string, address?: string) {
 		super();
 
 		this.modblue = modblue;
 		this.id = id;
-		this._name = name || `hci${id.replace('hci', '')}`;
+		this._name = name;
 		this._address = address?.toLowerCase();
 	}
 
