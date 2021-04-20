@@ -19,10 +19,13 @@ export class HciMODblue extends MODblue {
 	public async getAdapters(): Promise<Adapter[]> {
 		const adapters = Hci.getDeviceList();
 		for (const rawAdapter of adapters) {
-			const id = rawAdapter.devId ? `${rawAdapter.devId}` : `${rawAdapter.busNumber}-${rawAdapter.deviceAddress}`;
+			const id =
+				typeof rawAdapter.devId !== 'undefined'
+					? `${rawAdapter.devId}`
+					: `${rawAdapter.busNumber}-${rawAdapter.deviceAddress}`;
 			let adapter = this.adapters.get(id);
 			if (!adapter) {
-				adapter = new HciAdapter(this, id, id);
+				adapter = new HciAdapter(this, id, `hci-${id}`);
 				this.adapters.set(id, adapter);
 			}
 		}
