@@ -5,14 +5,18 @@ import { AddressType } from '../../models';
 
 import * as rt from './rt-utils';
 
+declare global {
+	const Windows: any;
+}
+
 // Note the load order here is important for cross-namespace dependencies.
-rt.using(require('../../../build/Release/win-foundation.node'), 'Windows.Foundation');
-rt.using(require('../../../build/Release/win-storage.streams.node'), 'Windows.Storage.Streams');
-rt.using(require('../../../build/Release/win-dev.enum.node'), 'Windows.Devices.Enumeration');
-rt.using(require('../../../build/Release/win-dev.ble.gap.node'), 'Windows.Devices.Bluetooth.GenericAttributeProfile');
-rt.using(require('../../../build/Release/win-dev.ble.node'), 'Windows.Devices.Bluetooth');
-rt.using(require('../../../build/Release/win-dev.ble.adv.node'), 'Windows.Devices.Bluetooth.Advertisement');
-rt.using(require('../../../build/Release/win-dev.radios.node'), 'Windows.Devices.Radios');
+rt.using('../../../build/Release/win-foundation.node', 'Windows.Foundation');
+rt.using('../../../build/Release/win-storage.streams.node', 'Windows.Storage.Streams');
+rt.using('../../../build/Release/win-dev.enum.node', 'Windows.Devices.Enumeration');
+rt.using('../../../build/Release/win-dev.ble.gap.node', 'Windows.Devices.Bluetooth.GenericAttributeProfile');
+rt.using('../../../build/Release/win-dev.ble.node', 'Windows.Devices.Bluetooth');
+rt.using('../../../build/Release/win-dev.ble.adv.node', 'Windows.Devices.Bluetooth.Advertisement');
+rt.using('../../../build/Release/win-dev.radios.node', 'Windows.Devices.Radios');
 
 const BluetoothLEDevice = Windows.Devices.Bluetooth.BluetoothLEDevice;
 const BluetoothCacheMode = Windows.Devices.Bluetooth.BluetoothCacheMode;
@@ -27,8 +31,8 @@ const BluetoothLEAdvertisementWatcherStatus =
 	Windows.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementWatcherStatus;
 
 const GattCharacteristicProperties = Windows.Devices.Bluetooth.GenericAttributeProfile.GattCharacteristicProperties;
-const GattDeviceService = Windows.Devices.Bluetooth.GenericAttributeProfile.GattDeviceService;
-const GattServiceUuids = Windows.Devices.Bluetooth.GenericAttributeProfile.GattServiceUuids;
+// const GattDeviceService = Windows.Devices.Bluetooth.GenericAttributeProfile.GattDeviceService;
+// const GattServiceUuids = Windows.Devices.Bluetooth.GenericAttributeProfile.GattServiceUuids;
 const GattCommunicationStatus = Windows.Devices.Bluetooth.GenericAttributeProfile.GattCommunicationStatus;
 const GattClientCharacteristicConfigurationDescriptorValue =
 	Windows.Devices.Bluetooth.GenericAttributeProfile.GattClientCharacteristicConfigurationDescriptorValue;
@@ -115,7 +119,17 @@ export class NobleBindings extends EventEmitter {
 	private _filterAdvertisementServiceUuids: string[];
 	private _allowAdvertisementDuplicates: boolean;
 
+	private static isInit = false;
+	private static init() {
+		if (this.isInit) {
+			return;
+		}
+
+		this.isInit = true;
+	}
+
 	public static async getAdapterList(): Promise<Radio[]> {
+		this.init();
 		const radios = rt.toArray<Radio>((await rt.promisify(Radio.getRadiosAsync)()) as Radio[]);
 		return radios.filter((radio) => radio.kind === RadioKind.bluetooth);
 	}
@@ -127,6 +141,8 @@ export class NobleBindings extends EventEmitter {
 	}
 
 	public init(): void {
+		this.init();
+
 		this._advertisementWatcher = new BluetoothLEAdvertisementWatcher();
 		this._advertisementWatcher.scanningMode = BluetoothLEScanningMode.active;
 		this._advertisementWatcher.on('received', this._onAdvertisementWatcherReceived);

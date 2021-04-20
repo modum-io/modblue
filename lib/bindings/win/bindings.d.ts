@@ -1,5 +1,8 @@
 /// <reference types="node" />
 import EventEmitter from 'events';
+declare global {
+    const Windows: any;
+}
 export interface Radio extends EventEmitter {
     kind: string;
     name: string;
@@ -14,6 +17,8 @@ export declare class NobleBindings extends EventEmitter {
     private _advertisementWatcher;
     private _filterAdvertisementServiceUuids;
     private _allowAdvertisementDuplicates;
+    private static isInit;
+    private static init;
     static getAdapterList(): Promise<Radio[]>;
     constructor(radio: Radio);
     init(): void;
