@@ -17,8 +17,6 @@ export declare class NobleBindings extends EventEmitter {
     private _advertisementWatcher;
     private _filterAdvertisementServiceUuids;
     private _allowAdvertisementDuplicates;
-    private static isInit;
-    private static init;
     static getAdapterList(): Promise<Radio[]>;
     constructor(radio: Radio);
     init(): void;
