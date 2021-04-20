@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import EventEmitter from 'events';
 declare global {
-    const Windows: any;
+    let Windows: any;
 }
 export interface Radio extends EventEmitter {
     kind: string;

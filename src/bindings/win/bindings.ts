@@ -6,7 +6,7 @@ import { AddressType } from '../../models';
 import * as rt from './rt-utils';
 
 declare global {
-	const Windows: any;
+	let Windows: any;
 }
 
 try {
@@ -20,6 +20,7 @@ try {
 	rt.using(require('../../../build/Release/win-dev.radios.node'), 'Windows.Devices.Radios');
 } catch {
 	// NO-OP
+	(global as any).Windows = null;
 }
 
 const BluetoothLEDevice = Windows?.Devices.Bluetooth.BluetoothLEDevice;
