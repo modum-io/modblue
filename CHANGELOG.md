@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [10.0.3](https://github.com/modum-io/modblue/compare/v10.0.2...v10.0.3) (2021-04-21)
+
+### Bug Fixes
+
+- Ubuntu doesn't need prebuilds ([afcf599](https://github.com/modum-io/modblue/commit/afcf59940d7f6100cab908244332e4b7bd7c0bf4))
+
 ### [10.0.2](https://github.com/modum-io/modblue/compare/v10.0.1...v10.0.2) (2021-04-21)
 
 ### [10.0.1](https://github.com/modum-io/modblue/compare/v10.0.0...v10.0.1) (2021-04-21)
