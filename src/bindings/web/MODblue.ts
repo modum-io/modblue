@@ -17,7 +17,7 @@ export class WebMODblue extends MODblue {
 
 	public async getAdapters(): Promise<Adapter[]> {
 		if (!this.adapter) {
-			this.adapter = new WebAdapter(this, 'web', 'web');
+			this.adapter = new WebAdapter(this, 'web', 'singleton');
 		}
 
 		return [this.adapter];

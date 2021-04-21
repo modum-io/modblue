@@ -15,6 +15,7 @@ interface HciDevice {
 	idVendor: number;
 	idProduct: number;
 	busNumber: number;
+	deviceAddress: number;
 }
 
 interface Handle {
@@ -67,7 +68,7 @@ interface HciEvents {
 
 export class Hci extends TypedEmitter<HciEvents> {
 	public state: string;
-	public deviceId: number;
+	public devId: number | { bus: number; address: number };
 
 	public addressType: AddressType;
 	public address: string;
@@ -91,11 +92,11 @@ export class Hci extends TypedEmitter<HciEvents> {
 	private totalNumAclLeDataPackets: number;
 	private aclPacketQueue: { handle: Handle; pkt: Buffer }[] = [];
 
-	public constructor(deviceId?: number, cmdTimeout: number = HCI_CMD_TIMEOUT) {
+	public constructor(devId?: number | { bus: number; address: number }, cmdTimeout: number = HCI_CMD_TIMEOUT) {
 		super();
 
 		this.state = 'poweredOff';
-		this.deviceId = deviceId;
+		this.devId = devId;
 
 		// We attach about 6 listeners per connected device
 		// 5 connected devices + 10 spare
@@ -109,9 +110,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 	}
 
 	private static createSocket() {
-		// This fixes an issue with webpack trying to load the module at compile time
-		const NAME = '/bluetooth-hci-socket';
-		return new (require(`@abandonware${NAME}`))();
+		return new (require(`@abandonware/bluetooth-hci-socket`))();
 	}
 
 	public static getDeviceList(): HciDevice[] {
@@ -133,7 +132,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 		this.socket.on('data', this.onSocketData);
 		this.socket.on('error', this.onSocketError);
 
-		this.deviceId = this.socket.bindRaw(this.deviceId);
+		this.devId = this.socket.bindRaw(this.devId);
 		this.socket.start();
 
 		this.isInitializing = true;
@@ -153,7 +152,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 				reject(
 					new HciError(
 						`Initializing socket timed out - Are you sure it's running?`,
-						`On unix try \`sudo hciconfig hci${this.deviceId} up\``
+						`On unix try \`sudo hciconfig hci${this.devId} up\``
 					)
 				);
 			}, timeoutInSeconds * 1000);

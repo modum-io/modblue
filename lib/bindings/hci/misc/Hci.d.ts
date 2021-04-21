@@ -7,6 +7,7 @@ interface HciDevice {
     idVendor: number;
     idProduct: number;
     busNumber: number;
+    deviceAddress: number;
 }
 interface HciEvents {
     stateChange: (newState: string) => void;
@@ -24,7 +25,10 @@ interface HciEvents {
 }
 export declare class Hci extends TypedEmitter<HciEvents> {
     state: string;
-    deviceId: number;
+    devId: number | {
+        bus: number;
+        address: number;
+    };
     addressType: AddressType;
     address: string;
     hciVersion: number;
@@ -41,7 +45,10 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private aclLeDataPacketLength;
     private totalNumAclLeDataPackets;
     private aclPacketQueue;
-    constructor(deviceId?: number, cmdTimeout?: number);
+    constructor(devId?: number | {
+        bus: number;
+        address: number;
+    }, cmdTimeout?: number);
     private static createSocket;
     static getDeviceList(): HciDevice[];
     private isInitializing;

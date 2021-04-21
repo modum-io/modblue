@@ -62,10 +62,6 @@ export abstract class Peripheral {
 	 */
 	public readonly uuid: string;
 	/**
-	 * The advertised name of the peripheral.
-	 */
-	public readonly name: string;
-	/**
 	 * The MAC address type of this peripheral.
 	 */
 	public readonly addressType: AddressType;
@@ -75,9 +71,13 @@ export abstract class Peripheral {
 	public readonly address: string;
 
 	/**
-	 * Any advertisement data received from the peripheral. Usually a buffer.
+	 * The advertised name of the peripheral.
 	 */
-	public advertisement: Record<string, unknown>;
+	public name: string;
+	/**
+	 * Any manufacturer advertisement data received from the peripheral. Includes the company identifier.
+	 */
+	public manufacturerData: Buffer;
 	/**
 	 * The current RSSI signal strength of the peripheral.
 	 */
@@ -97,7 +97,7 @@ export abstract class Peripheral {
 		name: string,
 		addressType: AddressType,
 		address: string,
-		advertisement?: Record<string, unknown>,
+		advertisement?: Buffer,
 		rssi?: number
 	) {
 		this.adapter = adapter;
@@ -106,7 +106,7 @@ export abstract class Peripheral {
 		this.addressType = addressType;
 		this.address = address;
 
-		this.advertisement = advertisement;
+		this.manufacturerData = advertisement;
 		this.rssi = rssi;
 
 		this._state = 'disconnected';

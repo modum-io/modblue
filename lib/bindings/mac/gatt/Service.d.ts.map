@@ -1,0 +1,1 @@
+{"version":3,"file":"Service.d.ts","sourceRoot":"","sources":["../../../../src/bindings/mac/gatt/Service.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,kBAAkB,EAA8B,WAAW,EAAE,MAAM,iBAAiB,CAAC;AAG9F,OAAO,EAAE,OAAO,EAAE,MAAM,QAAQ,CAAC;AAEjC,qBAAa,cAAe,SAAQ,WAAW;IAC9C,SAAgB,IAAI,EAAE,OAAO,CAAC;IAEvB,iBAAiB,IAAI,OAAO,CAAC,kBAAkB,CAAC;IAIhD,uBAAuB,IAAI,OAAO,CAAC,kBAAkB,EAAE,CAAC;CAuB/D"}

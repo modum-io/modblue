@@ -31,7 +31,7 @@ export class DbusPeripheral extends Peripheral {
 		name: string,
 		addressType: AddressType,
 		address: string,
-		advertisement: Record<string, unknown>,
+		advertisement: Buffer,
 		rssi: number
 	) {
 		super(adapter, id, name, addressType, address, advertisement, rssi);

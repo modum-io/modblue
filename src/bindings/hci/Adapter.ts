@@ -41,7 +41,15 @@ export class HciAdapter extends Adapter {
 			return;
 		}
 
-		this.hci = new Hci(Number(this.id));
+		let devId: number | { bus: number; address: number };
+		if (this.id.includes('-')) {
+			const splits = this.id.split('-');
+			devId = { bus: Number(splits[0]), address: Number(splits[1]) };
+		} else {
+			devId = Number(this.id);
+		}
+
+		this.hci = new Hci(devId);
 
 		await this.hci.init();
 
@@ -138,19 +146,18 @@ export class HciAdapter extends Adapter {
 		address: string,
 		addressType: AddressType,
 		connectable: boolean,
-		advertisement: Advertisement,
+		adv: Advertisement,
 		rssi: number
 	) => {
 		address = address.toLowerCase();
 		const uuid = address;
-		const adv = (advertisement as unknown) as Record<string, unknown>;
 
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
-			peripheral = new HciPeripheral(this, uuid, adv.localName as string, addressType, address, adv, rssi);
+			peripheral = new HciPeripheral(this, uuid, adv.localName, addressType, address, adv.manufacturerData, rssi);
 			this.peripherals.set(uuid, peripheral);
 		} else {
-			peripheral.advertisement = adv;
+			peripheral.manufacturerData = adv.manufacturerData;
 			peripheral.rssi = rssi;
 		}
 

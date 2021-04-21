@@ -24,11 +24,9 @@ export class DbusAdapter extends Adapter {
 	private peripherals: Map<string, Peripheral> = new Map();
 
 	public constructor(modblue: DbusMODblue, path: string, name: string, address: string) {
-		super(modblue, path.replace(`/org/bluez/`, ''));
+		super(modblue, path.replace(`/org/bluez/`, ''), name, address);
 
 		this.path = path;
-		this._name = name;
-		this._address = address.toLowerCase();
 	}
 
 	private async init() {
@@ -153,9 +151,18 @@ export class DbusAdapter extends Adapter {
 			const name = data.Name?.value as string;
 			const address = (data.Address?.value as string).toLowerCase();
 			const addressType = data.AddressType?.value as AddressType;
-			const advertisement = data.ManufacturerData?.value as Record<string, unknown>;
+			const advertisement = data.ManufacturerData?.value as Record<string, { value: Buffer }>;
+			let manufacturerData: Buffer = null;
+			if (advertisement) {
+				manufacturerData = Buffer.alloc(0);
+				for (const key of Object.keys(advertisement)) {
+					const prefix = Buffer.alloc(2);
+					prefix.writeUInt16LE(Number(key));
+					manufacturerData = Buffer.concat([manufacturerData, prefix, advertisement[key].value]);
+				}
+			}
 			const rssi = data.RSSI?.value as number;
-			peripheral = new DbusPeripheral(this, path, id, name, addressType, address, advertisement, rssi);
+			peripheral = new DbusPeripheral(this, path, id, name, addressType, address, manufacturerData, rssi);
 			this.peripherals.set(id, peripheral);
 		}
 

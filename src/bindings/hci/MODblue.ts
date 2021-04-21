@@ -7,7 +7,7 @@ import { Hci } from './misc';
  * Use the HCI socket bindings to access BLE functions.
  */
 export class HciMODblue extends MODblue {
-	private adapters: Map<number, HciAdapter> = new Map();
+	private adapters: Map<string, HciAdapter> = new Map();
 
 	public async dispose(): Promise<void> {
 		for (const adapter of this.adapters.values()) {
@@ -19,10 +19,14 @@ export class HciMODblue extends MODblue {
 	public async getAdapters(): Promise<Adapter[]> {
 		const adapters = Hci.getDeviceList();
 		for (const rawAdapter of adapters) {
-			let adapter = this.adapters.get(rawAdapter.devId);
+			const id =
+				typeof rawAdapter.devId !== 'undefined'
+					? `${rawAdapter.devId}`
+					: `${rawAdapter.busNumber}-${rawAdapter.deviceAddress}`;
+			let adapter = this.adapters.get(id);
 			if (!adapter) {
-				adapter = new HciAdapter(this, `hci${rawAdapter.devId}`);
-				this.adapters.set(rawAdapter.devId, adapter);
+				adapter = new HciAdapter(this, id, `hci-${id}`);
+				this.adapters.set(id, adapter);
 			}
 		}
 		return [...this.adapters.values()];

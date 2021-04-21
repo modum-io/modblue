@@ -9,8 +9,8 @@ export class WebAdapter extends Adapter {
 		// NO-OP
 	}
 
-	public isScanning(): Promise<boolean> {
-		throw new Error('Method not implemented.');
+	public async isScanning(): Promise<boolean> {
+		return false;
 	}
 
 	public async startScanning(): Promise<void> {
