@@ -67,12 +67,12 @@
 		"nan": "2.14.2",
 		"napi-thread-safe-callback": "0.0.6",
 		"node-addon-api": "3.1.0",
-		"prebuild-install": "6.1.1",
+		"prebuild-install": "valandur/prebuild-install#717eb6a36bc1551c282d689067f9b11753fde3f7",
 		"tiny-typed-emitter": "2.0.3"
 	},
-	"optionalDependencies": {
-		"@modum-io/bluetooth-hci-socket": "0.6.1",
-		"dbus-next": "0.9.2"
+	"peerDependencies": {
+		"@modum-io/bluetooth-hci-socket": "0.6.x",
+		"dbus-next": "0.9.x"
 	},
 	"devDependencies": {
 		"@types/node": "14.14.41",
