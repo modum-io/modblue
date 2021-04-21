@@ -53,17 +53,22 @@
 		"binding.gyp"
 	],
 	"scripts": {
+		"install": "prebuild-install --verbose || node-gyp rebuild",
 		"build": "tsc",
 		"docs": "typedoc",
 		"release": "standard-version -a",
 		"prepare": "npx husky install",
-		"pretty-quick": "npx pretty-quick --staged"
+		"pretty-quick": "npx pretty-quick --staged",
+		"prebuild": "npm run prebuild:node && npm run prebuild:electron",
+		"prebuild:node": "npx prebuild -t 16.0.0 -t 15.0.0 -t 14.0.0 -t 13.0.0 -t 12.0.0 -t 11.0.0",
+		"prebuild:electron": "npx prebuild -r electron -t 13.0.0-beta.2 -t 12.0.0-beta.1 -t 11.0.0-beta.11 -t 10.0.0-beta.1"
 	},
 	"dependencies": {
 		"async-mutex": "0.3.1",
 		"nan": "2.14.2",
 		"napi-thread-safe-callback": "0.0.6",
 		"node-addon-api": "3.1.0",
+		"prebuild-install": "6.1.1",
 		"tiny-typed-emitter": "2.0.3"
 	},
 	"optionalDependencies": {

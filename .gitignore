@@ -6,3 +6,6 @@ tests/modum.js
 
 # GYP stuff
 build
+
+# Prebuilds
+prebuilds
