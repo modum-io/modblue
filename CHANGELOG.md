@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [11.0.0](https://github.com/modum-io/modblue/compare/v10.0.3...v11.0.0) (2021-04-21)
+
+### ⚠ BREAKING CHANGES
+
+- Move optional dependencies to peer dependencies
+
+### Bug Fixes
+
+- Fix prebuilds ([22676fa](https://github.com/modum-io/modblue/commit/22676fa2e0abcc6c123ebf31f0d8c6dc4e249ad0))
+- Make dependencies peers again ([1e3e813](https://github.com/modum-io/modblue/commit/1e3e81327b5b84a9f1979ea34dd240d908661d2e))
+
 ### [10.0.3](https://github.com/modum-io/modblue/compare/v10.0.2...v10.0.3) (2021-04-21)
 
 ### Bug Fixes
