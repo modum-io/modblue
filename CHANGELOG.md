@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [10.0.1](https://github.com/modum-io/modblue/compare/v10.0.0...v10.0.1) (2021-04-21)
+
+### Bug Fixes
+
+- Fix build calling prebuild ([7bb8577](https://github.com/modum-io/modblue/commit/7bb85778506f2ccf99758ce2b67e8d8320588f0a))
+- **hci:** Fix wrong hci package ([df9d73b](https://github.com/modum-io/modblue/commit/df9d73b51b2f604bfabc09c3df9f0a5f3a78ff40))
+
 ## [10.0.0](https://github.com/modum-io/modblue/compare/v9.0.0...v10.0.0) (2021-04-21)
 
 ### ⚠ BREAKING CHANGES
