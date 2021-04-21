@@ -110,7 +110,7 @@ export class Hci extends TypedEmitter<HciEvents> {
 	}
 
 	private static createSocket() {
-		return new (require(`@abandonware/bluetooth-hci-socket`))();
+		return new (require(`@modum-io/bluetooth-hci-socket`))();
 	}
 
 	public static getDeviceList(): HciDevice[] {
