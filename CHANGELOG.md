@@ -2,6 +2,48 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [10.0.0](https://github.com/modum-io/modblue/compare/v9.0.0...v10.0.0) (2021-04-21)
+
+### ⚠ BREAKING CHANGES
+
+- **peripheral:** Changes advertisement data format
+
+### Features
+
+- Add prebuild support ([811907b](https://github.com/modum-io/modblue/commit/811907b1c7c781478bb7bb34566934d0df215bf9))
+- Improve adapter names ([0c96325](https://github.com/modum-io/modblue/commit/0c9632564575af6cc67865c73712b10dce3dd01d))
+- **win:** Add first windows version [WIP] ([ccaa703](https://github.com/modum-io/modblue/commit/ccaa70374715d6f8f64ed88ac8b278917d54f065))
+- Add mac bindings [WIP] ([ae9ac95](https://github.com/modum-io/modblue/commit/ae9ac9518baddd9aed3c29c689d0fc015e7adbb8))
+- Improve mac bindings ([f18e577](https://github.com/modum-io/modblue/commit/f18e5771de8a5f3d5433d6dbbab2776cb23b270d))
+
+### Bug Fixes
+
+- **dbus:** Fix advertisement data ([23c9ace](https://github.com/modum-io/modblue/commit/23c9acee55a9cdafc8558e42ada3744030fcf159))
+- **dbus:** Implement notifications ([3f32190](https://github.com/modum-io/modblue/commit/3f321907bd3705d3a43cdba5c93b1e1d622b14d7))
+- **hci:** Fix adapter id issues ([9941aa3](https://github.com/modum-io/modblue/commit/9941aa3fe5cec10fc0f5d0b22b408f437c420562))
+- **hci:** Fix hci usb issues ([6b986c0](https://github.com/modum-io/modblue/commit/6b986c0eb06e31f2e161988d85f494927004a47b))
+- **hci:** Fix missing device id ([7589641](https://github.com/modum-io/modblue/commit/7589641e6d67f24bcc081b1365184e41748408ef))
+- **mac:** Fix binding typo ([668803b](https://github.com/modum-io/modblue/commit/668803b78cc549f54075a7ae14d2e10006d3e5e1))
+- **mac:** Fix loading bindings ([1e53c79](https://github.com/modum-io/modblue/commit/1e53c794fa4417069c66eed14fa267f9f33972b6))
+- **mac:** Remove build files ([a4d6026](https://github.com/modum-io/modblue/commit/a4d6026b46aa7dfdbf2d0d392a0e2f7bb95b252d))
+- **mac:** Use dynamic loading ([79e2526](https://github.com/modum-io/modblue/commit/79e2526f424d114ef2e2e139d28ee8bcc676a4dd))
+- **peripheral:** Unify manufacturer data ([189b9af](https://github.com/modum-io/modblue/commit/189b9af44877e09909f3af37dc2d86964b7918ba))
+- **win:** Fix ([c2cb7bb](https://github.com/modum-io/modblue/commit/c2cb7bb809d639cd64bd81abcfc2a537ef437db4))
+- **win:** Fix import paths ([2f74aa0](https://github.com/modum-io/modblue/commit/2f74aa0ed6daa1ad0c1c7b5890b34ac1d3ba7893))
+- **win:** Fix missing global object ([801a01b](https://github.com/modum-io/modblue/commit/801a01b69f9c2a0a410c27277d4966fb9da77f01))
+- **win:** Improve adapter handling ([9a77a6a](https://github.com/modum-io/modblue/commit/9a77a6ae082780261a7a36cff2a43c5922600372))
+- **win:** Propagate errors ([6885c0f](https://github.com/modum-io/modblue/commit/6885c0f63f14d2b571bbd157a0776590bc7d59eb))
+- **win:** Remove package files for nan import ([e782dbc](https://github.com/modum-io/modblue/commit/e782dbcb22e58512c7d6a4ac98192b3ac1a5d08e))
+- **win:** Shorten file paths ([04727d4](https://github.com/modum-io/modblue/commit/04727d4114e90b505be0be70ed98983720f005d0))
+- **win:** Try fixing missing imports ([24eeb95](https://github.com/modum-io/modblue/commit/24eeb956940514c5cf192efd11e321a0718fbef5))
+- rework import paths ([4a3ce4c](https://github.com/modum-io/modblue/commit/4a3ce4c99898d870ea4fdef1ad79c0b910bc37ff))
+- **win:** Try to fix win loading issues ([03f06b7](https://github.com/modum-io/modblue/commit/03f06b72eeeed59ad447e749eb80ec4be86a4a58))
+- Convert js to ts ([da757a3](https://github.com/modum-io/modblue/commit/da757a39cfa86503092e583fc53bbc5f541bbf02))
+- **win:** Try fixing nan ([c9a5de0](https://github.com/modum-io/modblue/commit/c9a5de08733e1bf128fa4d19f2e4cef0160bf7bc))
+- **win:** Try relative nan path ([e374894](https://github.com/modum-io/modblue/commit/e374894e97fec840918644be6eed29bb793d99fe))
+- Fix mac bindings ([2819426](https://github.com/modum-io/modblue/commit/2819426d675dcbdfe9a6644f338feb6ce4abc677))
+- Make peers optional ([15abacc](https://github.com/modum-io/modblue/commit/15abacca6fc589e0882d5b56036b7a49f3d1859e))
+
 ## [9.0.0](https://github.com/modum-io/modblue/compare/v8.0.1...v9.0.0) (2021-04-08)
 
 ### ⚠ BREAKING CHANGES
