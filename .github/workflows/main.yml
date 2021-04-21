@@ -97,13 +97,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_CI_TOKEN }}
 
-      - name: Setup prebuild
-        run: echo "upload=$TOKEN" > ~/.prebuildrc
+      - name: Create node prebuilds
+        run: npm run prebuild:node -- -u $TOKEN
         env:
           TOKEN: ${{ secrets.GH_PACKAGES_CI_TOKEN }}
 
-      - name: Create node prebuilds
-        run: npm run prebuild:node
-
       - name: Create electron prebuilds
-        run: npm run prebuild:electron
+        run: npm run prebuild:electron -- -u $TOKEN
+        env:
+          TOKEN: ${{ secrets.GH_PACKAGES_CI_TOKEN }}
