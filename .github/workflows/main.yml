@@ -82,6 +82,9 @@ jobs:
         os: [macos-latest, windows-latest]
     needs:
       - release
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v2
