@@ -57,7 +57,6 @@
 		"build": "tsc",
 		"docs": "typedoc",
 		"release": "standard-version -a",
-		"prepare": "npx husky install",
 		"pretty-quick": "npx pretty-quick --staged",
 		"prebuild:node": "npx prebuild -t 16.0.0 -t 15.0.0 -t 14.0.0 -t 13.0.0 -t 12.0.0 -t 11.0.0",
 		"prebuild:electron": "npx prebuild -r electron -t 13.0.0-beta.2 -t 12.0.0-beta.1 -t 11.0.0-beta.11 -t 10.0.0-beta.1"
@@ -81,7 +80,6 @@
 		"@typescript-eslint/parser": "4.22.0",
 		"eslint": "7.24.0",
 		"eslint-config-prettier": "8.2.0",
-		"husky": "6.0.0",
 		"prettier": "2.2.1",
 		"pretty-quick": "3.1.0",
 		"standard-version": "9.2.0",
