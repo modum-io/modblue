@@ -64,7 +64,7 @@ export class WinGattCharacteristic extends GattCharacteristic {
 			const handler = (dev: string, srv: string, char: string, err: Error) => {
 				if (dev === this.service.gatt.peripheral.uuid && srv === this.service.uuid && char === this.uuid) {
 					noble.off('write', handler);
-					if (err) {
+					if (err instanceof Error) {
 						reject(err);
 					} else {
 						resolve();
@@ -88,7 +88,7 @@ export class WinGattCharacteristic extends GattCharacteristic {
 			const handler = (dev: string, srv: string, char: string, err: Error) => {
 				if (dev === this.service.gatt.peripheral.uuid && srv === this.service.uuid && char === this.uuid) {
 					noble.off('notify', handler);
-					if (err) {
+					if (err instanceof Error) {
 						reject(err);
 					} else {
 						resolve();
