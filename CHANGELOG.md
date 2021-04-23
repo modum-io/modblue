@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [11.1.0](https://github.com/modum-io/modblue/compare/v11.0.2...v11.1.0) (2021-04-23)
+
+### Features
+
+- Simplify windows bindings ([29cf2a2](https://github.com/modum-io/modblue/commit/29cf2a2e839d25b25d32f22acc4c5f2214e8e940))
+
 ### [11.0.2](https://github.com/modum-io/modblue/compare/v11.0.1...v11.0.2) (2021-04-22)
 
 ### Bug Fixes
