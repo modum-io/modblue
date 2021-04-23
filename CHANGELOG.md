@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [11.1.1](https://github.com/modum-io/modblue/compare/v11.1.0...v11.1.1) (2021-04-23)
+
+### Bug Fixes
+
+- **win:** Add /bigobj build flag ([0aeb20c](https://github.com/modum-io/modblue/commit/0aeb20cae0bc95134e8fb73c2497f776983fd3f9))
+
 ## [11.1.0](https://github.com/modum-io/modblue/compare/v11.0.2...v11.1.0) (2021-04-23)
 
 ### Features
