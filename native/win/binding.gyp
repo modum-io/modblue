@@ -5,7 +5,7 @@
   },
   "includes": ["common.gypi"],
   "targets": [{
-    "target_name": "win-foundation",
+    "target_name": "win-ble",
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"
@@ -15,7 +15,7 @@
       ["OS=='win'", {
         "libraries": ["-lruntimeobject.lib"],
         "sources": [
-          "_nodert_generated.cpp",
+          "win-ble.cpp",
           "NodeRtUtils.cpp",
           "OpaqueWrapper.cpp",
           "CollectionsConverterUtils.cpp"
@@ -73,6 +73,6 @@
         "AdditionalOptions": ["/ZW"],
         "DisableSpecificWarnings": [4609]
       }
-    }
+    },
   }]
 }
