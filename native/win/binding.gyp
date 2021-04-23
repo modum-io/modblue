@@ -70,7 +70,7 @@
     ],
     "msvs_settings": {
       "VCCLCompilerTool": {
-        "AdditionalOptions": ["/ZW"],
+        "AdditionalOptions": ["/ZW", "/bigobj"],
         "DisableSpecificWarnings": [4609]
       }
     },
