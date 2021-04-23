@@ -80,6 +80,7 @@ export class MacAdapter extends Adapter {
 				advertisement.manufacturerData,
 				rssi
 			);
+			this.peripherals.set(peripheral.uuid, peripheral);
 		} else {
 			peripheral.name = advertisement.localName;
 			peripheral.manufacturerData = advertisement.manufacturerData;

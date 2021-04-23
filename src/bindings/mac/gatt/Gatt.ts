@@ -9,9 +9,6 @@ export class MacGatt extends GattRemote {
 	public discoverServices(): Promise<GattService[]> {
 		const noble = this.peripheral.adapter.noble;
 
-		this.services.clear();
-		noble.discoverServices(this.peripheral.uuid);
-
 		return new Promise<GattService[]>((resolve) => {
 			const handler = (uuid: string, serviceUUIDs: string[]) => {
 				if (uuid === this.peripheral.uuid) {
@@ -23,6 +20,9 @@ export class MacGatt extends GattRemote {
 				}
 			};
 			noble.on('servicesDiscover', handler);
+
+			this.services.clear();
+			noble.discoverServices(this.peripheral.uuid);
 		});
 	}
 }

@@ -13,9 +13,6 @@ export class MacGattService extends GattService {
 	public discoverCharacteristics(): Promise<GattCharacteristic[]> {
 		const noble = this.gatt.peripheral.adapter.noble;
 
-		this.characteristics.clear();
-		noble.discoverCharacteristics(this.gatt.peripheral.uuid, this.uuid);
-
 		return new Promise<GattCharacteristic[]>((resolve) => {
 			const handler = (
 				uuid: string,
@@ -31,6 +28,9 @@ export class MacGattService extends GattService {
 				}
 			};
 			noble.on('characteristicsDiscover', handler);
+
+			this.characteristics.clear();
+			noble.discoverCharacteristics(this.gatt.peripheral.uuid, this.uuid);
 		});
 	}
 }
