@@ -10,43 +10,34 @@ declare global {
 }
 
 try {
-	// Note the load order here is important for cross-namespace dependencies.
-	rt.using(require('../../../build/Release/win-foundation.node'), 'Windows.Foundation');
-	rt.using(require('../../../build/Release/win-storage.streams.node'), 'Windows.Storage.Streams');
-	rt.using(require('../../../build/Release/win-dev.enum.node'), 'Windows.Devices.Enumeration');
-	rt.using(require('../../../build/Release/win-dev.ble.gap.node'), 'Windows.Devices.Bluetooth.GenericAttributeProfile');
-	rt.using(require('../../../build/Release/win-dev.ble.node'), 'Windows.Devices.Bluetooth');
-	rt.using(require('../../../build/Release/win-dev.ble.adv.node'), 'Windows.Devices.Bluetooth.Advertisement');
-	rt.using(require('../../../build/Release/win-dev.radios.node'), 'Windows.Devices.Radios');
+	(global as any).Windows = require('../../../build/Release/win-ble.node');
 } catch {
-	// NO-OP
 	(global as any).Windows = null;
 }
 
-const BluetoothLEDevice = Windows?.Devices.Bluetooth.BluetoothLEDevice;
-const BluetoothCacheMode = Windows?.Devices.Bluetooth.BluetoothCacheMode;
-const BluetoothUuidHelper = Windows?.Devices.Bluetooth.BluetoothUuidHelper;
-const BluetoothConnectionStatus = Windows?.Devices.Bluetooth.BluetoothConnectionStatus;
+const BluetoothLEDevice = Windows?.BluetoothLEDevice;
+const BluetoothCacheMode = Windows?.BluetoothCacheMode;
+const BluetoothUuidHelper = Windows?.BluetoothUuidHelper;
+const BluetoothConnectionStatus = Windows?.BluetoothConnectionStatus;
 
-const BluetoothLEAdvertisementWatcher = Windows?.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementWatcher;
-const BluetoothLEScanningMode = Windows?.Devices.Bluetooth.Advertisement.BluetoothLEScanningMode;
-const BluetoothLEAdvertisementType = Windows?.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementType;
-const BluetoothLEAdvertisementDataTypes = Windows?.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementDataTypes;
-const BluetoothLEAdvertisementWatcherStatus =
-	Windows?.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementWatcherStatus;
+const BluetoothLEAdvertisementWatcher = Windows?.BluetoothLEAdvertisementWatcher;
+const BluetoothLEScanningMode = Windows?.BluetoothLEScanningMode;
+const BluetoothLEAdvertisementType = Windows?.BluetoothLEAdvertisementType;
+const BluetoothLEAdvertisementDataTypes = Windows?.BluetoothLEAdvertisementDataTypes;
+const BluetoothLEAdvertisementWatcherStatus = Windows?.BluetoothLEAdvertisementWatcherStatus;
 
-const GattCharacteristicProperties = Windows?.Devices.Bluetooth.GenericAttributeProfile.GattCharacteristicProperties;
-// const GattDeviceService = Windows?.Devices.Bluetooth.GenericAttributeProfile.GattDeviceService;
-// const GattServiceUuids = Windows?.Devices.Bluetooth.GenericAttributeProfile.GattServiceUuids;
-const GattCommunicationStatus = Windows?.Devices.Bluetooth.GenericAttributeProfile.GattCommunicationStatus;
+const GattCharacteristicProperties = Windows?.GattCharacteristicProperties;
+// const GattDeviceService = Windows?.GattDeviceService;
+// const GattServiceUuids = Windows?.GattServiceUuids;
+const GattCommunicationStatus = Windows?.GattCommunicationStatus;
 const GattClientCharacteristicConfigurationDescriptorValue =
-	Windows?.Devices.Bluetooth.GenericAttributeProfile.GattClientCharacteristicConfigurationDescriptorValue;
+	Windows?.GattClientCharacteristicConfigurationDescriptorValue;
 
-const Radio = Windows?.Devices.Radios.Radio;
-const RadioKind = Windows?.Devices.Radios.RadioKind;
-const RadioState = Windows?.Devices.Radios.RadioState;
+const Radio = Windows?.Radio;
+const RadioKind = Windows?.RadioKind;
+const RadioState = Windows?.RadioState;
 
-const DataReader = Windows?.Storage.Streams.DataReader;
+const DataReader = Windows?.DataReader;
 
 export interface Radio extends EventEmitter {
 	kind: string;

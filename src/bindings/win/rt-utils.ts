@@ -72,7 +72,7 @@ export function toMap(o: { first(): Cursor }): Map<unknown, unknown> {
 export function toBuffer(b: { length: number }): Buffer {
 	// TODO: Use nodert-streams to more efficiently convert the buffer?
 	const len = b.length;
-	const DataReader = Windows.Storage.Streams.DataReader;
+	const DataReader = Windows.DataReader;
 	const r = DataReader.fromBuffer(b);
 	const a = new Uint8Array(len);
 	for (let i = 0; i < len; i++) {
@@ -85,7 +85,7 @@ export function toBuffer(b: { length: number }): Buffer {
 export function fromBuffer(b: Buffer): unknown {
 	// TODO: Use nodert-streams to more efficiently convert the buffer?
 	const len = b.length;
-	const DataWriter = Windows.Storage.Streams.DataWriter;
+	const DataWriter = Windows.DataWriter;
 	const w = new DataWriter();
 	for (let i = 0; i < len; i++) {
 		w.writeByte(b[i]);
