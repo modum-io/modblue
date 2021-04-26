@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [11.1.4](https://github.com/modum-io/modblue/compare/v11.1.3...v11.1.4) (2021-04-26)
+
+### Bug Fixes
+
+- **win:** Fix notifications ([7ee43bc](https://github.com/modum-io/modblue/commit/7ee43bc123f3213001ddee979e55233e19f999e2))
+
 ### [11.1.3](https://github.com/modum-io/modblue/compare/v11.1.2...v11.1.3) (2021-04-26)
 
 ### Bug Fixes
