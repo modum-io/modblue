@@ -9,9 +9,6 @@ export class WinGatt extends GattRemote {
 	public discoverServices(): Promise<GattService[]> {
 		const noble = this.peripheral.adapter.noble;
 
-		this.services.clear();
-		noble.discoverServices(this.peripheral.uuid);
-
 		return new Promise<GattService[]>((resolve, reject) => {
 			const handler = (uuid: string, serviceUUIDs: string[] | Error) => {
 				if (uuid === this.peripheral.uuid) {
@@ -27,6 +24,9 @@ export class WinGatt extends GattRemote {
 				}
 			};
 			noble.on('servicesDiscover', handler);
+
+			this.services.clear();
+			noble.discoverServices(this.peripheral.uuid);
 		});
 	}
 }
