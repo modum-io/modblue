@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [11.1.3](https://github.com/modum-io/modblue/compare/v11.1.2...v11.1.3) (2021-04-26)
+
+### Bug Fixes
+
+- **win:** Add connect & disconnect timeout ([9418720](https://github.com/modum-io/modblue/commit/94187201cf5de22b575cb881d750e2fed8a7754b))
+
 ### [11.1.2](https://github.com/modum-io/modblue/compare/v11.1.1...v11.1.2) (2021-04-23)
 
 ### Bug Fixes
