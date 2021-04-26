@@ -75,6 +75,7 @@ export class WinAdapter extends Adapter {
 				advertisement.manufacturerData,
 				rssi
 			);
+			this.peripherals.set(uuid, peripheral);
 		} else {
 			peripheral.name = advertisement.localName;
 			peripheral.manufacturerData = advertisement.manufacturerData;
