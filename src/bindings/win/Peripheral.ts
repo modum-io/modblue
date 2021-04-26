@@ -21,12 +21,24 @@ export class WinPeripheral extends Peripheral {
 	public async connect(): Promise<GattRemote> {
 		this._state = 'connecting';
 
-		this.adapter.noble.connect(this.uuid);
+		await new Promise<void>((res, rej) => {
+			const cleanup = () => {
+				clearTimeout(timer);
+				this.adapter.noble.off('connect', connHandler);
+			};
+			const resolve = () => {
+				cleanup();
+				res();
+			};
+			const reject = (err: Error) => {
+				cleanup();
+				rej(err);
+			};
 
-		await new Promise<void>((resolve, reject) => {
+			const timer = setTimeout(() => reject(new Error('Connecting timed out')), 10000);
+
 			const connHandler = (uuid: string, err: Error) => {
 				if (uuid === this.uuid) {
-					this.adapter.noble.off('connect', connHandler);
 					if (err) {
 						reject(err);
 					} else {
@@ -35,6 +47,8 @@ export class WinPeripheral extends Peripheral {
 				}
 			};
 			this.adapter.noble.on('connect', connHandler);
+
+			this.adapter.noble.connect(this.uuid);
 		});
 
 		this._gatt = new WinGatt(this);
@@ -45,16 +59,23 @@ export class WinPeripheral extends Peripheral {
 	public async disconnect(): Promise<void> {
 		this._state = 'disconnecting';
 
-		this.adapter.noble.disconnect(this.uuid);
+		await new Promise<void>((res) => {
+			const resolve = () => {
+				clearTimeout(timer);
+				this.adapter.noble.off('connect', disconnHandler);
+				res();
+			};
 
-		await new Promise<void>((resolve) => {
+			const timer = setTimeout(resolve, 10000);
+
 			const disconnHandler = (uuid: string) => {
 				if (uuid === this.uuid) {
-					this.adapter.noble.off('disconnect', disconnHandler);
 					resolve();
 				}
 			};
 			this.adapter.noble.on('disconnect', disconnHandler);
+
+			this.adapter.noble.disconnect(this.uuid);
 		});
 
 		this._state = 'disconnected';
