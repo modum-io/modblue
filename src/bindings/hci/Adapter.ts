@@ -106,7 +106,7 @@ export class HciAdapter extends Adapter {
 		this.initialized = false;
 	}
 
-	public async isScanning(): Promise<boolean> {
+	public isScanning(): boolean {
 		return this.scanning;
 	}
 
@@ -233,7 +233,7 @@ export class HciAdapter extends Adapter {
 		}
 	}
 
-	public async isAdvertising(): Promise<boolean> {
+	public isAdvertising(): boolean {
 		return this.advertising;
 	}
 

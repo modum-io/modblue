@@ -9,7 +9,7 @@ export class WebAdapter extends Adapter {
 		// NO-OP
 	}
 
-	public async isScanning(): Promise<boolean> {
+	public isScanning(): boolean {
 		return false;
 	}
 
@@ -67,7 +67,7 @@ export class WebAdapter extends Adapter {
 		throw new Error('Method not implemented.');
 	}
 
-	public async isAdvertising(): Promise<boolean> {
+	public isAdvertising(): boolean {
 		throw new Error('Method not implemented.');
 	}
 

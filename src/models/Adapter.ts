@@ -120,7 +120,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
 	 * Returns `true` if this adapter is currently scanning, `false` otherwise.
 	 */
-	public abstract isScanning(): Promise<boolean>;
+	public abstract isScanning(): boolean;
 
 	/**
 	 * Start scanning for nearby {@link Peripheral}s.
@@ -142,7 +142,7 @@ export abstract class Adapter extends TypedEmitter<AdapterEvents> {
 	/**
 	 * Returns `true` if this adapter is currently advertising, `false` otherwise.
 	 */
-	public abstract isAdvertising(): Promise<boolean>;
+	public abstract isAdvertising(): boolean;
 
 	/**
 	 * Start advertising on this adapter.

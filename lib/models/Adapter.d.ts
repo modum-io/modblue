@@ -45,7 +45,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
     /**
      * Returns `true` if this adapter is currently scanning, `false` otherwise.
      */
-    abstract isScanning(): Promise<boolean>;
+    abstract isScanning(): boolean;
     /**
      * Start scanning for nearby {@link Peripheral}s.
      * @param serviceUUIDs The UUIDs of the {@link GattService} that an advertising
@@ -64,7 +64,7 @@ export declare abstract class Adapter extends TypedEmitter<AdapterEvents> {
     /**
      * Returns `true` if this adapter is currently advertising, `false` otherwise.
      */
-    abstract isAdvertising(): Promise<boolean>;
+    abstract isAdvertising(): boolean;
     /**
      * Start advertising on this adapter.
      * @param deviceName The device name that is included in the advertisement.

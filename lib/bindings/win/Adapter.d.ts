@@ -5,7 +5,7 @@ export declare class WinAdapter extends Adapter {
     private initDone;
     private scanning;
     private peripherals;
-    isScanning(): Promise<boolean>;
+    isScanning(): boolean;
     constructor(modblue: MODblue, radio: Radio);
     private init;
     dispose(): void;
@@ -14,7 +14,7 @@ export declare class WinAdapter extends Adapter {
     private onNotification;
     stopScanning(): Promise<void>;
     getScannedPeripherals(): Promise<Peripheral[]>;
-    isAdvertising(): Promise<boolean>;
+    isAdvertising(): boolean;
     startAdvertising(): Promise<void>;
     stopAdvertising(): Promise<void>;
     setupGatt(): Promise<GattLocal>;

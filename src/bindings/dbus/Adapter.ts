@@ -20,6 +20,7 @@ export class DbusAdapter extends Adapter {
 	private scanning = false;
 	private requestScanStop = false;
 	private updateTimer: NodeJS.Timer;
+	private scanChangeListeners: ((scanning: boolean) => void)[] = [];
 
 	private peripherals: Map<string, Peripheral> = new Map();
 
@@ -82,7 +83,7 @@ export class DbusAdapter extends Adapter {
 		return [...this.peripherals.values()];
 	}
 
-	public async isScanning(): Promise<boolean> {
+	public isScanning(): boolean {
 		return this.scanning;
 	}
 
@@ -102,6 +103,31 @@ export class DbusAdapter extends Adapter {
 				DuplicateData: buildTypedValue('boolean', false)
 			});
 			await this.adapterIface.StartDiscovery();
+
+			if (!this.isScanning()) {
+				await new Promise<void>((res, rej) => {
+					const cleanup = () => {
+						this.scanChangeListeners = this.scanChangeListeners.filter((l) => l !== listener);
+						clearTimeout(timer);
+					};
+					const resolve = () => {
+						cleanup();
+						res();
+					};
+					const reject = (err: Error) => {
+						cleanup();
+						rej(err);
+					};
+
+					const listener = (state: boolean) => {
+						if (state) {
+							resolve();
+						}
+					};
+					const timer = setTimeout(() => reject(new Error('Scan state never changed')));
+					this.scanChangeListeners.push(listener);
+				});
+			}
 		}
 
 		const objs = await this.objManagerIface.GetManagedObjects();
@@ -115,6 +141,9 @@ export class DbusAdapter extends Adapter {
 
 	private onScanStart() {
 		this.scanning = true;
+		for (const listener of this.scanChangeListeners) {
+			listener(true);
+		}
 	}
 
 	public async stopScanning(): Promise<void> {
@@ -127,12 +156,41 @@ export class DbusAdapter extends Adapter {
 
 		this.requestScanStop = true;
 		await this.adapterIface.StopDiscovery();
+
+		if (this.isScanning()) {
+			await new Promise<void>((res, rej) => {
+				const cleanup = () => {
+					this.scanChangeListeners = this.scanChangeListeners.filter((l) => l !== listener);
+					clearTimeout(timer);
+				};
+				const resolve = () => {
+					cleanup();
+					res();
+				};
+				const reject = (err: Error) => {
+					cleanup();
+					rej(err);
+				};
+
+				const listener = (state: boolean) => {
+					if (!state) {
+						resolve();
+					}
+				};
+				const timer = setTimeout(() => reject(new Error('Scan state never changed')));
+				this.scanChangeListeners.push(listener);
+			});
+		}
 	}
 
 	private onScanStop() {
 		this.scanning = false;
 
 		if (this.requestScanStop) {
+			for (const listener of this.scanChangeListeners) {
+				listener(false);
+			}
+
 			this.requestScanStop = false;
 			return;
 		}
@@ -187,7 +245,7 @@ export class DbusAdapter extends Adapter {
 		}
 	};
 
-	public async isAdvertising(): Promise<boolean> {
+	public isAdvertising(): boolean {
 		return false;
 	}
 

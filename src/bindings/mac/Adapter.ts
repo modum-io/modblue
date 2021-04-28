@@ -13,7 +13,7 @@ export class MacAdapter extends Adapter {
 
 	private peripherals: Map<string, Peripheral> = new Map();
 
-	public async isScanning(): Promise<boolean> {
+	public isScanning(): boolean {
 		return this.scanning;
 	}
 
@@ -118,7 +118,7 @@ export class MacAdapter extends Adapter {
 		return [...this.peripherals.values()];
 	}
 
-	public isAdvertising(): Promise<boolean> {
+	public isAdvertising(): boolean {
 		throw new Error('Method not implemented.');
 	}
 
