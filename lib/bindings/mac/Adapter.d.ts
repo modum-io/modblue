@@ -4,7 +4,7 @@ export declare class MacAdapter extends Adapter {
     private initDone;
     private scanning;
     private peripherals;
-    isScanning(): Promise<boolean>;
+    isScanning(): boolean;
     constructor(modblue: MODblue, id: string, name: string);
     private init;
     dispose(): void;
@@ -13,7 +13,7 @@ export declare class MacAdapter extends Adapter {
     private onNotification;
     stopScanning(): Promise<void>;
     getScannedPeripherals(): Promise<Peripheral[]>;
-    isAdvertising(): Promise<boolean>;
+    isAdvertising(): boolean;
     startAdvertising(): Promise<void>;
     stopAdvertising(): Promise<void>;
     setupGatt(): Promise<GattLocal>;

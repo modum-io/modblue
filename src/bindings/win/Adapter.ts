@@ -12,7 +12,7 @@ export class WinAdapter extends Adapter {
 
 	private peripherals: Map<string, Peripheral> = new Map();
 
-	public async isScanning(): Promise<boolean> {
+	public isScanning(): boolean {
 		return this.scanning;
 	}
 
@@ -113,7 +113,7 @@ export class WinAdapter extends Adapter {
 		return [...this.peripherals.values()];
 	}
 
-	public isAdvertising(): Promise<boolean> {
+	public isAdvertising(): boolean {
 		throw new Error('Method not implemented.');
 	}
 
