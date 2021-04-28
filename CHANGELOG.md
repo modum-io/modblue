@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [12.0.0](https://github.com/modum-io/modblue/compare/v11.1.4...v12.0.0) (2021-04-28)
+
+### ⚠ BREAKING CHANGES
+
+- Make isScanning and isAdvertising sync instead of async
+
+### Bug Fixes
+
+- Fix dbus scanning issues ([7857cd3](https://github.com/modum-io/modblue/commit/7857cd37762ee749ab275738c2ce08f15742b427))
+
 ### [11.1.4](https://github.com/modum-io/modblue/compare/v11.1.3...v11.1.4) (2021-04-26)
 
 ### Bug Fixes
