@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.0.1](https://github.com/modum-io/modblue/compare/v12.0.0...v12.0.1) (2021-04-28)
+
+### Bug Fixes
+
+- **dbus:** Fix very short scan state timeouts ([3827038](https://github.com/modum-io/modblue/commit/3827038e6ebd3b23f32b845c83dc88e9ad8a2700))
+
 ## [12.0.0](https://github.com/modum-io/modblue/compare/v11.1.4...v12.0.0) (2021-04-28)
 
 ### ⚠ BREAKING CHANGES
