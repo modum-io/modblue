@@ -7,6 +7,7 @@ import { DbusMODblue } from './MODblue';
 import { DbusPeripheral } from './Peripheral';
 
 const UPDATE_INTERVAL = 5; // in seconds
+const SCAN_STATE_TIMEOUT = 10; // in seconds
 
 export class DbusAdapter extends Adapter {
 	public modblue: DbusMODblue;
@@ -124,7 +125,7 @@ export class DbusAdapter extends Adapter {
 							resolve();
 						}
 					};
-					const timer = setTimeout(() => reject(new Error('Scan state never changed')));
+					const timer = setTimeout(() => reject(new Error('No scan state change')), SCAN_STATE_TIMEOUT * 1000);
 					this.scanChangeListeners.push(listener);
 				});
 			}
@@ -177,7 +178,7 @@ export class DbusAdapter extends Adapter {
 						resolve();
 					}
 				};
-				const timer = setTimeout(() => reject(new Error('Scan state never changed')));
+				const timer = setTimeout(() => reject(new Error('No scan state change')), SCAN_STATE_TIMEOUT * 1000);
 				this.scanChangeListeners.push(listener);
 			});
 		}
