@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.0.2](https://github.com/modum-io/modblue/compare/v12.0.1...v12.0.2) (2021-05-06)
+
+### Bug Fixes
+
+- Support multiple hci socket implementations ([070f4c5](https://github.com/modum-io/modblue/commit/070f4c58a1c90179fd631333e3c1d41f2a2c47bc))
+
 ### [12.0.1](https://github.com/modum-io/modblue/compare/v12.0.0...v12.0.1) (2021-04-28)
 
 ### Bug Fixes
