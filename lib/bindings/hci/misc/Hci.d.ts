@@ -37,9 +37,11 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     private socketTimer;
     private isSocketUp;
     private handles;
-    private mutex;
     private currentCmd;
     private cmdTimeout;
+    private cmdMutex;
+    private connTimeout;
+    private connMutex;
     private aclDataPacketLength;
     private totalNumAclDataPackets;
     private aclLeDataPacketLength;
@@ -48,7 +50,7 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     constructor(devId?: number | {
         bus: number;
         address: number;
-    }, cmdTimeout?: number);
+    }, cmdTimeout?: number, connTimeout?: number);
     private static createSocket;
     static getDeviceList(): HciDevice[];
     private isInitializing;
@@ -69,7 +71,7 @@ export declare class Hci extends TypedEmitter<HciEvents> {
     setScanParameters(): Promise<void>;
     setScanEnabled(enabled: boolean, filterDuplicates: boolean): Promise<void>;
     createLeConn(address: string, addressType: AddressType, minInterval?: number, maxInterval?: number, latency?: number, supervisionTimeout?: number): Promise<number>;
-    cancelLeConn(customMutex?: boolean): Promise<void>;
+    cancelLeConn(): Promise<void>;
     connUpdateLe(handle: number, minInterval: number, maxInterval: number, latency: number, supervisionTimeout: number): Promise<void>;
     disconnect(handle: number, reason?: number): Promise<void>;
     readRssi(handle: number): Promise<number>;
