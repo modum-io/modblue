@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.0.3](https://github.com/modum-io/modblue/compare/v12.0.2...v12.0.3) (2021-05-12)
+
+### Bug Fixes
+
+- **hci:** Improve connection flow ([fb8a552](https://github.com/modum-io/modblue/commit/fb8a55260c720deae5c677f2c49c7c61682ac9e5))
+
 ### [12.0.2](https://github.com/modum-io/modblue/compare/v12.0.1...v12.0.2) (2021-05-06)
 
 ### Bug Fixes
