@@ -1,5 +1,7 @@
 const { HciMODblue } = require('../lib/hci');
 const { DbusMODblue } = require('../lib/dbus');
+const { MacMODblue } = require('../lib/mac');
+const { WinMODblue } = require('../lib/win');
 
 const MAC_ADDRESS = /(?:[0-9A-F]{2}:?){6}/i;
 
@@ -7,8 +9,8 @@ const USAGE = `
 Usage:
 	node ./tests/connect.js <bindings> <devices> <service> <characteristic>
 Arguments:
-	bindings:        Bindings to use: "hci" or "dbus"
-	devices:         Peripheral MAC addresses seperated by pipe. Eg. "AA:AA:AA:AA:AA:AA|BB:BB:BB:BB:BB:BB" (at least 2)
+	bindings:        Bindings to use: "hci", "dbus", "win" or "mac"
+	devices:         Peripheral MAC addresses seperated by one of ,|; Eg. "AA:AA:AA:AA:AA:AA|BB:BB:BB:BB:BB:BB" (at least 2)
 	service:         Service UUID without dashes
 	characteristic:  Characteristic UUID without dashes
 `;
@@ -27,7 +29,16 @@ const main = async () => {
 
 	console.log('Initializing MODblue...');
 
-	const modblue = BINDINGS === 'hci' ? new HciMODblue() : BINDINGS === 'dbus' ? new DbusMODblue() : null;
+	const modblue =
+		BINDINGS === 'hci'
+			? new HciMODblue()
+			: BINDINGS === 'dbus'
+			? new DbusMODblue()
+			: BINDINGS === 'mac'
+			? new MacMODblue()
+			: BINDINGS === 'win'
+			? new WinMODblue()
+			: null;
 	if (!modblue) {
 		throw new Error(`Could not find requested bindings ${BINDINGS}`);
 	}
