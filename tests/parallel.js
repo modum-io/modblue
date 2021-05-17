@@ -3,7 +3,7 @@ const { DbusMODblue } = require('../lib/dbus');
 const { MacMODblue } = require('../lib/mac');
 const { WinMODblue } = require('../lib/win');
 
-const MAC_ADDRESS = /(?:[0-9A-F]{2}:?){6}/i;
+const MAC_ADDRESS = /(?:[0-9a-f]{2}:?){6}/i;
 
 const USAGE = `
 Usage:
@@ -16,7 +16,10 @@ Arguments:
 `;
 
 const BINDINGS = process.argv[2];
-const PERIPHERAL_ADDRESSES = (process.argv[3] || '').split(/[,|;]/g).filter((p) => !!p && MAC_ADDRESS.test(p));
+const PERIPHERAL_ADDRESSES = (process.argv[3] || '')
+	.split(/[,|;]/g)
+	.filter((p) => !!p && MAC_ADDRESS.test(p))
+	.map((a) => a.toLowerCase());
 const SERVICE_UUID = process.argv[4];
 const CHAR_UUID = process.argv[5];
 
@@ -62,26 +65,19 @@ const main = async () => {
 	// Scan for 3 seconds
 	await new Promise((resolve) => setTimeout(resolve, 3000));
 
-	await adapter.stopScanning();
-
 	console.log('Getting peripherals...');
-
-	const peripherals = await adapter.getScannedPeripherals();
-	const missing = PERIPHERAL_ADDRESSES.filter(
-		(address) => !peripherals.some((p) => p.address === address.toUpperCase())
-	);
-	if (missing.length > 0) {
-		throw new Error(
-			`Could not find peripherals.\nAvailable: ${peripherals.map((p) => p.address)}\nMissing: ${missing}`
-		);
-	}
 
 	console.time('Connect');
 	let total = 0;
 	let success = 0;
 
 	const testDevice = async (targetAddress) => {
+		const peripherals = await adapter.getScannedPeripherals();
 		const peripheral = peripherals.find((p) => p.address === targetAddress);
+		if (!peripheral) {
+			throw new Error(`Missing peripheral ${targetAddress}`);
+		}
+
 		console.log(targetAddress, `Connecting ${total}...`);
 
 		try {
@@ -127,8 +123,8 @@ const main = async () => {
 	};
 
 	for (let i = 0; i < PERIPHERAL_ADDRESSES.length; i++) {
-		testDevice(PERIPHERAL_ADDRESSES[i].toUpperCase());
-		setInterval(() => testDevice(PERIPHERAL_ADDRESSES[i].toUpperCase()), 10000);
+		testDevice(PERIPHERAL_ADDRESSES[i]);
+		setInterval(() => testDevice(PERIPHERAL_ADDRESSES[i]), 10000);
 	}
 
 	// Keep this process running
