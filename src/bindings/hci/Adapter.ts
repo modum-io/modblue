@@ -4,8 +4,8 @@ import { HciGattLocal } from './gatt';
 import { Gap, Hci } from './misc';
 import { HciPeripheral } from './Peripheral';
 
-const SCAN_ENABLE_TIMEOUT = 1000;
-const ADVERTISING_ENABLE_TIMEOUT = 1000;
+const SCAN_ENABLE_TIMEOUT = 5000;
+const ADVERTISING_ENABLE_TIMEOUT = 5000;
 
 interface Advertisement {
 	localName: string;
@@ -300,7 +300,7 @@ export class HciAdapter extends Adapter {
 						this.scanEnableTimer = setTimeout(() => enableScanning(), SCAN_ENABLE_TIMEOUT);
 					});
 			};
-			enableScanning();
+			this.scanEnableTimer = setTimeout(() => enableScanning(), SCAN_ENABLE_TIMEOUT);
 		}
 	};
 
@@ -318,7 +318,7 @@ export class HciAdapter extends Adapter {
 						this.advertisingEnableTimer = setTimeout(() => enableAdvertising(), ADVERTISING_ENABLE_TIMEOUT);
 					});
 			};
-			enableAdvertising();
+			this.advertisingEnableTimer = setTimeout(() => enableAdvertising(), ADVERTISING_ENABLE_TIMEOUT);
 		}
 	};
 
