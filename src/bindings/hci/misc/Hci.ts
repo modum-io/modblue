@@ -631,12 +631,6 @@ export class Hci extends TypedEmitter<HciEvents> {
 			};
 
 			const rejectHandler = async (error?: Error) => {
-				try {
-					await this.cancelLeConn();
-				} catch {
-					// NO-OP
-				}
-
 				cleanup();
 
 				if (error) {
@@ -649,7 +643,16 @@ export class Hci extends TypedEmitter<HciEvents> {
 			this.on('leConnComplete', onComplete);
 
 			const timeoutError = new HciError(`Creating connection timed out`);
-			timeout = setTimeout(() => rejectHandler(timeoutError), 2 * this.cmdTimeout);
+			timeout = setTimeout(async () => {
+				// If we timed out we should cancel our connection attempt
+				try {
+					await this.cancelLeConn();
+				} catch {
+					// NO-OP
+				}
+
+				rejectHandler(timeoutError);
+			}, this.connTimeout);
 
 			this.sendCommand(cmd, true).catch((err) => rejectHandler(err));
 		});
