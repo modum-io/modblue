@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.0.4](https://github.com/modum-io/modblue/compare/v12.0.3...v12.0.4) (2021-05-27)
+
+### Bug Fixes
+
+- **hci:** Possible fixes for timeouts ([16fbb91](https://github.com/modum-io/modblue/commit/16fbb9186c41653175c8513561bf69b6a6f0de34))
+- **mac:** Fix inconsistent addresses ([b5b608a](https://github.com/modum-io/modblue/commit/b5b608a9d7038d0dad6f99f4062313b743400591))
+
 ### [12.0.3](https://github.com/modum-io/modblue/compare/v12.0.2...v12.0.3) (2021-05-12)
 
 ### Bug Fixes
