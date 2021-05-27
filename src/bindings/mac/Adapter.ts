@@ -69,6 +69,8 @@ export class MacAdapter extends Adapter {
 		advertisement: { localName?: string; manufacturerData?: Buffer },
 		rssi: number
 	) => {
+		// Fixes address on some macs
+		address = address.replace(/-/g, ':');
 		let peripheral = this.peripherals.get(uuid);
 		if (!peripheral) {
 			peripheral = new MacPeripheral(
