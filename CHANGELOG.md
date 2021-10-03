@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.0.7](https://github.com/modum-io/modblue/compare/v12.0.6...v12.0.7) (2021-10-03)
+
 ### [12.0.6](https://github.com/modum-io/modblue/compare/v12.0.5...v12.0.6) (2021-09-30)
 
 ### Bug Fixes
